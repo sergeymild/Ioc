@@ -1,0 +1,13 @@
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+app/sampledata/
+app/src/main/java/com/alohamobile/browser/services/navigation/
+app/src/main/java/com/ioc/browser/services/
+librarydependency/libs/
+librarydependency/src/main/res/drawable/
