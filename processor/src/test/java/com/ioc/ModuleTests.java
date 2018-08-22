@@ -560,8 +560,8 @@ public class ModuleTests {
                 "   }",
                 "",
                 "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
-                "       ParentDependency singleton_getDependency = ParentDependencySingleton.get();",
-                "       target.dependency = singleton_getDependency;",
+                "       ParentDependency parentDependency = ParentDependencySingleton.get();",
+                "       target.dependency = parentDependency;",
                 "   }",
                 "}");
 
@@ -619,8 +619,8 @@ public class ModuleTests {
                 "   }",
                 "",
                 "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
-                "       ParentDependency singleton_getDependency = ParentDependencySingleton.get();",
-                "       target.setDependency(singleton_getDependency);",
+                "       ParentDependency parentDependency = ParentDependencySingleton.get();",
+                "       target.setDependency(parentDependency);",
                 "   }",
                 "}");
 
@@ -752,8 +752,8 @@ public class ModuleTests {
                 "   }",
                 "",
                 "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
-                "       ParentDependency singleton_getDependency = ParentDependencySingleton.get();",
-                "       target.dependency = singleton_getDependency;",
+                "       ParentDependency parentDependency = ParentDependencySingleton.get();",
+                "       target.dependency = parentDependency;",
                 "   }",
                 "}");
 
@@ -828,8 +828,8 @@ public class ModuleTests {
                 "",
                 "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
                 "       DependencyModel dependencyModel = ModuleClass.getDependency();",
-                "       Dependency2 singleton_getDependency2 = Dependency2Singleton.get();",
-                "       ParentDependency parentDependency = ModuleClass.getParentDependency(dependencyModel, singleton_getDependency2);",
+                "       Dependency2 dependency2 = Dependency2Singleton.get();",
+                "       ParentDependency parentDependency = ModuleClass.getParentDependency(dependencyModel, dependency2);",
                 "       target.dependency = parentDependency;",
                 "   }",
                 "}");
@@ -1077,8 +1077,8 @@ public class ModuleTests {
                 "   }",
                 "",
                 "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
-                "       ParentDependency singleton_parentDependency = ParentDependencySingleton.get();",
-                "       target.dependency = singleton_parentDependency;",
+                "       ParentDependency parentDependency = ParentDependencySingleton.get();",
+                "       target.dependency = parentDependency;",
                 "   }",
                 "}");
 
@@ -1197,8 +1197,8 @@ public class ModuleTests {
                 "   }",
                 "",
                 "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
-                "       ParentDependency singleton_parentDependency = ParentDependencySingleton.get();",
-                "       target.setDependency(singleton_parentDependency);",
+                "       ParentDependency parentDependency = ParentDependencySingleton.get();",
+                "       target.setDependency(parentDependency);",
                 "   }",
                 "}");
 
@@ -1268,8 +1268,8 @@ public class ModuleTests {
                 "   public static final ParentDependency get() {",
                 "       if (singleton != null) return singleton;",
                 "       DependencyModel dependencyModel = new DependencyModel();",
-                "       Singleton2 singleton_singleton2 = Singleton2Singleton.get();",
-                "       singleton = new ParentDependency(dependencyModel, singleton_singleton2);",
+                "       Singleton2 singleton2 = Singleton2Singleton.get();",
+                "       singleton = new ParentDependency(dependencyModel, singleton2);",
                 "       return singleton;",
                 "   }",
                 "}");
@@ -1341,8 +1341,8 @@ public class ModuleTests {
                 "   public static final ParentDependency get() {",
                 "       if (singleton != null) return singleton;",
                 "       DependencyModel dependencyModel = new DependencyModel();",
-                "       Singleton2 singleton_singleton2 = Singleton2Singleton.get();",
-                "       singleton = new ParentDependency(dependencyModel, singleton_singleton2);",
+                "       Singleton2 singleton2 = Singleton2Singleton.get();",
+                "       singleton = new ParentDependency(dependencyModel, singleton2);",
                 "       return singleton;",
                 "   }",
                 "}");
@@ -1409,8 +1409,8 @@ public class ModuleTests {
                 "",
                 "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
                 "       DependencyModel dependencyModel = new DependencyModel();",
-                "       Singleton2 singleton_singleton2 = Singleton2Singleton.get();",
-                "       ParentDependency parentDependency = new ParentDependency(dependencyModel, singleton_singleton2);",
+                "       Singleton2 singleton2 = Singleton2Singleton.get();",
+                "       ParentDependency parentDependency = new ParentDependency(dependencyModel, singleton2);",
                 "       target.dependency = parentDependency;",
                 "   }",
                 "}");
@@ -1478,8 +1478,8 @@ public class ModuleTests {
                 "",
                 "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
                 "       DependencyModel dependencyModel = new DependencyModel();",
-                "       Singleton2 singleton_singleton2 = Singleton2Singleton.get();",
-                "       ParentDependency parentDependency = new ParentDependency(dependencyModel, singleton_singleton2);",
+                "       Singleton2 singleton2 = Singleton2Singleton.get();",
+                "       ParentDependency parentDependency = new ParentDependency(dependencyModel, singleton2);",
                 "       target.setDependency(parentDependency);",
                 "   }",
                 "}");

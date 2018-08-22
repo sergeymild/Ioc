@@ -9,6 +9,7 @@ import org.junit.runners.JUnit4
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Named
+import javax.inject.Provider
 import javax.inject.Singleton
 
 /**
@@ -327,8 +328,8 @@ class SingletonTests : BaseTest {
                 "   @NonNull",
                 "   public static final MainPresenter get() {",
                 "       if (singleton != null) return singleton;",
-                "       DependencyModel singleton_dependencyModel = DependencyModelSingleton.get();",
-                "       singleton = new MainPresenter(singleton_dependencyModel);",
+                "       DependencyModel dependencyModel = DependencyModelSingleton.get();",
+                "       singleton = new MainPresenter(dependencyModel);",
                 "       return singleton",
                 "   }",
                 "}")
@@ -575,6 +576,183 @@ class SingletonTests : BaseTest {
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
                 .that(Arrays.asList(activityFile, logger, settings, dependencyFile))
+                .processedWith(IProcessor())
+                .compilesWithoutError()
+                .and().generatesSources(injectedFile)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun singletonInLazyConstruction() {
+
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
+                "package test;",
+                "",
+                Inject::class.java.import(),
+                Named::class.java.import(),
+                "",
+                "public class Activity {",
+                "",
+                "   @Inject",
+                "   public MainPresenter presenter;",
+                "}")
+
+        val presenter = JavaFileObjects.forSourceLines("test.MainPresenter",
+                "package test;",
+                "",
+                Inject::class.java.import(),
+                Lazy::class.java.import(),
+                "",
+                "class MainPresenter {",
+                "   @Inject",
+                "   MainPresenter(Lazy<DependencyModel> lazyDependency, SingletonDependency singletonDependency) {}",
+                "}")
+
+        val singletonDependency = JavaFileObjects.forSourceLines("test.SingletonDependency",
+                "package test;",
+                "",
+                Singleton::class.java.import(),
+                "",
+                "@Singleton",
+                "class SingletonDependency {",
+                "}")
+
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+                "package test;",
+                "",
+                Inject::class.java.import(),
+                "",
+                "class DependencyModel {",
+                "   @Inject",
+                "   DependencyModel(SingletonDependency singletonDependency) {}",
+                "}")
+
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+                "package test;",
+                "",
+                keepAnnotation,
+                nonNullAnnotation,
+                "import com.ioc.Lazy;",
+                "import java.lang.Override;",
+                "",
+                "@Keep",
+                "public final class ActivityInjector",
+                "",
+                "   @Keep",
+                "   public final void inject(@NonNull final Activity target) {",
+                "       injectMainPresenterInPresenter(target);",
+                "   }",
+                "",
+                "   private final void injectMainPresenterInPresenter(@NonNull final Activity target) {",
+                "       Lazy<DependencyModel> lazy_dependencyModel = new Lazy<DependencyModel>() {",
+                "           private DependencyModel value;",
+                "           public boolean isInitialized() {",
+                "               return value != null;",
+                "           }",
+                "",
+                "           @Override",
+                "           @NonNull",
+                "           public DependencyModel get() {",
+                "               if (isInitialized()) return value;",
+                "               SingletonDependency singletonDependency = SingletonDependencySingleton.get();",
+                "               DependencyModel dependencyModel = new DependencyModel(singletonDependency);",
+                "               value = dependencyModel;",
+                "               return value;",
+                "           }",
+                "       };",
+                "       SingletonDependency singletonDependency2 = SingletonDependencySingleton.get();",
+                "       MainPresenter mainPresenter = new MainPresenter(lazy_dependencyModel, singletonDependency2);",
+                "       target.presenter = mainPresenter;",
+                "   }",
+                "}")
+
+        Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
+                .that(Arrays.asList(activityFile, singletonDependency, presenter, dependencyFile))
+                .processedWith(IProcessor())
+                .compilesWithoutError()
+                .and().generatesSources(injectedFile)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun singletonInProviderConstruction() {
+
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
+                "package test;",
+                "",
+                Inject::class.java.import(),
+                Named::class.java.import(),
+                "",
+                "public class Activity {",
+                "",
+                "   @Inject",
+                "   public MainPresenter presenter;",
+                "}")
+
+        val presenter = JavaFileObjects.forSourceLines("test.MainPresenter",
+                "package test;",
+                "",
+                Inject::class.java.import(),
+                Provider::class.java.import(),
+                "",
+                "class MainPresenter {",
+                "   @Inject",
+                "   MainPresenter(Provider<DependencyModel> providerDependency, SingletonDependency singletonDependency) {}",
+                "}")
+
+        val singletonDependency = JavaFileObjects.forSourceLines("test.SingletonDependency",
+                "package test;",
+                "",
+                Singleton::class.java.import(),
+                "",
+                "@Singleton",
+                "class SingletonDependency {",
+                "}")
+
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+                "package test;",
+                "",
+                Inject::class.java.import(),
+                "",
+                "class DependencyModel {",
+                "   @Inject",
+                "   DependencyModel(SingletonDependency singletonDependency) {}",
+                "}")
+
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+                "package test;",
+                "",
+                keepAnnotation,
+                nonNullAnnotation,
+                Override::class.java.import(),
+                Provider::class.java.import(),
+                "",
+                "@Keep",
+                "public final class ActivityInjector",
+                "",
+                "   @Keep",
+                "   public final void inject(@NonNull final Activity target) {",
+                "       injectMainPresenterInPresenter(target);",
+                "   }",
+                "",
+                "   private final void injectMainPresenterInPresenter(@NonNull final Activity target) {",
+                "       Provider<DependencyModel> provider_dependencyModel = new Provider<DependencyModel>() {",
+                "           @Override",
+                "           @NonNull",
+                "           public DependencyModel get() {",
+                "               SingletonDependency singletonDependency = SingletonDependencySingleton.get();",
+                "               DependencyModel dependencyModel = new DependencyModel(singletonDependency);",
+                "               return dependencyModel;",
+                "           }",
+                "       };",
+                "       SingletonDependency singletonDependency2 = SingletonDependencySingleton.get();",
+                "       MainPresenter mainPresenter = new MainPresenter(provider_dependencyModel, singletonDependency2);",
+                "       target.presenter = mainPresenter;",
+                "   }",
+                "}")
+
+        Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
+                .that(Arrays.asList(activityFile, singletonDependency, presenter, dependencyFile))
                 .processedWith(IProcessor())
                 .compilesWithoutError()
                 .and().generatesSources(injectedFile)

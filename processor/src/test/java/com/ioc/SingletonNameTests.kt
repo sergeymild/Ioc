@@ -70,8 +70,8 @@ class SingletonNameTests : BaseTest {
                 "   }",
                 "",
                 "   private final void injectCrashlitycsServiceInService(@NonNull final Activity target) {",
-                "        CrashlyticsLogger singleton_crashlyticsLogger = CrashlyticsLoggerSingleton.get();",
-                "        target.service = singleton_crashlyticsLogger;",
+                "        CrashlyticsLogger crashlyticsLogger = CrashlyticsLoggerSingleton.get();",
+                "        target.service = crashlyticsLogger;",
                 "   }",
                 "}")
 
@@ -147,8 +147,8 @@ class SingletonNameTests : BaseTest {
                 "   @NonNull",
                 "   public static final DependencyModel get() {",
                 "       if (singleton != null) return singleton;",
-                "       CrashlyticsLogger singleton_crashlyticsLogger = CrashlyticsLoggerSingleton.get();",
-                "       singleton = new DependencyModel(singleton_crashlyticsLogger);",
+                "       CrashlyticsLogger crashlyticsLogger = CrashlyticsLoggerSingleton.get();",
+                "       singleton = new DependencyModel(crashlyticsLogger);",
                 "       return singleton;",
                 "   }",
                 "}")
@@ -226,8 +226,8 @@ class SingletonNameTests : BaseTest {
                 "",
                 "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
                 "       DependencyModel dependencyModel = ModuleClass.getDependency();",
-                "       Dependency2 singleton_getDependency2 = Dependency2Singleton.get();",
-                "       ParentDependency parentDependency = ModuleClass.getParentDependency(dependencyModel, singleton_getDependency2);",
+                "       Dependency2 dependency2 = Dependency2Singleton.get();",
+                "       ParentDependency parentDependency = ModuleClass.getParentDependency(dependencyModel, dependency2);",
                 "       target.setDependency(parentDependency);",
                 "   }",
                 "}")
@@ -281,8 +281,8 @@ class SingletonNameTests : BaseTest {
                 "   }",
                 "",
                 "   private final void injectCrashlyticsLoggerInService(@NonNull final Activity target) {",
-                "       CrashlyticsLogger singleton_crashlyticsLogger = CrashlyticsLoggerSingleton.get();",
-                "       target.service = singleton_crashlyticsLogger;",
+                "       CrashlyticsLogger crashlyticsLogger = CrashlyticsLoggerSingleton.get();",
+                "       target.service = crashlyticsLogger;",
                 "   }",
                 "}")
 

@@ -48,11 +48,7 @@ fun argumentsConstructor(model: DependencyModel, typeUtils: Types, target: Targe
 
 fun singleton(model: DependencyModel): CodeBlock {
     val name = model.dependency.simpleName.toString()
-    if (!uniqueSingleton(name)) {
-        //model.generatedName = getOriginalSingletonName(name)
-        return emptyCodBlock
-    }
-    //model.generatedName = name.decapitalize()
+    model.generatedName = uniqueName(name).decapitalize()
     val singleton = ClassName.bestGuess("${model.packageName}.${model.dependency.asTypeElement().simpleName}$SINGLETON")
     val type = model.dependency.asTypeElement()
     return CodeBlock.builder()

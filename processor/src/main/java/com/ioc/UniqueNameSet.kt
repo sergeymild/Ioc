@@ -30,30 +30,3 @@ fun uniqueName(base: CharSequence): String {
     }
     return name
 }
-
-fun uniqueSingleton(base: CharSequence): Boolean {
-    var list = uniqueSingletons[base.toString()]
-    if (list == null) {
-        list = mutableSetOf()
-        uniqueSingletons[base.toString()] = list
-    }
-    return list.add(base.toString())
-}
-
-fun getOriginalSingletonName(base: CharSequence): String {
-    for (key in uniqueSingletons.keys) {
-        if (uniqueSingletons[key]?.contains(base.toString()) == true) {
-            return key.decapitalize()
-        }
-    }
-    return base.toString().decapitalize()
-}
-
-
-/**
- * Adds `name` without any modification to the name set. Has no effect if `name` is
- * already present in the set.
- */
-fun claim(name: CharSequence) {
-    uniqueNames.add(name.toString())
-}
