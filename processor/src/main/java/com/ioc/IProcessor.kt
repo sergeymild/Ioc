@@ -36,6 +36,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
     lateinit var dependencyResolver: DependencyResolver
 
     companion object {
+        var scopeTargets = mutableMapOf<String, MutableMap<TargetType, MutableSet<String>>>()
         val classesWithDependencyAnnotation = mutableListOf<Element>()
         val methodsWithDependencyAnnotation = mutableListOf<ExecutableElement>()
         var singletons = mutableMapOf<String, MutableList<DependencyModel>>()
@@ -242,15 +243,27 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
                     resetUniqueSingletons()
                 }
 
+
         for (scopeAnnotation in roundEnv.getElementsAnnotatedWith(Scope::class.java)) {
             for (scopedElement in roundEnv.getElementsAnnotatedWith(scopeAnnotation.asTypeElement())) {
                 if (scopedElement.kind == ElementKind.PARAMETER) continue
-                if (scopedElement.isRootScope()) continue
+                if (scopedElement.isRootScope()) {
+                    val rootScopeName = scopeAnnotation.simpleName.toString()
+                    scopeTargets[rootScopeName] = mutableMapOf()
+                    targetKeys.firstOrNull { it.element.isEqualTo(scopedElement) }?.let {
+                        scopeTargets[rootScopeName]!![it] = mutableSetOf()
+                    }
+                    continue
+                }
                 if (ScopeFinder.isKotlinAnnotationsMethod(scopedElement)) continue
                 if (scopedElement.isInterface()) {
                     throw ProcessorException("`@${scopeAnnotation.simpleName}` must be declared on one of the implementations `$scopedElement`").setElement(scopedElement)
                 }
 
+                // TODO!!!!
+                scopeTargets[scopeAnnotation.simpleName.toString()]?.keys?.first()?.let {
+                    scopeTargets[scopeAnnotation.simpleName.toString()]!![it]?.add(scopedElement.asType().toString())
+                }
                 val targets = targetKeys.filter { it.isTargetForDependency(scopeAnnotation, scopedElement) }
                 if (targets.isEmpty()) {
                     message("Can't find Element annotated with `@ScopeRoot(@$scopeAnnotation.class)`")
@@ -277,6 +290,19 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
             }
         }
 
+        val cacheMethods = mutableMapOf<TargetType, MutableList<MethodSpec>>()
+        for (pair in scopeTargets) {
+            for (entry in pair.value) {
+                for (type in entry.value) {
+                    val scopeHolder = targets.filter { it.value.rootScope == pair.key }.map { it.value }.firstOrNull()
+                    val dependency = targetsWithDependencies.flatMap { it.value }.firstOrNull { it.typeElement.asType().toString() == type }
+                            ?: continue
+                    val method = ImplementationsSpec.cachedMethod(scopeHolder!!, typeUtils, dependency)
+                    cacheMethods.getOrPut(scopeHolder) { mutableListOf() }.add(method)
+                }
+            }
+        }
+
         // Generate target classesWithDependencyAnnotation
         for (target in targetsWithDependencies) {
 
@@ -299,6 +325,11 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
 
             val sorted = target.key.dependencies.sortedBy { it.order }.asReversed()
             val methods = mutableListOf<MethodSpec>()
+
+            cacheMethods[target.key]?.let {
+                it.forEachIfNotNull { method -> methods.add(method) }
+            }
+
             for (dependency in sorted) {
                 scopedFieldName(target.key, dependency)
                 trySetIsFromTarget(target.key, dependency)
@@ -323,13 +354,13 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
                 }
             }
 
-            val cacheMethods = mutableListOf<MethodSpec>()
-            for (remainCacheDependency in uniqueFlatDependencies) {
-                ImplementationsSpec.cachedMethod(target.key, typeUtils, remainCacheDependency)
-                        .also { cacheMethods.add(it) }
-            }
+//            val cacheMethods = mutableListOf<MethodSpec>()
+//            for (remainCacheDependency in uniqueFlatDependencies) {
+//                ImplementationsSpec.cachedMethod(target.key, typeUtils, remainCacheDependency)
+//                        .also { cacheMethods.add(it) }
+//            }
 
-            methods.addAll(0, cacheMethods)
+//            methods.addAll(0, cacheMethods)
 
             ImplementationsSpec(target.key, processingEnv.typeUtils, methods, target.key.uniqueFlat())
                     .inject()

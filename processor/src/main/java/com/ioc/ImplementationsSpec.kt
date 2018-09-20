@@ -169,6 +169,18 @@ class ImplementationsSpec constructor(private val target: TargetType,
 //                    return wrapInLazyIfNeed(wrapInProviderIfNeed, dependency)
 //                }
 
+                // TODO scoped?
+                if (dependency.scoped != ROOT_SCOPE) {
+                    builder.addStatement("\$T \$N = \$T.get(target, \$S, \$S)",
+                            dependency.originalClassName(),
+                            dependency.generatedName,
+                            scopeFactoryType,
+                            dependency.scoped,
+                            dependency.name)
+                    val wrapInProviderIfNeed = wrapInProviderIfNeed(builder, dependency)
+                    return wrapInLazyIfNeed(wrapInProviderIfNeed, dependency)
+                }
+
                 if (dependency.isViewModel) {
                     val code = CodeBlock.builder()
                     DependencyTree.get(dependency.depencencies, typeUtils, target).also { code.add(it) }

@@ -1450,4 +1450,181 @@ class ScopesTest : BaseTest {
                 .compilesWithoutError()
                 .and().generatesSources(injectedFile)
     }
+
+    @Test
+    @Throws(Exception::class)
+    fun scope() {
+
+        val preferences = JavaFileObjects.forSourceLines("test.Preferences",
+                "package test;",
+                "public class Preferences {",
+                "   Preferences() {}",
+                "}")
+
+        val session = JavaFileObjects.forSourceLines("test.Session",
+                "package test;",
+                Context::class.java.import(),
+
+                "@PerActivity",
+                "public class Session {",
+                "   Session(Preferences preferences) {}",
+                "}")
+
+        val perActivity = JavaFileObjects.forSourceLines("test.PerActivity",
+                "package test;",
+                Context::class.java.import(),
+                Scope::class.java.import(),
+                Retention::class.java.import(),
+                RetentionPolicy::class.java.import(),
+
+                "@Scope",
+                "@Retention(RetentionPolicy.RUNTIME)",
+                "public @interface PerActivity {",
+                "}")
+
+
+        val activityFile = JavaFileObjects.forSourceLines("test.MainActivity",
+                "package test;",
+                "",
+                Inject::class.java.import(),
+                ScopeRoot::class.java.import(),
+                Activity::class.java.import(),
+                "",
+                "@ScopeRoot",
+                "@PerActivity",
+                "public class MainActivity extends Activity {",
+                "   @Inject",
+                "   Presenter presenter;",
+                "}")
+
+        val presenterFile = JavaFileObjects.forSourceLines("test.Presenter",
+                "package test;",
+                "",
+                Inject::class.java.import(),
+                "",
+                "public class Presenter {",
+                "   @Inject",
+                "   @PerActivity Session session;",
+                "   Presenter() {}",
+                "}")
+
+        val injectedFile = JavaFileObjects.forSourceLines("test.MainActivityInjector",
+                "package test;",
+                "",
+                keepAnnotation,
+                nonNullAnnotation,
+                ScopeFactory::class.java.import(),
+                "",
+                "@Keep",
+                "public final class MainActivityInjector {",
+                "",
+                "   @Keep",
+                "   public final void inject(@NonNull final MainActivity target) {",
+                "       cacheSession(target);",
+                "       injectPresenterInPresenter(target);",
+                "   }",
+                "",
+                "   private final void cacheSession(@NonNull final MainActivity target) {",
+                "       Preferences preferences = new Preferences();",
+                "       Session session = new Session(preferences);",
+                "       ScopeFactory.cache(target, \"PerActivity\", \"session\", session);",
+                "   }",
+                "",
+                "   private final void injectPresenterInPresenter(@NonNull final MainActivity target) {",
+                "       Presenter presenter = new Presenter();",
+                "       target.presenter = presenter;",
+                "   }",
+                "}")
+
+        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+                .that(Arrays.asList(activityFile, preferences, session, perActivity, presenterFile))
+                .processedWith(IProcessor())
+                .compilesWithoutError()
+                .and().generatesSources(injectedFile)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun scopeProvides() {
+
+        val preferences = JavaFileObjects.forSourceLines("test.Preferences",
+                "package test;",
+                "public class Preferences {",
+                "   Preferences() {}",
+                "}")
+
+        val session = JavaFileObjects.forSourceLines("test.Session",
+                "package test;",
+                Context::class.java.import(),
+
+                "@PerActivity",
+                "public class Session {",
+                "   Session(Preferences preferences) {}",
+                "}")
+
+        val perActivity = JavaFileObjects.forSourceLines("test.PerActivity",
+                "package test;",
+                Context::class.java.import(),
+                Scope::class.java.import(),
+                Retention::class.java.import(),
+                RetentionPolicy::class.java.import(),
+
+                "@Scope",
+                "@Retention(RetentionPolicy.RUNTIME)",
+                "public @interface PerActivity {",
+                "}")
+
+
+        val activityFile = JavaFileObjects.forSourceLines("test.MainActivity",
+                "package test;",
+                "",
+                Inject::class.java.import(),
+                ScopeRoot::class.java.import(),
+                Activity::class.java.import(),
+                "",
+                "@ScopeRoot",
+                "@PerActivity",
+                "public class MainActivity extends Activity {",
+                "   @Inject",
+                "   Presenter presenter;",
+                "}")
+
+        val presenterFile = JavaFileObjects.forSourceLines("test.Presenter",
+                "package test;",
+                "",
+                Inject::class.java.import(),
+                "",
+                "public class Presenter {",
+                "   @Inject",
+                "   @PerActivity Session session;",
+                "   Presenter() {}",
+                "}")
+
+        val injectedFile = JavaFileObjects.forSourceLines("test.PresenterInjector",
+                "package test;",
+                "",
+                keepAnnotation,
+                nonNullAnnotation,
+                ScopeFactory::class.java.import(),
+                "",
+                "@Keep",
+                "public final class PresenterInjector {",
+                "",
+                "   @Keep",
+                "   public final void inject(@NonNull final Presenter target) {",
+                "       injectSessionInSession(target);",
+                "   }",
+                "",
+                "   private final void injectSessionInSession(@NonNull final Presenter target) {",
+                "       Presenter presenter = new Presenter();",
+                "       target.presenter = presenter;",
+                "   }",
+                "}")
+
+        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+                .that(Arrays.asList(activityFile, preferences, session, perActivity, presenterFile))
+                .processedWith(IProcessor())
+                .compilesWithoutError()
+                .and().generatesSources(injectedFile)
+    }
 }

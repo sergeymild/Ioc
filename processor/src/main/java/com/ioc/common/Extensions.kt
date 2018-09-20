@@ -3,7 +3,6 @@ package com.ioc.common
 import com.ioc.IProcessor
 import com.ioc.LazyAnonymousClass
 import com.ioc.ViewModelFactoryAnonymousClass
-import com.ioc.uniqueName
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.CodeBlock
 import com.squareup.javapoet.ParameterizedTypeName
@@ -20,6 +19,11 @@ import javax.tools.Diagnostic
  */
 inline fun <T: Any, R> T?.transform(block: (T) -> R) : R? {
     return if (this != null) block(this) else null
+}
+
+inline fun <T> List<T>?.forEachIfNotNull(predicate: (T) -> Unit) {
+    if (this == null) return
+    forEach(predicate)
 }
 
 
