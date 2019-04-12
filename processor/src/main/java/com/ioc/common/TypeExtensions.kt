@@ -125,7 +125,10 @@ fun Element.isNotMethodAndInterface(): Boolean {
 }
 
 fun TypeMirror.isNotValid(): Boolean {
-    return toString() == Object::class.java.canonicalName || kind == TypeKind.NONE || kind == TypeKind.PACKAGE || kind == TypeKind.NULL
+    return toString() == Object::class.java.canonicalName
+            || kind == TypeKind.NONE
+            || kind == TypeKind.PACKAGE
+            || kind == TypeKind.NULL
 }
 
 fun Element.isEqualTo(other: Element): Boolean {

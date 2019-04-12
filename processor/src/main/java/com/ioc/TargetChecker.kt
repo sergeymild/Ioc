@@ -18,9 +18,7 @@ object TargetChecker {
         return target.supertypes.any { dependency.isEqualTo(it) && (target.rootScope == scoped || target.scope == scoped) }
     }
 
-    fun isFromTarget(target: TargetType,
-                     dependency: TypeMirror): ExecutableElement? {
-        println("")
+    fun isFromTarget(target: TargetType, dependency: TypeMirror): ExecutableElement? {
         return target.methods.firstOrNull { it.returnType.asTypeElement().isEqualTo(dependency) }
 
     }

@@ -230,16 +230,19 @@ class DependencyTypesFinder(private val roundEnv: RoundEnvironment,
     fun collectSuperTypes(typeElement: TypeElement?, returnTypes: MutableList<TypeMirror>) {
         typeElement ?: return
 
+        // first check and collect super interfaces recursively
         for (typeInterface in typeElement.interfaces) {
             returnTypes.add(typeInterface)
             collectSuperTypes(typeInterface.asTypeElement(), returnTypes)
         }
+        // if super class is Object or is not present return
         if (typeElement.superclass.isNotValid()) return
+        // else put superclass
         returnTypes.add(typeElement.superclass)
-        typeElement.superclass?.let {
-            if (it.kind != TypeKind.NONE) {
-                collectSuperTypes(it.asTypeElement(), returnTypes)
-            }
+        // collect all superclass's superclasses
+        val superclass = typeElement.superclass ?: return
+        if (superclass.kind != TypeKind.NONE) {
+            collectSuperTypes(superclass.asTypeElement(), returnTypes)
         }
     }
 
