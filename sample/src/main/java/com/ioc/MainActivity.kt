@@ -3,7 +3,11 @@ package com.ioc
 import com.example.mylibrary.MyLibraryActivity
 import javax.inject.Inject
 
-class D
+class S
+
+class D @Inject constructor(val s: S) {
+
+}
 
 @ParentDependencies
 class MainActivity : MyLibraryActivity() {

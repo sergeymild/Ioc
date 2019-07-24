@@ -2,6 +2,7 @@ apply plugin: 'java'
 apply plugin: 'kotlin'
 apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'com.github.dcendents.android-maven' // ADD THIS
+apply plugin: 'maven-publish' // ADD THIS
 
 group='com.ioc'
 archivesBaseName = "ioc-processor"
@@ -47,5 +48,16 @@ sourceSets {
     sourceSets {
         main.java.srcDirs += [file("$buildDir/generated/source/kapt/main")]
         main.java.srcDirs += "src/main/kotlin"
+    }
+}
+
+publishing {
+    publications {
+        libraryJar(MavenPublication) {
+            groupId = 'com.github.sergeymild.ioc'
+            artifactId = 'ioc-processor'
+            version = baseVersion
+            from components.java
+        }
     }
 }

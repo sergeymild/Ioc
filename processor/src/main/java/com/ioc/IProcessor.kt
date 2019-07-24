@@ -101,18 +101,20 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         classesWithDependencyAnnotation.clear()
         methodsWithDependencyAnnotation.clear()
 
-        roundEnv.getElementsAnnotatedWith(Dependency::class.java)
+        val dependencies = roundEnv.getElementsAnnotatedWith(Dependency::class.java)
+        val libraries = roundEnv.getElementsAnnotatedWith(LibraryModules::class.java)
+
+        dependencies
                 .filter { it.isNotMethodAndInterface() }
                 .addTo(classesWithDependencyAnnotation)
 
-        roundEnv.getElementsAnnotatedWith(Dependency::class.java)
+        dependencies
                 .filter { it.kind == ElementKind.METHOD }
                 .map { it as ExecutableElement }
                 .addTo(methodsWithDependencyAnnotation)
 
         val alreadyReadModules = mutableSetOf<String>()
-        roundEnv.getElementsAnnotatedWith(LibraryModules::class.java)
-                .forEach { findLibraryModules(it.getAnnotation(LibraryModules::class.java), alreadyReadModules) }
+        libraries.forEach { findLibraryModules(it.getAnnotation(LibraryModules::class.java), alreadyReadModules) }
         alreadyReadModules.clear()
 
         measure("Process") {
@@ -156,7 +158,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
 
 
         message("-> Get root elements")
-        val rootTypeElements = roundEnv.rootElementsWithInjectedDependencies()
+        val rootTypeElements = roundEnv.rootElementsWithInjectedDependencies(processingEnv)
 
         message("-> Map to target with dependencies")
         val targetsWithDependencies = mapToTargetWithDependencies(rootTypeElements, dependencyResolver)

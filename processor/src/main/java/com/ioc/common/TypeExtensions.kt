@@ -4,6 +4,8 @@ import com.ioc.*
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.ParameterSpec
 import java.lang.ref.WeakReference
+import java.util.LinkedHashSet
+import javax.annotation.processing.ProcessingEnvironment
 import javax.annotation.processing.RoundEnvironment
 import javax.inject.Inject
 import javax.inject.Provider
@@ -13,6 +15,7 @@ import javax.lang.model.type.ExecutableType
 import javax.lang.model.type.TypeKind
 import javax.lang.model.type.TypeMirror
 import javax.lang.model.util.ElementFilter
+import javax.lang.model.util.ElementScanner8
 import javax.lang.model.util.Types
 
 /**
@@ -81,44 +84,95 @@ fun Element.getPackage(): PackageElement {
     return MoreElements.getPackage(this)
 }
 
-fun RoundEnvironment.rootElementsWithInjectedDependencies(): List<TypeElement> {
+private val targetDependencies = mutableMapOf<String, MutableSet<Element>>()
+
+class AnnotationSetScanner(
+    val processingEnvironment: ProcessingEnvironment,
+    elements: MutableSet<Element>): ElementScanner8<MutableSet<Element>, TypeElement>(elements) {
+    internal var annotatedElements: MutableSet<Element> = LinkedHashSet()
+
+    override fun visitType(var1: TypeElement, var2: TypeElement): MutableSet<Element> {
+        this.scan(var1.typeParameters, var2)
+        return super.visitType(var1, var2)
+    }
+
+    override fun visitExecutable(var1: ExecutableElement, var2: TypeElement): MutableSet<Element> {
+        this.scan(var1.typeParameters, var2)
+        return super.visitExecutable(var1, var2)
+    }
+
+    override fun scan(var1: Element, var2: TypeElement): MutableSet<Element> {
+        val var3 = processingEnvironment.elementUtils.getAllAnnotationMirrors(var1)
+        val var4 = var3.iterator()
+
+        while (var4.hasNext()) {
+            val var5 = var4.next() as AnnotationMirror
+            if (var2 == var5.annotationType.asElement()) {
+                this.annotatedElements.add(var1)
+            }
+        }
+
+        var1.accept(this, var2)
+        return this.annotatedElements
+    }
+}
+
+fun RoundEnvironment.rootElementsWithInjectedDependencies(processingEnv: ProcessingEnvironment): List<TypeElement> {
+    targetDependencies.clear()
     val rootTypeElements = mutableListOf<TypeElement>()
     val uniqueRootTypeElements = mutableSetOf<String>()
 
-    for (dependencyElement in getElementsAnnotatedWith(Inject::class.java)) {
-        val enclosingElement = dependencyElement.enclosingElement
-        if (uniqueRootTypeElements.contains(enclosingElement.asType().toString())) continue
-        val typeElement = enclosingElement.asTypeElement()
-        rootTypeElements.add(typeElement)
+    val injectAnnotationType = processingEnv.elementUtils.getTypeElement(Inject::class.java.canonicalName)
+    val injectedElements = getElementsAnnotatedWith(Inject::class.java)
+    message("-> injected: $injectedElements")
 
-        if (typeElement.isHasAnnotation(ParentDependencies::class.java)) {
-            var superclass = typeElement.superclass
-            while (!superclass.isNotValid()) {
-                if (uniqueRootTypeElements.contains(superclass.toString())) continue
-                val superclassTypeElement = superclass.asTypeElement()
-                rootTypeElements.add(superclassTypeElement)
-                superclass = superclassTypeElement.superclass
-                if (superclass.isNotValid()) break
+    for (dependencyElement in injectedElements) {
+        val enclosingElement = dependencyElement.enclosingElement
+
+        // if first time meet class element
+        if (!targetDependencies.containsKey(enclosingElement.asType().toString())) {
+            val typeElement = enclosingElement.asTypeElement()
+            rootTypeElements.add(typeElement)
+            if (typeElement.isHasAnnotation(ParentDependencies::class.java)) {
+                var superclass = typeElement.superclass
+                while (!superclass.isNotValid()) {
+                    if (uniqueRootTypeElements.contains(superclass.toString())) continue
+                    val superclassTypeElement = superclass.asTypeElement()
+
+                    val injectElements = mutableSetOf<Element>()
+                    val scanner = AnnotationSetScanner(processingEnv, injectElements)
+                    superclassTypeElement.accept(scanner, injectAnnotationType)
+
+                    val dependencies = targetDependencies.getOrPut(superclass.toString()) { mutableSetOf() }
+                    dependencies.addAll(injectElements)
+                    rootTypeElements.add(superclassTypeElement)
+                    superclass = superclassTypeElement.superclass
+                    if (superclass.isNotValid()) break
+                }
             }
         }
+
+        
+        val dependencies = targetDependencies.getOrPut(enclosingElement.asType().toString()) { mutableSetOf() }
+        dependencies.add(dependencyElement)
     }
 
     return rootTypeElements
 }
 
-fun List<Element>.withInjectAnnotation(): List<Element> {
-    return filter { it.kind != ElementKind.CONSTRUCTOR && it.isHasAnnotation(Inject::class.java) }
-}
-
 fun mapToTargetWithDependencies(targets: List<TypeElement>, dependencyResolver: DependencyResolver): Map<TargetType, MutableList<DependencyModel>> {
     val targetsWithDependencies = mutableMapOf<TargetType, MutableList<DependencyModel>>()
+
+    message("-> targets: $targets")
 
     for (targetTypeElement in targets) {
         val targetType = IProcessor.createTarget(targetTypeElement, IProcessor.dependencyFinder)
 
         val dependencies = targetsWithDependencies.getOrPut(targetType) { mutableListOf() }
-        val injectElements = targetTypeElement.enclosedElements.withInjectAnnotation()
+
+        val injectElements = targetDependencies.getValue(targetTypeElement.asType().toString())
         for (injectElement in injectElements) {
+            if (injectElement.kind == ElementKind.CONSTRUCTOR) continue
             val resolved = dependencyResolver.resolveDependency(injectElement, target = targetType, skipCheckFromTarget = true, parents = ParensSet())
             dependencies.add(resolved)
         }
