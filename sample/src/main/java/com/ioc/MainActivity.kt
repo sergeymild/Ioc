@@ -1,26 +1,30 @@
 package com.ioc
 
 import com.example.mylibrary.MyLibraryActivity
+import javax.inject.Inject
+import javax.inject.Singleton
 
-open class AlohaBrowserUi
+@Singleton
+class Single
+
+interface AlohaBrowserUi
 
 @Dependency
-class BrowserUi: AlohaBrowserUi()
+class BrowserUi(val single: Single): AlohaBrowserUi
 
-class FullscreenWebVideoManager(val BrowserUi: AlohaBrowserUi)
+class FullscreenWebVideoManager(val BrowserUi: AlohaBrowserUi, val single: Single)
 
 interface BrowserUiCallback
 
 @Dependency
-class BrowserUiCallbackImplementation(val FullscreenWebVideoManager: FullscreenWebVideoManager): BrowserUiCallback
+class BrowserUiCallbackImplementation(val FullscreenWebVideoManager: FullscreenWebVideoManager, val single: Single): BrowserUiCallback
 
-@InjectParentDependencies
+//@InjectParentDependencies
 class MainActivity : MyLibraryActivity() {
 
-//    @Inject
-//    @LocalScope
-//    var alohaBrowserUi: AlohaBrowserUi? = null
-//
-//    @Inject
-//    lateinit var browserUiCallbackImplementation: BrowserUiCallback
+    @Inject
+    var alohaBrowserUi: AlohaBrowserUi? = null
+
+    @Inject
+    lateinit var browserUiCallbackImplementation: BrowserUiCallback
 }
