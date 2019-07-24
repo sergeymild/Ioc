@@ -7,8 +7,8 @@ import com.ioc.LibraryModules
 
 
 object BottomModule {
-    @Dependency
-    @JvmStatic
+//    @Dependency
+//    @JvmStatic
     fun factory(preferences: Preferences, configProvider: ApplicationConfigProvider): BottomFactory {
         return BottomAdHolderFactory(preferences, configProvider)
     }

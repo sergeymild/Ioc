@@ -7,6 +7,7 @@ interface Preferences {
 
 }
 
+@Dependency
 class PreferencesInt: Preferences {
 
 }

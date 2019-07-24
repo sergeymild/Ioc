@@ -1,27 +1,13 @@
 package com.ioc
 
-import android.support.v7.app.AppCompatActivity
+import android.app.Activity
+import com.example.common.Preferences
+import com.example.mylibrary.MyLibraryActivity
 import javax.inject.Inject
-import javax.inject.Scope
-import javax.inject.Singleton
-
-@PerActivity
-class Dep
-
-@Scope
-annotation class PerActivity
 
 
-@ScopeRoot
-@PerActivity
-class MainActivity : AppCompatActivity() {
+class MainActivity : Activity() {
+
     @Inject
-    lateinit var holder: PresenterHolder
+    lateinit var preferences: Preferences
 }
-
-class PresenterHolder {
-    @Inject
-    lateinit var presenter: Presenter
-}
-
-class Presenter(@PerActivity val dep: Dep)

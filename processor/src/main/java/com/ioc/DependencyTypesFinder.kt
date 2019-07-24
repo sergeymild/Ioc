@@ -26,7 +26,7 @@ class DependencyTypesFinder(private val roundEnv: RoundEnvironment,
                 target: TargetType,
                 typeElement: Element,
                 skipCheckFromTarget: Boolean = false,
-                parents: ParensSet) : List<DependencyProvider> {
+                parents: ParensSet): List<DependencyProvider> {
 
         val isInterface = typeElement.kind == ElementKind.INTERFACE
         val isAbstractClass = typeElement.modifiers.contains(Modifier.ABSTRACT)
@@ -54,8 +54,8 @@ class DependencyTypesFinder(private val roundEnv: RoundEnvironment,
         findMethodProviders(element, named, parents, typeElement, target, implementations)
 
         if (implementations.size > 1) {
-            throw ProcessorException("Ambiguous classesWithDependencyAnnotation for type [${element.asType()}] with qualifiers [${if (named?.isBlank() == true) "@Default" else "@"+named}] founded [${implementations.joinToString { it.method.asType().toString() }}]")
-                    .setElement(element)
+            throw ProcessorException("Ambiguous classesWithDependencyAnnotation for type [${element.asType()}] with qualifiers [${if (named?.isBlank() == true) "@Default" else "@" + named}] founded [${implementations.joinToString { it.method.asType().toString() }}]")
+                .setElement(element)
         }
 
         if (implementations.isNotEmpty()) {
@@ -83,15 +83,18 @@ class DependencyTypesFinder(private val roundEnv: RoundEnvironment,
             // method must contain only one parameter and must be interface
             val implementation = method.parameters[0].asTypeElement()
             val `interface` = method.returnType.asTypeElement()
+            val isSingleton = method.getAnnotation(Singleton::class.java) != null
 
             if (isSubtype(element, `interface`, named)) {
-                implementations.add(createProvider(implementation, typeElement, target, parents = parents))
+                val dependencyProvider = createProvider(implementation, typeElement, target, parents = parents)
+                if (!dependencyProvider.isSingleton) dependencyProvider.isSingleton = isSingleton
+                implementations.add(dependencyProvider)
             }
         }
 
         if (implementations.size > 1) {
-            throw ProcessorException("Ambiguous classesWithDependencyAnnotation for type [${element.asType()}] with qualifiers [${if (named?.isBlank() == true) "@Default" else "@"+named}] founded [${implementations.joinToString { it.method.asType().toString() }}]")
-                    .setElement(element)
+            throw ProcessorException("Ambiguous classesWithDependencyAnnotation for type [${element.asType()}] with qualifiers [${if (named?.isBlank() == true) "@Default" else "@" + named}] founded [${implementations.joinToString { it.method.asType().toString() }}]")
+                .setElement(element)
         }
 
         if (implementations.isNotEmpty()) {
@@ -108,8 +111,8 @@ class DependencyTypesFinder(private val roundEnv: RoundEnvironment,
         }
 
         if (implementations.size > 1) {
-            throw ProcessorException("Ambiguous classesWithDependencyAnnotation for type [${element.asType()}] with qualifiers [${if (named?.isBlank() == true) "@Default" else "@"+(if(named == null) "Default" else named)}]")
-                    .setElement(element)
+            throw ProcessorException("Ambiguous classesWithDependencyAnnotation for type [${element.asType()}] with qualifiers [${if (named?.isBlank() == true) "@Default" else "@" + (if (named == null) "Default" else named)}]")
+                .setElement(element)
         }
 
         if (implementations.isNotEmpty()) {
@@ -118,13 +121,13 @@ class DependencyTypesFinder(private val roundEnv: RoundEnvironment,
         }
 
         if (implementations.size > 1) {
-            throw ProcessorException("Ambiguous classesWithDependencyAnnotation for type [${element.asType()}] with qualifiers [${if (named?.isBlank() == true) "@Default" else "@"+(if(named == null) "Default" else named)}]")
-                    .setElement(element)
+            throw ProcessorException("Ambiguous classesWithDependencyAnnotation for type [${element.asType()}] with qualifiers [${if (named?.isBlank() == true) "@Default" else "@" + (if (named == null) "Default" else named)}]")
+                .setElement(element)
         }
 
         if ((isInterface || isAbstractClass) && implementations.isEmpty()) {
             throw ProcessorException("Can't find implementations of `${element.asType()} $element` forTarget: ${target.element} maybe you forgot add correct @Named, @Qualifier or @Scope annotations or add @Dependency on provides method.").setElement(element)
-                    .setElement(element)
+                .setElement(element)
         }
 
         return implementations
@@ -163,12 +166,13 @@ class DependencyTypesFinder(private val roundEnv: RoundEnvironment,
         }
     }
 
-    private fun createProvider(implementation: TypeElement,
-                               parent: Element,
-                               target: TargetType,
-                               dependencies: List<Element> = emptyList(),
-                               isMethod: Boolean = false,
-                               parents: ParensSet) : DependencyProvider {
+    private fun createProvider(
+        implementation: TypeElement,
+        parent: Element,
+        target: TargetType,
+        dependencies: List<Element> = emptyList(),
+        isMethod: Boolean = false,
+        parents: ParensSet): DependencyProvider {
 
         val modulePackageName = implementation.getPackage().toString()
 
@@ -225,8 +229,6 @@ class DependencyTypesFinder(private val roundEnv: RoundEnvironment,
     }
 
 
-
-
     fun collectSuperTypes(typeElement: TypeElement?, returnTypes: MutableList<TypeMirror>) {
         typeElement ?: return
 
@@ -252,8 +254,8 @@ class DependencyTypesFinder(private val roundEnv: RoundEnvironment,
             return compareSuperclasses(dependency, named, implementation.asType())
         }
 
-        private fun compareSuperclasses(compareElement: Element, named: String?, superclass: TypeMirror?) : Boolean {
-            superclass ?:  return false
+        private fun compareSuperclasses(compareElement: Element, named: String?, superclass: TypeMirror?): Boolean {
+            superclass ?: return false
             if (superclass.isNotValid()) return false
             val typeElement = superclass.asTypeElement()
             val typeElementNamed = qualifierFinder.getQualifier(typeElement)
@@ -262,8 +264,8 @@ class DependencyTypesFinder(private val roundEnv: RoundEnvironment,
             return compareSuperclasses(compareElement, named, typeElement.superclass)
         }
 
-        private fun compareInterfaces(compareElement: Element, checkingInterface: TypeMirror?) : Boolean {
-            checkingInterface ?:  return false
+        private fun compareInterfaces(compareElement: Element, checkingInterface: TypeMirror?): Boolean {
+            checkingInterface ?: return false
             if (checkingInterface.isEqualTo(compareElement)) return true
             return checkingInterface.asTypeElement().interfaces.any { compareInterfaces(compareElement, it) }
         }

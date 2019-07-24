@@ -1567,7 +1567,7 @@ public class ModuleTests {
     }
 
     @Test
-    public void abstractModules() throws Exception {
+    public void interfaceModules() throws Exception {
         JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
                 "package test;",
                 "",
@@ -1626,5 +1626,69 @@ public class ModuleTests {
                 .processedWith(new IProcessor())
                 .compilesWithoutError()
                 .and().generatesSources(injectedFile);
+    }
+
+    @Test
+    public void abstractModules() throws Exception {
+        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            "package test;",
+            "",
+            Helpers.importType(Inject.class),
+            "",
+            "public class Activity {",
+            "",
+            "   @Inject",
+            "   public CountryService service;",
+            "}");
+
+        JavaFileObject countryServiceFile = JavaFileObjects.forSourceLines("test.CountryService",
+            "package test;",
+            "",
+            "public interface CountryService {",
+            "}");
+
+        JavaFileObject countryServiceImplementation = JavaFileObjects.forSourceLines("test.CountryServiceImplementation",
+            "package test;",
+
+            "public class CountryServiceImplementation implements CountryService {",
+            "}");
+
+        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
+            "package test;",
+            "",
+            Helpers.importType(Dependency.class),
+            Helpers.importType(Singleton.class),
+            "",
+            "public abstract class ModuleFile {",
+            "   @Dependency",
+            "   @Singleton",
+            "   public abstract CountryService getService(CountryServiceImplementation implementation);",
+            "}");
+
+        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+            "package test;",
+            "",
+            "import android.support.annotation.Keep",
+            "import android.support.annotation.NonNull",
+            "",
+            "@Keep",
+            "public final class ActivityInjector {",
+            "",
+            "   @Keep",
+            "   public final void inject(@NonNull final Activity target) {",
+            "       injectCountryServiceInService(target);",
+            "   }",
+            "",
+            "   private final void injectCountryServiceInService(@NonNull final Activity target) {",
+            "       CountryServiceImplementation countryServiceImplementation = CountryServiceImplementationSingleton.get();",
+            "       target.service = countryServiceImplementation;",
+            "   }",
+            "}");
+
+        assertAbout(javaSources())
+            .that(Arrays.asList(activityFile, countryServiceImplementation, countryServiceFile, moduleFile))
+            .processedWith(new IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile);
     }
 }
