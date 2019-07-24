@@ -1,11 +1,9 @@
 package com.ioc
 
-import com.example.common.Preferences
-import com.example.common.PreferencesInt
-import javax.inject.Singleton
+import com.example.mylibrary.BottomAdHolderFactory
+import com.example.mylibrary.BottomFactory
 
 abstract class AbstractModule {
     @Dependency
-    @Singleton
-    abstract fun preferences(preferences: PreferencesInt): Preferences
+    abstract fun bottomFactory(factory: BottomAdHolderFactory): BottomFactory
 }

@@ -1,13 +1,13 @@
 package com.ioc
 
-import android.app.Activity
-import com.example.common.Preferences
 import com.example.mylibrary.MyLibraryActivity
 import javax.inject.Inject
 
+class D
 
-class MainActivity : Activity() {
+@ParentDependencies
+class MainActivity : MyLibraryActivity() {
 
     @Inject
-    lateinit var preferences: Preferences
+    lateinit var d: D
 }

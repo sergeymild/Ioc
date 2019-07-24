@@ -13,7 +13,10 @@ import com.squareup.javapoet.TypeSpec
 import javax.annotation.processing.*
 import javax.inject.Scope
 import javax.lang.model.SourceVersion
-import javax.lang.model.element.*
+import javax.lang.model.element.Element
+import javax.lang.model.element.ElementKind
+import javax.lang.model.element.ExecutableElement
+import javax.lang.model.element.TypeElement
 import javax.lang.model.type.TypeKind
 import javax.lang.model.util.Types
 import javax.tools.Diagnostic
@@ -150,36 +153,15 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         dependencyResolver = DependencyResolver(processingEnv.typeUtils, qualifierFinder, dependencyFinder)
         dependencyFinder.dependencyResolver = dependencyResolver
 
-        val membersAnnotatedWithInject = roundEnv.fieldsWithInjectAnnotation()
 
-        val targetsWithDependencies = mutableMapOf<TargetType, MutableList<DependencyModel>>()
 
-        // for uniqueness while searching
-        val targets = mutableMapOf<Element, TargetType>()
+        message("-> Get root elements")
+        val rootTypeElements = roundEnv.rootElementsWithInjectedDependencies()
 
-        for (element in membersAnnotatedWithInject) {
-            // get member target class
-            val targetTypeElement = element.enclosingElement.asTypeElement()
-
-            // if we haven't add TargetType for particular target
-            if (!targets.containsKey(targetTypeElement)) {
-                // create TargetType
-                val type = createTarget(targetTypeElement, dependencyFinder)
-                // cache
-                targets[element.enclosingElement] = type
-            }
-            val target = targets[element.enclosingElement]!!
-
-            //CyclicValidation(processingEnv.typeUtils, roundEnv, target).validate(element)
-
-            val dependencies = targetsWithDependencies.getOrPut(target) {
-                return@getOrPut mutableListOf()
-            }
-            val resolved = dependencyResolver.resolveDependency(element, target = target, skipCheckFromTarget = true, parents = ParensSet())
-            //generateUniqueNames(resolved)
-            dependencies.add(resolved)
-        }
-
+        message("-> Map to target with dependencies")
+        val targetsWithDependencies = mapToTargetWithDependencies(rootTypeElements, dependencyResolver)
+        message("-> Done")
+        val targetTypes = targetsWithDependencies.keys
 
         // generate singleton classesWithDependencyAnnotation
         val singletons = mutableListOf<SingletonWrapper>()
@@ -191,7 +173,6 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
 
         val rootElements = roundEnv.rootElements
         val typeUtils = processingEnv.typeUtils
-        val targetKeys = targetsWithDependencies.keys
 
         measure("targetWith") {
             for (target in targetsWithDependencies) {
@@ -206,7 +187,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
 
                 rootElements
                         .firstOrNull { typeUtils.directSupertypes(it.asType()).contains(target.key.element.asType()) }
-                        ?.transform { root -> targetKeys.firstOrNull { it.element.isEqualTo(root) } }
+                        ?.transform { root -> targetTypes.firstOrNull { it.element.isEqualTo(root) } }
                         ?.let { target.key.childTarget = it }
             }
 
@@ -219,7 +200,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
                 }
             }
 
-            for (target in targetKeys) {
+            for (target in targetTypes) {
                 var parentTarget = target.parentTarget
                 while (parentTarget != null) {
                     parentTarget.rootScope = target.rootScope
@@ -241,7 +222,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
                 if (scopedElement.isRootScope()) {
                     val rootScopeName = scopeAnnotation.simpleName.toString()
                     scopeTargets[rootScopeName] = mutableMapOf()
-                    targetKeys.firstOrNull { it.element.isEqualTo(scopedElement) }?.let {
+                    targetTypes.firstOrNull { it.element.isEqualTo(scopedElement) }?.let {
                         scopeTargets[rootScopeName]!![it] = mutableSetOf()
                     }
                     continue
@@ -255,7 +236,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
                 scopeTargets[scopeAnnotation.simpleName.toString()]?.keys?.first()?.let {
                     scopeTargets[scopeAnnotation.simpleName.toString()]!![it]?.add(scopedElement.asType().toString())
                 }
-                val targets = targetKeys.filter { it.isTargetForDependency(scopeAnnotation, scopedElement) }
+                val targets = targetTypes.filter { it.isTargetForDependency(scopeAnnotation, scopedElement) }
                 if (targets.isEmpty()) {
                     message("Can't find Element annotated with `@ScopeRoot(@$scopeAnnotation.class)`")
                 }
@@ -285,7 +266,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         for (pair in scopeTargets) {
             for (entry in pair.value) {
                 for (type in entry.value) {
-                    val scopeHolder = targets.filter { it.value.rootScope == pair.key }.map { it.value }.firstOrNull()
+                    val scopeHolder = targetTypes.filter { it.rootScope == pair.key }.map { it }.firstOrNull()
                     val dependency = targetsWithDependencies.flatMap { it.value }.firstOrNull { it.typeElement.asType().toString() == type }
                             ?: continue
                     val method = ImplementationsSpec.cachedMethod(scopeHolder!!, typeUtils, dependency)

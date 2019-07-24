@@ -4177,4 +4177,41 @@ public class FieldInjectionTest {
                 .compilesWithoutError()
                 .and().generatesSources(injectedFile);
     }
+
+    @Test
+    public void findDependencyDirectParent() throws Exception {
+        JavaFileObject activityParentFile = JavaFileObjects.forSourceLines("test.ParentActivity",
+            "package test;",
+            importType(Inject.class),
+            "public class ParentActivity {",
+            "   @Inject",
+            "   public ParentDependency parentDependency;",
+            "}");
+        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            "package test;",
+            "public class Activity extends ParentActivity{}");
+
+        JavaFileObject parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
+            "package test;",
+            importType(Inject.class),
+            "public class ParentDependency {}");
+
+        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+            "package test;",
+            "import android.support.annotation.Keep",
+            "import android.support.annotation.NonNull",
+            "@Keep",
+            "public final class ActivityInjector {",
+            "   @Keep",
+            "   public final void inject(@NonNull final Activity target) {",
+            "       new ParentActivityInjector().inject(target);",
+            "   }",
+            "}");
+
+        assertAbout(javaSources())
+            .that(Arrays.asList(activityFile, activityParentFile, parentDependencyFile))
+            .processedWith(new IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile);
+    }
 }

@@ -26,9 +26,9 @@ fun TypeElement.asClassName(): ClassName {
 
 fun scopeHolderParameter(target: TargetType): ParameterSpec {
     return ParameterSpec
-            .builder(target.className, "target", Modifier.FINAL)
-            .addAnnotation(nonNullAnnotation)
-            .build()
+        .builder(target.className, "target", Modifier.FINAL)
+        .addAnnotation(nonNullAnnotation)
+        .build()
 }
 
 @Throws(ProcessorException::class)
@@ -42,14 +42,6 @@ fun Element.asTypeElement(): TypeElement {
     }
 }
 
-fun Element?.collectionMethods(types: Types, container: MutableList<ExecutableElement>) {
-    this ?: return
-    container.addAll(ElementFilter.methodsIn(enclosedElements))
-    types.directSupertypes(asType()).forEach {
-        it.asTypeElement().collectionMethods(types, container)
-    }
-}
-
 fun Element.methods(predicate: (ExecutableElement) -> Boolean): List<ExecutableElement> {
     return ElementFilter.methodsIn(enclosedElements).filter(predicate)
 }
@@ -58,9 +50,6 @@ fun Element.fields(): List<Element> {
     return ElementFilter.fieldsIn(enclosedElements)
 }
 
-fun Element.isType(): Boolean {
-    return MoreElements.isType(this)
-}
 
 fun Element.isPrivate(): Boolean {
     return modifiers.contains(Modifier.PRIVATE)
@@ -75,11 +64,11 @@ fun Element.getGenericFirstType(): Element {
     return asType().getGenericFirstType()
 }
 
-fun <A: Annotation> Element.isHasAnnotation(annotation: Class<A>): Boolean {
+fun <A : Annotation> Element.isHasAnnotation(annotation: Class<A>): Boolean {
     return getAnnotation(annotation) != null
 }
 
-fun <A: Annotation> Element.isNotHasAnnotation(annotation: Class<A>): Boolean {
+fun <A : Annotation> Element.isNotHasAnnotation(annotation: Class<A>): Boolean {
     return getAnnotation(annotation) == null
 }
 
@@ -87,21 +76,55 @@ fun Element.asExecutable(): ExecutableElement {
     return MoreElements.asExecutable(this)
 }
 
-fun Element.isExecutable(): Boolean {
-    return MoreElements.isExecutable(this)
-}
-
-fun Element.asPackage(): PackageElement {
-    return MoreElements.asPackage(this)
-}
 
 fun Element.getPackage(): PackageElement {
     return MoreElements.getPackage(this)
 }
 
-fun RoundEnvironment.fieldsWithInjectAnnotation(): List<Element> {
-    return getElementsAnnotatedWith(Inject::class.java)
-            .filter { it.kind != ElementKind.CONSTRUCTOR }
+fun RoundEnvironment.rootElementsWithInjectedDependencies(): List<TypeElement> {
+    val rootTypeElements = mutableListOf<TypeElement>()
+    val uniqueRootTypeElements = mutableSetOf<String>()
+
+    for (dependencyElement in getElementsAnnotatedWith(Inject::class.java)) {
+        val enclosingElement = dependencyElement.enclosingElement
+        if (uniqueRootTypeElements.contains(enclosingElement.asType().toString())) continue
+        val typeElement = enclosingElement.asTypeElement()
+        rootTypeElements.add(typeElement)
+
+        if (typeElement.isHasAnnotation(ParentDependencies::class.java)) {
+            var superclass = typeElement.superclass
+            while (!superclass.isNotValid()) {
+                if (uniqueRootTypeElements.contains(superclass.toString())) continue
+                val superclassTypeElement = superclass.asTypeElement()
+                rootTypeElements.add(superclassTypeElement)
+                superclass = superclassTypeElement.superclass
+                if (superclass.isNotValid()) break
+            }
+        }
+    }
+
+    return rootTypeElements
+}
+
+fun List<Element>.withInjectAnnotation(): List<Element> {
+    return filter { it.kind != ElementKind.CONSTRUCTOR && it.isHasAnnotation(Inject::class.java) }
+}
+
+fun mapToTargetWithDependencies(targets: List<TypeElement>, dependencyResolver: DependencyResolver): Map<TargetType, MutableList<DependencyModel>> {
+    val targetsWithDependencies = mutableMapOf<TargetType, MutableList<DependencyModel>>()
+
+    for (targetTypeElement in targets) {
+        val targetType = IProcessor.createTarget(targetTypeElement, IProcessor.dependencyFinder)
+
+        val dependencies = targetsWithDependencies.getOrPut(targetType) { mutableListOf() }
+        val injectElements = targetTypeElement.enclosedElements.withInjectAnnotation()
+        for (injectElement in injectElements) {
+            val resolved = dependencyResolver.resolveDependency(injectElement, target = targetType, skipCheckFromTarget = true, parents = ParensSet())
+            dependencies.add(resolved)
+        }
+    }
+
+    return targetsWithDependencies
 }
 
 fun methodsWithDependencyAnnotation(): List<ExecutableElement> {
@@ -116,8 +139,8 @@ fun classesWithDependencyAnnotation(): List<Element> {
 // Only get all classes with annotation @Dependency
 fun abstractMethodsWithDependencyAnnotations(): List<ExecutableElement> {
     return IProcessor
-            .methodsWithDependencyAnnotation
-            .filter { it.modifiers.contains(Modifier.ABSTRACT) }
+        .methodsWithDependencyAnnotation
+        .filter { it.modifiers.contains(Modifier.ABSTRACT) }
 }
 
 fun Element.isNotMethodAndInterface(): Boolean {
@@ -126,9 +149,9 @@ fun Element.isNotMethodAndInterface(): Boolean {
 
 fun TypeMirror.isNotValid(): Boolean {
     return toString() == Object::class.java.canonicalName
-            || kind == TypeKind.NONE
-            || kind == TypeKind.PACKAGE
-            || kind == TypeKind.NULL
+        || kind == TypeKind.NONE
+        || kind == TypeKind.PACKAGE
+        || kind == TypeKind.NULL
 }
 
 fun Element.isEqualTo(other: Element): Boolean {
@@ -142,19 +165,6 @@ fun TypeMirror.isEqualTo(other: Element): Boolean {
 fun Element?.isEqualTo(other: TypeMirror): Boolean {
     this ?: return false
     return this.asType().toString() == other.toString()
-}
-
-fun Element?.isNotEqualTo(other: TypeMirror): Boolean {
-    this ?: return true
-    return this.asType().toString() != other.toString()
-}
-
-fun Element.asDeclared(): DeclaredType {
-    return asType().asDeclared()
-}
-
-fun DeclaredType.enclosingType(): TypeMirror {
-    return MoreTypes.enclosingType(this)
 }
 
 fun DeclaredType.getGenericFirstType(): Element {
@@ -208,51 +218,31 @@ fun TypeMirror.typeArguments(): List<TypeMirror> {
     return MoreTypes.asDeclared(this).typeArguments
 }
 
-fun TypeMirror.asExecutable(): ExecutableType {
-    return MoreTypes.asExecutable(this)
-}
-
-fun TypeMirror.isType(): Boolean {
-    return MoreTypes.isType(this)
-}
-
-fun TypeMirror.isTypeOf(clazz: Class<*> ): Boolean {
-    return MoreTypes.isTypeOf(clazz, this)
-}
-
-fun AnnotationMirror.asElement() : Element {
-    return annotationType.asElement()
-}
 
 inline fun <R> AnnotationMirror.asElement(block: Element.() -> R): R {
     return block(annotationType.asElement())
 }
 
-inline fun <reified T> T?.orElse(closure: () -> Unit) : T {
+inline fun <reified T> T?.orElse(closure: () -> Unit): T {
     if (this == null) closure()
     return this!!
 }
 
-
-fun Name.decapitalize() : String {
-    return toString().decapitalize()
-}
-
-fun Name.capitalize() : String {
+fun Name.capitalize(): String {
     return toString().capitalize()
 }
 
-fun Element.isHasArgumentsConstructor() : Boolean =
-        ElementFilter.constructorsIn(asTypeElement().enclosedElements)
-                .any { !it.parameters.isEmpty() || it.isHasAnnotation(Inject::class.java) }
+fun Element.isHasArgumentsConstructor(): Boolean =
+    ElementFilter.constructorsIn(asTypeElement().enclosedElements)
+        .any { !it.parameters.isEmpty() || it.isHasAnnotation(Inject::class.java) }
 
-fun Element.argumentsConstructor() : ExecutableElement? =
-        ElementFilter.constructorsIn(asTypeElement().enclosedElements)
-                .firstOrNull { !it.parameters.isEmpty() || it.isHasAnnotation(Inject::class.java) }
+fun Element.argumentsConstructor(): ExecutableElement? =
+    ElementFilter.constructorsIn(asTypeElement().enclosedElements)
+        .firstOrNull { !it.parameters.isEmpty() || it.isHasAnnotation(Inject::class.java) }
 
-fun Element.injectionFields() : List<Element> =
-        ElementFilter.fieldsIn(asTypeElement().enclosedElements)
-                .filter { it.isHasAnnotation(Inject::class.java) }
+fun Element.injectionFields(): List<Element> =
+    ElementFilter.fieldsIn(asTypeElement().enclosedElements)
+        .filter { it.isHasAnnotation(Inject::class.java) }
 
 
 fun Element.isWeakDependency(types: Types): Boolean {
@@ -302,24 +292,14 @@ fun Element.isChildScope(): Boolean {
     return isHasAnnotation(ScopeChild::class.java)
 }
 
-fun Element.isParameter(): Boolean {
-    return kind == ElementKind.PARAMETER
-}
-
 fun Element.isMethod(): Boolean {
     return kind == ElementKind.METHOD
-}
-
-fun Element.isMethodWithReturnType(): Boolean {
-    return kind == ElementKind.METHOD
-            && (this.asExecutable().returnType.kind != TypeKind.VOID)
-            && (!this.asExecutable().returnType.kind.isPrimitive)
 }
 
 fun Element.isInterface(): Boolean {
     return kind == ElementKind.INTERFACE
 }
 
-fun <T>  List<T>.addTo(other: MutableList<T>) {
+fun <T> List<T>.addTo(other: MutableList<T>) {
     other.addAll(this)
 }

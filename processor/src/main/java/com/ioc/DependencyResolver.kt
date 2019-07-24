@@ -14,17 +14,19 @@ import javax.lang.model.util.Types
  * Created by sergeygolishnikov on 31/10/2017.
  */
 
-class DependencyResolver(private val types: Types,
-                         private val qualifierFinder: QualifierFinder,
-                         private val dependencyTypesFinder: DependencyTypesFinder) {
+class DependencyResolver(
+    private val types: Types,
+    private val qualifierFinder: QualifierFinder,
+    private val dependencyTypesFinder: DependencyTypesFinder) {
 
     @Throws(ProcessorException::class)
-    fun resolveDependency(element: Element,
-                          target: TargetType,
-                          named: String? = null,
-                          scoped: String? = null,
-                          skipCheckFromTarget: Boolean = false,
-                          parents: ParensSet): DependencyModel {
+    fun resolveDependency(
+        element: Element,
+        target: TargetType,
+        named: String? = null,
+        scoped: String? = null,
+        skipCheckFromTarget: Boolean = false,
+        parents: ParensSet): DependencyModel {
 
         var setterMethod: ExecutableElement? = null
         var dependencyElement = element
@@ -79,22 +81,23 @@ class DependencyResolver(private val types: Types,
 
         val isInterface = dependencyTypeElement.kind == ElementKind.INTERFACE
         val isSingleton = dependencyElement.isHasAnnotation(Singleton::class.java)
-                || dependencyTypeElement.isHasAnnotation(Singleton::class.java)
+            || dependencyTypeElement.isHasAnnotation(Singleton::class.java)
 
 
         val named = named
-                ?: qualifierFinder.getQualifier(element)
-                ?: qualifierFinder.getQualifier(dependencyElement)
-                ?: qualifierFinder.getQualifier(dependencyTypeElement)
-                //?: ""
+            ?: qualifierFinder.getQualifier(element)
+            ?: qualifierFinder.getQualifier(dependencyElement)
+            ?: qualifierFinder.getQualifier(dependencyTypeElement)
+        //?: ""
 
         val scoped = scoped
-                ?: ScopeFinder.getScope(element)
-                ?: ScopeFinder.getScope(dependencyElement)
-                ?: ScopeFinder.getScope(dependencyTypeElement)
-                ?: ROOT_SCOPE
+            ?: ScopeFinder.getScope(element)
+            ?: ScopeFinder.getScope(dependencyElement)
+            ?: ScopeFinder.getScope(dependencyTypeElement)
+            ?: ROOT_SCOPE
 
-        if ((ScopeFinder.getScope(dependencyTypeElement) ?: ROOT_SCOPE) != ROOT_SCOPE && isInterface) {
+        if ((ScopeFinder.getScope(dependencyTypeElement)
+                ?: ROOT_SCOPE) != ROOT_SCOPE && isInterface) {
             throw ProcessorException("@$scoped must be placed on one of the implementations `$dependencyTypeElement`").setElement(dependencyTypeElement)
         }
 
@@ -103,7 +106,8 @@ class DependencyResolver(private val types: Types,
             isTarget = TargetChecker.isSubtype(target, dependencyElement, scoped)
         }
 
-        val order = dependencyElement.getAnnotation(InjectPriority::class.java)?.value ?: Int.MAX_VALUE
+        val order = dependencyElement.getAnnotation(InjectPriority::class.java)?.value
+            ?: Int.MAX_VALUE
 
         val dependencyImplementations = if (isTarget) emptyList() else dependencyTypesFinder.findFor(dependencyElement, named, target, dependencyTypeElement, isSingleton || skipCheckFromTarget, parents)
         // if we did't find any providers of this type, try to find constructors of concrete type
@@ -121,12 +125,12 @@ class DependencyResolver(private val types: Types,
         }
 
         val depdendency = DependencyModel(dependencyElement,
-                dependencyElement,
-                fieldName,
-                types.erasure(dependencyElement.asType()),
-                isProvider,
-                isLazy,
-                isWeakDependency)
+            dependencyElement,
+            fieldName,
+            types.erasure(dependencyElement.asType()),
+            isProvider,
+            isLazy,
+            isWeakDependency)
 
 
         depdendency.implementations = dependencyImplementations
@@ -134,7 +138,7 @@ class DependencyResolver(private val types: Types,
 
         depdendency.originalType = dependencyTypeElement
         depdendency.dependency = depdendency.implementations.firstOrNull()?.method
-                ?: dependencyTypeElement
+            ?: dependencyTypeElement
         depdendency.depencencies = dependencies
         depdendency.order = order
         depdendency.named = named
@@ -162,7 +166,8 @@ class DependencyResolver(private val types: Types,
                     val fields = target.fields + target.supertypes.map { it.asTypeElement() }.flatMap { it.fields() }
                     val field = fields.firstOrNull { it.isHasAnnotation(Inject::class.java) && it.isEqualTo(depdendency.dependency) }
                     // prefer argument constructor
-                    argumentConstructor = depdendency.implementations.map { findArgumentConstructor(it.returnType()) }.firstOrNull() ?: argumentConstructor
+                    argumentConstructor = depdendency.implementations.map { findArgumentConstructor(it.returnType()) }.firstOrNull()
+                        ?: argumentConstructor
                     depdendency.isFromTarget = (argumentConstructor == null || field != null) && !isSingleton
                     depdendency.isLocal = true
                     depdendency.targetMethod = it
@@ -221,8 +226,8 @@ class DependencyResolver(private val types: Types,
 
             val named = qualifierFinder.getQualifier(argument)
             val scoped = ScopeFinder.getScope(argument)
-                    ?: ScopeFinder.getScope(argument.asTypeElement())
-                    ?: ROOT_SCOPE
+                ?: ScopeFinder.getScope(argument.asTypeElement())
+                ?: ROOT_SCOPE
             val isTarget = TargetChecker.isSubtype(target, element, scoped)
 
             if (isTarget && !isParentSingleton) {
@@ -294,8 +299,8 @@ class DependencyResolver(private val types: Types,
 
     private fun findEmptyConstructor(typeElement: TypeElement): ExecutableElement? {
         ElementFilter.constructorsIn(typeElement.enclosedElements)
-                .firstOrNull { it.parameters.isEmpty() && !it.isHasAnnotation(Inject::class.java) }
-                ?.let { return it }
+            .firstOrNull { it.parameters.isEmpty() && !it.isHasAnnotation(Inject::class.java) }
+            ?.let { return it }
         return null
     }
 
