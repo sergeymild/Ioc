@@ -1,6 +1,5 @@
 package com.ioc
 
-import com.ioc.common.scopeFactoryType
 import com.squareup.javapoet.CodeBlock
 import javax.lang.model.util.Types
 
@@ -23,17 +22,12 @@ object ProviderMethodBuilder {
 
         val builder = CodeBlock.builder()
 
-        if (!provider.isSingleton && provider.scoped == ROOT_SCOPE) {
+        if (!provider.isSingleton) {
             DependencyTree.get(provider.dependencyModels, typeUtils, target)
                     .also { builder.add(it) }
         }
 
         builder.add(generateWithDependencies(dependencyModel, provider))
-
-        // Module method with params
-//        if (dependencyModel.isProvider) {
-//            return ImplementationsSpec.wrapInProviderIfNeed(builder, dependencyModel).build()
-//        }
 
         return builder.build()
     }
@@ -41,15 +35,6 @@ object ProviderMethodBuilder {
     @Throws(Throwable::class)
     private fun generateWithDependencies(dependencyModel: DependencyModel, method: DependencyProvider): CodeBlock {
         val builder = CodeBlock.builder()
-
-        if (dependencyModel.scoped != ROOT_SCOPE) {
-            return builder.addStatement("\$T \$N = \$T.get(target, \$S, \$S)",
-                    dependencyModel.originalClassName(),
-                    dependencyModel.generatedName,
-                    scopeFactoryType,
-                    dependencyModel.scoped,
-                    dependencyModel.name).build()
-        }
 
         if (!method.isSingleton) {
             val names = method.dependencyNames()
@@ -72,15 +57,6 @@ object ProviderMethodBuilder {
         }
 
         var code = CodeBlock.builder()
-
-        if (dependencyModel.scoped != ROOT_SCOPE) {
-            return code.addStatement("\$T \$N = \$T.get(target, \$S, \$S)",
-                    dependencyModel.originalClassName(),
-                    dependencyModel.generatedName,
-                    scopeFactoryType,
-                    dependencyModel.scoped,
-                    dependencyModel.name).build()
-        }
 
         code = code.addStatement("\$T \$N = \$T.\$N()",
                 dependencyModel.originalClassName(),

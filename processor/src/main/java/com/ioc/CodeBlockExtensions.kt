@@ -1,8 +1,6 @@
 package com.ioc
 
 import com.ioc.common.asTypeElement
-import com.ioc.common.emptyCodBlock
-import com.ioc.common.message
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.CodeBlock
 import javax.lang.model.util.Types
@@ -27,10 +25,20 @@ fun CodeBlock.Builder.emptyConstructor(model: DependencyModel, isFromScope: Bool
             .build()
 }
 
+fun applyIsLoadIfNeed(model: DependencyModel, target: TargetType?) {
+    for (dependency in model.dependencies) {
+        val fieldName = target?.localScopeDependencies?.get(dependency.originalTypeString) ?: continue
+        dependency.isLocal = true
+        dependency.fieldName = fieldName
+    }
+}
+
 fun argumentsConstructor(model: DependencyModel, typeUtils: Types, target: TargetType?, isFromScope: Boolean = false): CodeBlock {
 
-    val dependencies = DependencyTree.get(model.depencencies, typeUtils, target)
+    val dependencies = DependencyTree.get(model.dependencies, typeUtils, target)
     val builder = CodeBlock.builder().add(dependencies)
+
+    applyIsLoadIfNeed(model, target)
 
     val names = model.dependencyNames()
 

@@ -15,20 +15,20 @@ import javax.lang.model.type.TypeMirror
  * Created by sergeygolishnikov on 10/07/2017.
  */
 
-fun DependencyModel.copy(): DependencyModel {
-    return DependencyModel(dependency, originalType, fieldName, erasuredType, isProvider, isLazy, isWeakDependency)
-}
-
-class DependencyModel constructor(var dependency: Element,
-                                  var originalType: Element,
-                                  var fieldName: String,
-                                  var erasuredType: TypeMirror,
-                                  var isProvider: Boolean = false,
-                                  var isLazy: Boolean = false,
-                                  var isWeakDependency: Boolean = false): SingletonWrapper {
+class DependencyModel constructor(
+    var dependency: Element,
+    var originalType: Element,
+    var fieldName: String,
+    var erasuredType: TypeMirror,
+    var isProvider: Boolean = false,
+    var isLazy: Boolean = false,
+    var isWeakDependency: Boolean = false) : SingletonWrapper {
 
     val typeString: String
         get() = dependency.asType().toString()
+
+    val originalTypeString: String
+        get() = originalType.asType().toString()
     var argumentsConstructor: ExecutableElement? = null
     var emptyConstructor: ExecutableElement? = null
     var asTarget: Boolean = false
@@ -36,7 +36,6 @@ class DependencyModel constructor(var dependency: Element,
     var isFromTarget: Boolean = false
     var isLocal: Boolean = false
     var isViewModel: Boolean = false
-    var targetMethod: ExecutableElement? = null
     override val typeElement: TypeElement
         get() = dependency.asType().asTypeElement()
     override val packageName: String
@@ -48,7 +47,7 @@ class DependencyModel constructor(var dependency: Element,
         }
     override val className: ClassName
         get() = ClassName.get(typeElement)
-    override var depencencies: List<DependencyModel> = emptyList()
+    override var dependencies: List<DependencyModel> = emptyList()
         get() {
             return if (implementations.isEmpty()) field
             else implementations[0].dependencyModels
@@ -62,22 +61,14 @@ class DependencyModel constructor(var dependency: Element,
     //var packageName: String? = null
     var order: Int = Int.MAX_VALUE
     var injectMethodName: String = "inject${name.capitalize()}In${fieldName.capitalize()}"
-    var cacheMethodName: String = ""
-        get() = "cache${name.capitalize()}"
     var named: String? = ""
-    var scoped: String? = ROOT_SCOPE
     var setterMethod: ExecutableElement? = null
-    var scopedFieldName: String = dependency.asTypeElement().simpleName.toString()
 
     var generatedName: String = name
-    var scopedName: String = ""
-        get() {
-            return dependency.asTypeElement().simpleName.toString()
-        }
 
-    override fun originalClassName() : TypeName {
-        if (typeArguments.isEmpty()) return ClassName.get(dependency.asTypeElement())
-        return ParameterizedTypeName.get(ClassName.get(dependency.asTypeElement()) , *typeArguments.map { ClassName.get(it) }.toTypedArray())
+    override fun originalClassName(): TypeName {
+        if (typeArguments.isEmpty()) return ClassName.get(originalType.asTypeElement())
+        return ParameterizedTypeName.get(ClassName.get(originalType.asTypeElement()), *typeArguments.map { ClassName.get(it) }.toTypedArray())
     }
 
     fun setterName(): String {
@@ -97,5 +88,10 @@ class DependencyModel constructor(var dependency: Element,
             return CodeBlock.builder().addStatement("$target($value)", *arguments).build()
         }
         return CodeBlock.builder().addStatement("$target = $value", *arguments).build()
+    }
+
+    fun fieldOrGetterName(): String {
+        return if (setterMethod == null) fieldName
+        else "get${fieldName.capitalize()}()"
     }
 }

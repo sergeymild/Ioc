@@ -5,7 +5,10 @@ import com.ioc.common.*
 import com.squareup.javapoet.ClassName
 import javax.annotation.processing.RoundEnvironment
 import javax.inject.Singleton
-import javax.lang.model.element.*
+import javax.lang.model.element.Element
+import javax.lang.model.element.ElementKind
+import javax.lang.model.element.Modifier
+import javax.lang.model.element.TypeElement
 import javax.lang.model.type.TypeKind
 import javax.lang.model.type.TypeMirror
 
@@ -13,20 +16,21 @@ import javax.lang.model.type.TypeMirror
  * Created by sergeygolishnikov on 31/10/2017.
  */
 
-val excludedPackages = setOf("java", "sun", "org.jetbrains", "android.content", "android.util")
+val excludedPackages = setOf("java", "sun", "org.jetbrains", "android.content", "android.util", "android.app", "android.view")
 
-class DependencyTypesFinder(private val roundEnv: RoundEnvironment,
-                            private val qualifierFinder: QualifierFinder) {
+class DependencyTypesFinder(
+    private val roundEnv: RoundEnvironment,
+    private val qualifierFinder: QualifierFinder) {
 
     lateinit var dependencyResolver: DependencyResolver
 
     @Throws(ProcessorException::class)
-    fun findFor(element: Element,
-                named: String?,
-                target: TargetType,
-                typeElement: Element,
-                skipCheckFromTarget: Boolean = false,
-                parents: ParensSet): List<DependencyProvider> {
+    fun findFor(
+        element: Element,
+        named: String?,
+        target: TargetType,
+        typeElement: Element,
+        skipCheckFromTarget: Boolean = false): List<DependencyProvider> {
 
         val isInterface = typeElement.kind == ElementKind.INTERFACE
         val isAbstractClass = typeElement.modifiers.contains(Modifier.ABSTRACT)
@@ -45,13 +49,12 @@ class DependencyTypesFinder(private val roundEnv: RoundEnvironment,
                 type.name = it.simpleName.toString()
                 type.isFromTarget = true
                 implementations.add(type)
-                parents.add(target.element)
                 return implementations
             }
         }
 
         // Try find dependency by annotated @Dependency method
-        findMethodProviders(element, named, parents, typeElement, target, implementations)
+        findMethodProviders(element, named, typeElement, target, implementations)
 
         if (implementations.size > 1) {
             throw ProcessorException("Ambiguous classesWithDependencyAnnotation for type [${element.asType()}] with qualifiers [${if (named?.isBlank() == true) "@Default" else "@" + named}] founded [${implementations.joinToString { it.method.asType().toString() }}]")
@@ -59,7 +62,6 @@ class DependencyTypesFinder(private val roundEnv: RoundEnvironment,
         }
 
         if (implementations.isNotEmpty()) {
-            parents.add(implementations[0].returnType())
             return implementations
         }
 
@@ -67,14 +69,12 @@ class DependencyTypesFinder(private val roundEnv: RoundEnvironment,
 
         // prefer arguments constructor
         if (!isInterface && !isAbstractClass && element.isHasArgumentsConstructor()) {
-            implementations.add(createProvider(element.asTypeElement(), typeElement, target, parents = parents))
-            parents.add(element)
+            implementations.add(createProvider(element.asTypeElement(), typeElement, target))
             return implementations
         }
 
         if (!isInterface && !isAbstractClass) {
-            implementations.add(createProvider(element.asTypeElement(), typeElement, target, parents = parents))
-            parents.add(element)
+            implementations.add(createProvider(element.asTypeElement(), typeElement, target))
             return implementations
         }
 
@@ -86,7 +86,7 @@ class DependencyTypesFinder(private val roundEnv: RoundEnvironment,
             val isSingleton = method.getAnnotation(Singleton::class.java) != null
 
             if (isSubtype(element, `interface`, named)) {
-                val dependencyProvider = createProvider(implementation, typeElement, target, parents = parents)
+                val dependencyProvider = createProvider(implementation, typeElement, target)
                 if (!dependencyProvider.isSingleton) dependencyProvider.isSingleton = isSingleton
                 implementations.add(dependencyProvider)
             }
@@ -98,7 +98,6 @@ class DependencyTypesFinder(private val roundEnv: RoundEnvironment,
         }
 
         if (implementations.isNotEmpty()) {
-            parents.add(implementations[0].returnType())
             return implementations
         }
 
@@ -106,7 +105,7 @@ class DependencyTypesFinder(private val roundEnv: RoundEnvironment,
             if (isInterface && element.isEqualTo(provider)) continue
             if (isSubtype(element, provider as TypeElement, named)) {
 
-                implementations.add(createProvider(provider, typeElement, target, parents = parents))
+                implementations.add(createProvider(provider, typeElement, target))
             }
         }
 
@@ -116,7 +115,6 @@ class DependencyTypesFinder(private val roundEnv: RoundEnvironment,
         }
 
         if (implementations.isNotEmpty()) {
-            parents.add(implementations[0].returnType())
             return implementations
         }
 
@@ -133,7 +131,7 @@ class DependencyTypesFinder(private val roundEnv: RoundEnvironment,
         return implementations
     }
 
-    private fun findMethodProviders(element: Element, named: String?, parents: ParensSet, typeElement: Element, target: TargetType, implementations: MutableList<DependencyProvider>) {
+    private fun findMethodProviders(element: Element, named: String?, typeElement: Element, target: TargetType, implementations: MutableList<DependencyProvider>) {
         for (provider in methodsWithDependencyAnnotation()) {
 
             // if method is abstract skip
@@ -144,15 +142,8 @@ class DependencyTypesFinder(private val roundEnv: RoundEnvironment,
 
             val returnType = provider.returnType.asDeclared().asTypeElement()
 
-            if (parents.containsAny(provider.parameters)) {
-                val params = provider.parameters.joinToString(prefix = "(", postfix = ")") { it.asType().toString() }
-                // TODO cyclic
-                //throw ProcessorException("Cyclic graph searching: $returnType parents: $parents parameters: $params")
-            }
-
-            val type = createProvider(returnType, typeElement, target, provider.parameters, isMethod = true, parents = parents)
+            val type = createProvider(returnType, typeElement, target, provider.parameters, isMethod = true)
             type.isMethod = true
-            type.scoped = ScopeFinder.getScope(provider) ?: type.scoped
             type.name = provider.simpleName.toString()
             type.module = ClassName.get(provider.enclosingElement.asTypeElement())
             type.isSingleton = type.isSingleton || provider.isHasAnnotation(Singleton::class.java)
@@ -171,16 +162,13 @@ class DependencyTypesFinder(private val roundEnv: RoundEnvironment,
         parent: Element,
         target: TargetType,
         dependencies: List<Element> = emptyList(),
-        isMethod: Boolean = false,
-        parents: ParensSet): DependencyProvider {
+        isMethod: Boolean = false): DependencyProvider {
 
         val modulePackageName = implementation.getPackage().toString()
 
         val named = qualifierFinder.getQualifier(implementation)
-        val scoped = ScopeFinder.getScope(implementation) ?: ROOT_SCOPE
         val provider = DependencyProvider(implementation, implementation.isHasAnnotation(Singleton::class.java), ClassName.get(implementation))
         provider.named = named
-        provider.scoped = scoped
         provider.isMethod = false
         if (provider.isSingleton) {
             provider.packageName = modulePackageName
@@ -194,7 +182,7 @@ class DependencyTypesFinder(private val roundEnv: RoundEnvironment,
                 if (dependency.isEqualTo(parent.asType())) {
                     throw ProcessorException("Cyclic graph detected building ${dependency.asType()} cyclic: ${dependency.asType()}").setElement(parent)
                 }
-                val resolved = dependencyResolver.resolveDependency(dependency, target = target, parents = parents)
+                val resolved = dependencyResolver.resolveDependency(dependency, target = target)
                 provider.dependencyModels.add(resolved)
             }
             return provider
@@ -218,7 +206,7 @@ class DependencyTypesFinder(private val roundEnv: RoundEnvironment,
             if (parameter.isEqualTo(parent.asType())) {
                 throw ProcessorException("Cyclic graph detected building ${parameter.asType()} cyclic: ${parameter.asType()}").setElement(parent)
             }
-            val dependency = dependencyResolver.resolveDependency(parameter, target = target, parents = parents)
+            val dependency = dependencyResolver.resolveDependency(parameter, target = target)
             provider.dependencyModels.add(dependency)
             if (provider.isSingleton) {
                 IProcessor.singletons["${provider.method.asType()}"] = provider.dependencyModels

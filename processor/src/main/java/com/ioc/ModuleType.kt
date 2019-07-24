@@ -12,27 +12,33 @@ import javax.lang.model.type.TypeMirror
  * Created by sergeygolishnikov on 10/07/2017.
  */
 
+fun dependencyName(model: DependencyModel) = when {
+    model.asTarget -> "target"
+    model.isLocal -> "target.${model.fieldOrGetterName()}"
+    else -> model.generatedName
+}
+
 fun DependencyProvider.dependencyNames(): String {
-    return dependencyModels.joinToString { if (it.asTarget) "target" else it.generatedName }
+    return dependencyModels.joinToString { dependencyName(it) }
 }
 
 fun SingletonWrapper.dependencyNames(): String {
-    return depencencies.joinToString { if (it.asTarget) "target" else it.generatedName }
+    return dependencies.joinToString { dependencyName(it) }
 }
 
 fun DependencyModel.dependencyNames(): String {
-    return depencencies.joinToString { if (it.asTarget) "target" else it.generatedName }
+    return dependencies.joinToString { dependencyName(it) }
 }
 
-class DependencyProvider constructor(var method: Element,
-                                     var isSingleton: Boolean,
-                                     var module: TypeName) {
+class DependencyProvider constructor(
+    var method: Element,
+    var isSingleton: Boolean,
+    var module: TypeName) {
     var methodType: ExecutableElement? = null
     var returnTypes = mutableListOf<TypeMirror>()
     var dependencyModels: MutableList<DependencyModel> = mutableListOf()
     var name = method.simpleName.toString()
     var named: String? = null
-    var scoped: String = ROOT_SCOPE
     var isMethod: Boolean = true
     var isLocal: Boolean = false
     var isFromTarget: Boolean = false

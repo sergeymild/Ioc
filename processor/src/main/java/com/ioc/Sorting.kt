@@ -19,7 +19,7 @@ class Sorting {
         if (models.isEmpty()) return
 
         for (model in models) {
-            countOrder(appender + appender, model.typeString, model.depencencies, depth + 1)
+            countOrder(appender + appender, model.typeString, model.dependencies, depth + 1)
         }
     }
 

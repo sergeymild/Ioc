@@ -19,6 +19,7 @@ object DependencyTree {
 
         var builder = CodeBlock.builder()
         for (dependency in dependencyModels) {
+            if (target?.localScopeDependencies?.containsKey(dependency.originalTypeString) == true) continue
             if (dependency.asTarget) continue
             val packageName = dependency.originalType.asTypeElement().getPackage()
             val isAllowedPackage = excludedPackages.any { packageName.toString().startsWith(it) }
@@ -36,16 +37,6 @@ object DependencyTree {
 
     private fun generateCode(dependency: DependencyModel, typeUtils: Types, target: TargetType?): CodeBlock {
         val builder = CodeBlock.builder()
-
-        if (dependency.isFromTarget && !dependency.isLocal) {
-            builder.addStatement("\$T \$N = \$T.get(target, \$S, \$S)",
-                    dependency.originalClassName(),
-                    dependency.generatedName,
-                    scopeFactoryType,
-                    dependency.scoped,
-                    dependency.name)
-            return builder.build()
-        }
 
         if (dependency.isSingleton) {
             return singleton(dependency)

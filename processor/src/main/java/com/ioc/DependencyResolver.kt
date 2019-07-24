@@ -4,7 +4,6 @@ import com.ioc.common.*
 import javax.inject.Inject
 import javax.inject.Singleton
 import javax.lang.model.element.Element
-import javax.lang.model.element.ElementKind
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.TypeElement
 import javax.lang.model.util.ElementFilter
@@ -24,13 +23,14 @@ class DependencyResolver(
         element: Element,
         target: TargetType,
         named: String? = null,
-        scoped: String? = null,
-        skipCheckFromTarget: Boolean = false,
-        parents: ParensSet): DependencyModel {
+        skipCheckFromTarget: Boolean = false): DependencyModel {
 
         var setterMethod: ExecutableElement? = null
         var dependencyElement = element
         val fieldName = dependencyElement.simpleName.toString()
+        var getterMethod = fieldName
+
+        val isLocalScope = element.isHasAnnotation(LocalScope::class.java)
 
         if (element.isMethod() && element.isPrivate()) {
             throw ProcessorException("@Inject annotation is placed on method `$element` in `${element.enclosingElement}` with private access").setElement(element)
@@ -43,9 +43,9 @@ class DependencyResolver(
                 throw ProcessorException("@Inject annotation placed on field `${element.simpleName}` in `${element.enclosingElement.simpleName}` with private access and which does't have public setter method.").setElement(element)
             }
 
-            if (setterMethod.isPrivate()) {
-                throw ProcessorException("@Inject annotation is placed on field `$element` in `${element.enclosingElement.simpleName}` with private access").setElement(element)
-            }
+            getterMethod = findDependencyGetter(element).orElse {
+                throw ProcessorException("@Inject annotation placed on field `${element.simpleName}` in `${element.enclosingElement.simpleName}` with private access and which does't have public getter method.").setElement(element)
+            }.simpleName.toString() + "()"
         }
 
         // If @Inject annotation is placed on setter method
@@ -79,7 +79,7 @@ class DependencyResolver(
 
         val dependencyTypeElement = dependencyElement.asTypeElement()
 
-        val isInterface = dependencyTypeElement.kind == ElementKind.INTERFACE
+
         val isSingleton = dependencyElement.isHasAnnotation(Singleton::class.java)
             || dependencyTypeElement.isHasAnnotation(Singleton::class.java)
 
@@ -88,28 +88,16 @@ class DependencyResolver(
             ?: qualifierFinder.getQualifier(element)
             ?: qualifierFinder.getQualifier(dependencyElement)
             ?: qualifierFinder.getQualifier(dependencyTypeElement)
-        //?: ""
 
-        val scoped = scoped
-            ?: ScopeFinder.getScope(element)
-            ?: ScopeFinder.getScope(dependencyElement)
-            ?: ScopeFinder.getScope(dependencyTypeElement)
-            ?: ROOT_SCOPE
-
-        if ((ScopeFinder.getScope(dependencyTypeElement)
-                ?: ROOT_SCOPE) != ROOT_SCOPE && isInterface) {
-            throw ProcessorException("@$scoped must be placed on one of the implementations `$dependencyTypeElement`").setElement(dependencyTypeElement)
-        }
-
-        var isTarget = TargetChecker.isSubtype(target, dependencyElement, scoped)
+        var isTarget = TargetChecker.isSubtype(target, dependencyElement)
         if (!isTarget && setterMethod != null) {
-            isTarget = TargetChecker.isSubtype(target, dependencyElement, scoped)
+            isTarget = TargetChecker.isSubtype(target, dependencyElement)
         }
 
         val order = dependencyElement.getAnnotation(InjectPriority::class.java)?.value
             ?: Int.MAX_VALUE
 
-        val dependencyImplementations = if (isTarget) emptyList() else dependencyTypesFinder.findFor(dependencyElement, named, target, dependencyTypeElement, isSingleton || skipCheckFromTarget, parents)
+        val dependencyImplementations = if (isTarget) emptyList() else dependencyTypesFinder.findFor(dependencyElement, named, target, dependencyTypeElement, isSingleton || skipCheckFromTarget)
         // if we did't find any providers of this type, try to find constructors of concrete type
         var argumentConstructor = if (dependencyImplementations.isEmpty()) findArgumentConstructor(dependencyTypeElement) else null
         val noArgsConstructor = if (dependencyImplementations.isEmpty()) findEmptyConstructor(dependencyTypeElement) else null
@@ -118,8 +106,7 @@ class DependencyResolver(
 
         if (dependencies.isEmpty()) {
             argumentConstructor?.let {
-                parents.add(dependencyTypeElement)
-                resolveConstructorArguments(dependencyTypeElement, it, dependencies, target, dependencyTypeElement, isSingleton, parents)
+                resolveConstructorArguments(dependencyTypeElement, it, dependencies, target, isSingleton)
                 IProcessor.singletons["${dependencyTypeElement.asType()}"] = dependencies
             }
         }
@@ -139,40 +126,29 @@ class DependencyResolver(
         depdendency.originalType = dependencyTypeElement
         depdendency.dependency = depdendency.implementations.firstOrNull()?.method
             ?: dependencyTypeElement
-        depdendency.depencencies = dependencies
+        depdendency.dependencies = dependencies
         depdendency.order = order
         depdendency.named = named
-        // Assign correct scope
-        // first check if we have root scope
-        // and if it is, check on implementation
-        // if implementation have root scope or null
-        // check on dependency
-        if (depdendency.scoped == ROOT_SCOPE) {
-            val implementationScope = depdendency.implementations.firstOrNull()?.scoped
-            if (implementationScope == null || implementationScope == ROOT_SCOPE) {
-                //depdendency.scoped = ScopeFinder.getScope(depdendency.dependency)
-                depdendency.scoped = scoped
-            } else {
-                depdendency.scoped = implementationScope
-            }
-        }
+
         depdendency.isViewModel = isViewModel
 
-        if (!skipCheckFromTarget) {
-            if (dependencyImplementations.none { it.isFromTarget } && argumentConstructor == null) {
-                TargetChecker.isFromTarget(target, dependencyTypeElement.asType())?.let {
-                    // if we have in target field with @Inject annotation
-                    // which means we must pass this dependency instead create new one
-                    val fields = target.fields + target.supertypes.map { it.asTypeElement() }.flatMap { it.fields() }
-                    val field = fields.firstOrNull { it.isHasAnnotation(Inject::class.java) && it.isEqualTo(depdendency.dependency) }
-                    // prefer argument constructor
-                    argumentConstructor = depdendency.implementations.map { findArgumentConstructor(it.returnType()) }.firstOrNull()
-                        ?: argumentConstructor
-                    depdendency.isFromTarget = (argumentConstructor == null || field != null) && !isSingleton
-                    depdendency.isLocal = true
-                    depdendency.targetMethod = it
-                }
-            }
+
+        if (isLocalScope) {
+            target.localScopeDependencies[element.asType().toString()] = getterMethod
+//            if (dependencyImplementations.none { it.isFromTarget } && argumentConstructor == null) {
+//                TargetChecker.isFromTarget(target, dependencyTypeElement.asType())?.let {
+//                    // if we have in target field with @Inject annotation
+//                    // which means we must pass this dependency instead create new one
+//                    val fields = target.fields + target.supertypes.map { it.asTypeElement() }.flatMap { it.fields() }
+//                    val field = fields.firstOrNull { it.isHasAnnotation(Inject::class.java) && it.isEqualTo(depdendency.dependency) }
+//                    // prefer argument constructor
+//                    argumentConstructor = depdendency.implementations.map { findArgumentConstructor(it.returnType()) }.firstOrNull()
+//                        ?: argumentConstructor
+//                    depdendency.isFromTarget = (argumentConstructor == null || field != null) && !isSingleton
+//                    depdendency.isLocal = true
+//                    depdendency.targetMethod = it
+//                }
+//            }
         }
         depdendency.asTarget = isTarget
         resolveDependencyName(depdendency, isSingleton)
@@ -197,13 +173,12 @@ class DependencyResolver(
         }
     }
 
-    private fun resolveConstructorArguments(typeElement: TypeElement,
-                                            argumentConstructor: ExecutableElement?,
-                                            dependencies: MutableList<DependencyModel>,
-                                            target: TargetType,
-                                            parent: Element,
-                                            isParentSingleton: Boolean,
-                                            parents: ParensSet) {
+    private fun resolveConstructorArguments(
+        typeElement: TypeElement,
+        argumentConstructor: ExecutableElement?,
+        dependencies: MutableList<DependencyModel>,
+        target: TargetType,
+        isParentSingleton: Boolean) {
 
         val constructorArguments = argumentConstructor?.parameters ?: emptyList()
 
@@ -225,33 +200,23 @@ class DependencyResolver(
             if (isLazy) element = argument.getGenericFirstType()
 
             val named = qualifierFinder.getQualifier(argument)
-            val scoped = ScopeFinder.getScope(argument)
-                ?: ScopeFinder.getScope(argument.asTypeElement())
-                ?: ROOT_SCOPE
-            val isTarget = TargetChecker.isSubtype(target, element, scoped)
+
+            val isTarget = TargetChecker.isSubtype(target, element)
 
             if (isTarget && !isParentSingleton) {
                 val dependency = DependencyModel(target.element, target.element, element.simpleName.toString(), types.erasure(target.element.asType()), false, false, false)
                 dependency.name = "target"
                 dependency.asTarget = true
-                dependency.scoped = scoped
                 dependencies.add(dependency)
                 continue
             }
 
-            //val implementations = dependencyTypesFinder.findFor(element.asTypeElement(), named, target, parent, isParentSingleton)
-
-            //val dependency = implementations.firstOrNull()?.transform { it.method } ?: element
             var newTarget = target
             if (isParentSingleton) {
                 newTarget = IProcessor.createTarget(typeElement, dependencyTypesFinder)
             }
-            parents.add(typeElement)
             // TODO зачем это делать, если мы нашли implementations
-            resolveDependency(element, newTarget, named, scoped, isParentSingleton, parents).let {
-                //                if (!it.asTarget) {
-//                    it.asTarget = implementations.flatMap { it.dependencyModels }.any { it.asTarget }
-//                }
+            resolveDependency(element, newTarget, named, isParentSingleton).let {
                 it.isWeakDependency = isWeakDependency
                 it.isProvider = isProvider
                 it.isLazy = isLazy
@@ -259,19 +224,11 @@ class DependencyResolver(
                     it.asTarget = false
                     it.name = element.simpleName.toString()
                 }
-                // prefer method with @Dependency over target method
-//                if (it.isFromTarget && implementations.any { it.isMethod && !it.isFromTarget }) {
-//                    it.isFromTarget = false
-//                }
+
                 if (it.named.isNullOrEmpty()) {
                     it.named = qualifierFinder.getQualifier(argument)
                 }
 
-                if (it.scoped == ROOT_SCOPE) {
-                    it.scoped = if (scoped != ROOT_SCOPE || it.implementations.isEmpty()) scoped else it.implementations[0].scoped
-                }
-
-                //it.implementations = implementations
                 it.originalType = element
 
                 dependencies.add(it)
@@ -308,6 +265,13 @@ class DependencyResolver(
     private fun findDependencySetter(element: Element): ExecutableElement? {
         return element.enclosingElement.methods {
             it.isPublic() && it.parameters.size == 1 && it.parameters[0].isEqualTo(element)
+        }.firstOrNull()
+    }
+
+    @Throws(ProcessorException::class)
+    private fun findDependencyGetter(element: Element): ExecutableElement? {
+        return element.enclosingElement.methods {
+            it.isPublic() && it.parameters.isEmpty() && it.returnType.toString() == element.asType().toString()
         }.firstOrNull()
     }
 }

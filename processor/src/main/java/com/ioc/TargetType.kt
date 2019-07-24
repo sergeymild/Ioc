@@ -1,11 +1,9 @@
 package com.ioc
 
 import com.ioc.common.asTypeElement
-import com.ioc.common.fields
 import com.ioc.common.isEqualTo
 import com.ioc.common.isInterface
 import com.squareup.javapoet.ClassName
-import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.TypeElement
 import javax.lang.model.type.TypeMirror
@@ -14,7 +12,7 @@ import javax.lang.model.type.TypeMirror
  * Created by sergeygolishnikov on 10/07/2017.
  */
 
-val ROOT_SCOPE = "root"
+
 
 class TargetType(val element: TypeElement) {
     var name = element.simpleName.toString()
@@ -23,14 +21,10 @@ class TargetType(val element: TypeElement) {
     var dependencies = emptyList<DependencyModel>()
     var parentTarget: TargetType? = null
     var childTarget: TargetType? = null
-    var rootScope: String = ROOT_SCOPE
-    var scope: String = ROOT_SCOPE
-    var isRootScope: Boolean = false
     var postInitialization: ExecutableElement? = null
-    var isNestedScope: Boolean = false
     var supertypes = mutableListOf<TypeMirror>()
     var methods = mutableListOf<ExecutableElement>()
-    var fields = element.fields()
+    var localScopeDependencies = mutableMapOf<String, String>()
 
     var superclass: TypeMirror? = null
         get() = supertypes.firstOrNull { !it.asTypeElement().isInterface() }
@@ -54,23 +48,10 @@ class TargetType(val element: TypeElement) {
         return true
     }
 
-    fun isTargetForDependency(scoped: Element, dependency: Element): Boolean {
-       return (rootScope == scoped.simpleName.toString()
-               && flatDependencies.any { it.dependency.isEqualTo(dependency) }) || parentTarget?.isTargetForDependency(scoped, dependency) == true
-    }
-
     fun isDeclaredAsMember(dependency: DependencyModel): Boolean {
-        return flatDependencies.filter { it.dependency.isEqualTo(dependency.dependency) && rootScope == dependency.scoped }.any()
+        return flatDependencies.filter { it.dependency.isEqualTo(dependency.dependency) }.any()
     }
 
-    fun setChildForParent() {
-        var parent: TargetType? = this
-        while (parent != null) {
-            val current = parent
-            parent = parent.parentTarget
-            parent?.childTarget = current
-        }
-    }
 
     fun parentsDependencies() {
         parentDependencies.clear()

@@ -1,17 +1,26 @@
 package com.ioc
 
 import com.example.mylibrary.MyLibraryActivity
-import javax.inject.Inject
 
-class S
+open class AlohaBrowserUi
 
-class D @Inject constructor(val s: S) {
+@Dependency
+class BrowserUi: AlohaBrowserUi()
 
-}
+class FullscreenWebVideoManager(val BrowserUi: AlohaBrowserUi)
 
-@ParentDependencies
+interface BrowserUiCallback
+
+@Dependency
+class BrowserUiCallbackImplementation(val FullscreenWebVideoManager: FullscreenWebVideoManager): BrowserUiCallback
+
+@InjectParentDependencies
 class MainActivity : MyLibraryActivity() {
 
-    @Inject
-    lateinit var d: D
+//    @Inject
+//    @LocalScope
+//    var alohaBrowserUi: AlohaBrowserUi? = null
+//
+//    @Inject
+//    lateinit var browserUiCallbackImplementation: BrowserUiCallback
 }

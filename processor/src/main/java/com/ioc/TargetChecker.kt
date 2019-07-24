@@ -12,10 +12,10 @@ import javax.lang.model.type.TypeMirror
 
 object TargetChecker {
 
-    fun isSubtype(target: TargetType, dependency: Element, scoped: String): Boolean {
+    fun isSubtype(target: TargetType, dependency: Element): Boolean {
         if (target.element.isEqualTo(dependency)) return true
 
-        return target.supertypes.any { dependency.isEqualTo(it) && (target.rootScope == scoped || target.scope == scoped) }
+        return target.supertypes.any { dependency.isEqualTo(it) }
     }
 
     fun isFromTarget(target: TargetType, dependency: TypeMirror): ExecutableElement? {

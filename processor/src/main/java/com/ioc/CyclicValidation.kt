@@ -40,7 +40,7 @@ class CyclicValidation(val types: Types,
             if (rootElement.kind == ElementKind.ANNOTATION_TYPE) continue
             if (rootElement.isEqualTo(element)) continue
             val packageName = rootElement.asTypeElement().getPackage().toString()
-            if (excludedPackages.any { packageName.startsWith(it) } && !TargetChecker.isSubtype(target, rootElement, ROOT_SCOPE)) {
+            if (excludedPackages.any { packageName.startsWith(it) } && !TargetChecker.isSubtype(target, rootElement)) {
                 continue
             }
 
@@ -74,7 +74,7 @@ class CyclicValidation(val types: Types,
         for (parameter in parameters) {
             // Skip all constructors with primitive types
             if (!parameter.isSupportedType()) continue
-            if (TargetChecker.isSubtype(target, parameter, ROOT_SCOPE)) continue
+            if (TargetChecker.isSubtype(target, parameter)) continue
 
             if (parameter.asTypeElement().isInterface()) {
                 val implementations = findAllImplementations(parameter)
@@ -120,7 +120,7 @@ class CyclicValidation(val types: Types,
         for (field in injectionFields) {
             // Skip all constructors with primitive types
             if (!field.isSupportedType()) continue
-            if (TargetChecker.isSubtype(target, field, ROOT_SCOPE)) continue
+            if (TargetChecker.isSubtype(target, field)) continue
 
             if (field.asTypeElement().isInterface()) {
                 val implementations = findAllImplementations(field)
@@ -160,10 +160,10 @@ class CyclicValidation(val types: Types,
 
     private fun checkConstructors(possibles: MutableList<TypeMirror>?, checkType: TypeMirror): Boolean {
         possibles ?: return false
-        if (possibles.contains(checkType) && !TargetChecker.isSubtype(target, checkType.asTypeElement(), ROOT_SCOPE)) return true
+        if (possibles.contains(checkType) && !TargetChecker.isSubtype(target, checkType.asTypeElement())) return true
 
         possibles.forEach {
-            if (checkConstructors(constructorDependsOf[it], checkType) && !TargetChecker.isSubtype(target, it.asTypeElement(), ROOT_SCOPE)) return true
+            if (checkConstructors(constructorDependsOf[it], checkType) && !TargetChecker.isSubtype(target, it.asTypeElement())) return true
         }
 
         return false
@@ -171,10 +171,10 @@ class CyclicValidation(val types: Types,
 
     private fun checkFields(possibles: MutableList<TypeMirror>?, checkType: TypeMirror): Boolean {
         possibles ?: return false
-        if (possibles.contains(checkType) && !TargetChecker.isSubtype(target, checkType.asTypeElement(), ROOT_SCOPE)) return true
+        if (possibles.contains(checkType) && !TargetChecker.isSubtype(target, checkType.asTypeElement())) return true
 
         possibles.forEach {
-            if (checkFields(fieldsDependsOf[it], checkType) && !TargetChecker.isSubtype(target, it.asTypeElement(), ROOT_SCOPE)) return true
+            if (checkFields(fieldsDependsOf[it], checkType) && !TargetChecker.isSubtype(target, it.asTypeElement())) return true
         }
 
         return false
