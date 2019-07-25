@@ -9,6 +9,7 @@ import org.junit.runners.JUnit4;
 import java.util.Arrays;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.tools.JavaFileObject;
 
@@ -1695,6 +1696,120 @@ public class ModuleTests {
 
         assertAbout(javaSources())
             .that(Arrays.asList(activityFile, countryServiceImplementation, countryServiceFile, moduleFile))
+            .processedWith(new IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile);
+    }
+
+    @Test
+    public void methodMustBeStatic() throws Exception {
+        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            "package test;",
+            "",
+            Helpers.importType(Inject.class),
+            Helpers.importType(Named.class),
+            "",
+            "public class Activity {",
+            "",
+            "   @Inject",
+            "   @Named(\"named\")",
+            "   public String serviceName;",
+            "}");
+
+        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
+            "package test;",
+            "",
+            Helpers.importType(Dependency.class),
+            Helpers.importType(Named.class),
+            "",
+            "public abstract class ModuleFile {",
+            "   @Dependency",
+            "   @Named(\"named\")",
+            "   public String getServiceName() { return \"some name\"; }",
+            "}");
+
+        assertAbout(javaSources())
+            .that(Arrays.asList(activityFile, moduleFile))
+            .processedWith(new IProcessor())
+            .failsToCompile()
+            .withErrorContaining("ModuleFile.getServiceName() is annotated with @Dependency must be static and public")
+            .in(moduleFile)
+            .onLine(9);
+    }
+
+    @Test
+    public void injectStringFromModuleMethod() throws Exception {
+        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            "package test;",
+            "",
+            Helpers.importType(Inject.class),
+            Helpers.importType(Named.class),
+            "",
+            "public class Activity {",
+            "",
+            "   @Inject",
+            "   @Named(\"named\")",
+            "   public String serviceName;",
+            "   @Inject",
+            "   public Service service;",
+            "}");
+
+        JavaFileObject service = JavaFileObjects.forSourceLines("test.Service",
+            "package test;",
+            "",
+            Helpers.importType(Inject.class),
+            Helpers.importType(Named.class),
+            "",
+            "public class Service {",
+            "   Service(@Named(\"named\") String serviceName) {}",
+            "",
+            "   @Inject",
+            "   @Named(\"named\")",
+            "   public String serviceName;",
+            "}");
+
+        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
+            "package test;",
+            "",
+            Helpers.importType(Dependency.class),
+            Helpers.importType(Named.class),
+            "",
+            "public abstract class ModuleFile {",
+            "   @Dependency",
+            "   @Named(\"named\")",
+            "   public static String getServiceName() { return \"some name\"; }",
+            "}");
+
+        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+            "package test;",
+            "",
+            "import android.support.annotation.Keep;",
+            "import android.support.annotation.NonNull;",
+            "import java.lang.String;",
+            "",
+            "@Keep",
+            "public final class ActivityInjector {",
+            "",
+            "   @Keep",
+            "   public final void inject(@NonNull final Activity target) {",
+            "       injectStringInServiceName(target);",
+            "       injectServiceInService(target);",
+            "   }",
+            "",
+            "   private final void injectStringInServiceName(@NonNull final Activity target) {",
+            "       String string = ModuleFile.getServiceName();",
+            "       target.serviceName = string;",
+            "   }",
+            "",
+            "   private final void injectServiceInService(@NonNull final Activity target) {",
+            "       String string2 = ModuleFile.getServiceName();",
+            "       Service service = new Service(string2);",
+            "       target.service = service;",
+            "   }",
+            "}");
+
+        assertAbout(javaSources())
+            .that(Arrays.asList(activityFile, service, moduleFile))
             .processedWith(new IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile);

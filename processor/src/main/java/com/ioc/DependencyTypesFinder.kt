@@ -119,6 +119,9 @@ class DependencyTypesFinder(
             // if method is abstract skip
             if (provider.modifiers.contains(Modifier.ABSTRACT)) continue
 
+            if (!provider.modifiers.contains(Modifier.STATIC)) {
+                throw ProcessorException("${provider.enclosingElement.simpleName}.${provider.simpleName}() is annotated with @Dependency must be static and public").setElement(provider)
+            }
 
             if (!provider.returnType.isEqualTo(element) || !qualifierFinder.hasNamed(named, provider)) continue
 
