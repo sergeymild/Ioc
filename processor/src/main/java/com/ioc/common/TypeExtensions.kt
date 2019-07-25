@@ -70,9 +70,9 @@ val targetDependencies = mutableMapOf<String, MutableSet<Element>>()
 val rootTypeElements = mutableListOf<TypeElement>()
 
 class AnnotationSetScanner(
-    val processingEnvironment: ProcessingEnvironment,
-    elements: MutableSet<Element>): ElementScanner8<MutableSet<Element>, TypeElement>(elements) {
-    internal var annotatedElements: MutableSet<Element> = LinkedHashSet()
+    private val processingEnvironment: ProcessingEnvironment,
+    elements: MutableSet<Element>) : ElementScanner8<MutableSet<Element>, TypeElement>(elements) {
+    private var annotatedElements: MutableSet<Element> = LinkedHashSet()
 
     override fun visitType(var1: TypeElement, var2: TypeElement): MutableSet<Element> {
         this.scan(var1.typeParameters, var2)
@@ -136,7 +136,7 @@ fun RoundEnvironment.findDependenciesInParents(processingEnv: ProcessingEnvironm
 
             val injectElements = mutableSetOf<Element>()
             val scanner = AnnotationSetScanner(processingEnv, injectElements)
-            val found  = scanner.scan(superclassTypeElement, injectAnnotationType)
+            val found = scanner.scan(superclassTypeElement, injectAnnotationType)
 
             val dependencies = targetDependencies.getOrPut(superclass.toString()) { mutableSetOf() }
             dependencies.addAll(found)
@@ -341,4 +341,31 @@ fun Element.isInterface(): Boolean {
 
 fun <T> List<T>.addTo(other: MutableList<T>) {
     other.addAll(this)
+}
+
+class SetterAndGetter(val setter: ExecutableElement, val getter: Element)
+
+@Throws(ProcessorException::class)
+fun findDependencySetter(element: Element): ExecutableElement? {
+    return element.enclosingElement.methods {
+        it.isPublic() && it.parameters.size == 1 && it.parameters[0].isEqualTo(element)
+    }.firstOrNull()
+}
+
+@Throws(ProcessorException::class)
+fun findDependencyGetter(element: Element): Element {
+    if (element.isPublic()) return element
+    return element.enclosingElement.methods {
+        it.isPublic() && it.parameters.isEmpty() && it.returnType.toString() == element.asType().toString()
+    }.firstOrNull() ?: throw ProcessorException("@Inject annotation placed on field `${element.simpleName}` in `${element.enclosingElement.simpleName}` with private access and which does't have public getter method.").setElement(element)
+}
+
+fun Element.toGetterName(): String = if (this is ExecutableElement) "$simpleName()" else simpleName.toString()
+
+fun findSetterAndGetterMethods(element: Element): SetterAndGetter {
+    val setterMethod = findDependencySetter(element).orElse {
+        throw ProcessorException("@Inject annotation placed on field `${element.simpleName}` in `${element.enclosingElement.simpleName}` with private access and which does't have public setter method.").setElement(element)
+    }
+    val getterMethod = findDependencyGetter(element)
+    return SetterAndGetter(setterMethod, getterMethod)
 }

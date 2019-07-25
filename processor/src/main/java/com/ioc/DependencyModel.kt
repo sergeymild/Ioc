@@ -96,4 +96,6 @@ class DependencyModel constructor(
         return if (setterMethod == null) fieldName
         else "get${fieldName.capitalize()}()"
     }
+
+    val simpleName get() = typeElement.simpleName.toString().decapitalize()
 }

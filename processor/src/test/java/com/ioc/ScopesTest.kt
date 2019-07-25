@@ -143,4 +143,60 @@ class ScopesTest : BaseTest {
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
     }
+
+    @Test
+    @Throws(Exception::class)
+    fun localScopeInConstructor() {
+
+        val listener = JavaFileObjects.forSourceLines("test.AutoCompleteListenerImpl",
+            "package test;",
+            "public class AutoCompleteListenerImpl {",
+            "   AutoCompleteListenerImpl(AlohaBrowserUi browserUi) {}",
+            "}")
+
+        val alohabrowser = JavaFileObjects.forSourceLines("test.AlohaBrowserUi",
+            "package test;",
+            "public class AlohaBrowserUi {",
+            "}")
+
+        val logger = JavaFileObjects.forSourceLines("test.AddressBarListenerImpl",
+            "package test;",
+            LocalScope::class.java.import(),
+            Inject::class.java.import(),
+            "public class AddressBarListenerImpl {",
+            "   @Inject",
+            "   public AutoCompleteListenerImpl listener;",
+            "   @LocalScope",
+            "   private AlohaBrowserUi browserUi;",
+            "   AddressBarListenerImpl(AlohaBrowserUi browserUi) {}",
+            "   public AlohaBrowserUi getAlohaBrowserUi() { return null; }",
+            "}")
+
+
+        val injectedFile = JavaFileObjects.forSourceLines("test.AddressBarListenerImplInjector",
+            "package test;",
+            "",
+            keepAnnotation,
+            nonNullAnnotation,
+            "",
+            "@Keep",
+            "public final class AddressBarListenerImplInjector {",
+            "",
+            "   @Keep",
+            "   public final void inject(@NonNull final AddressBarListenerImpl target) {",
+            "       injectAutoCompleteListenerImplInListener(target);",
+            "   }",
+            "",
+            "   private final void injectAutoCompleteListenerImplInListener(@NonNull final AddressBarListenerImpl target) {",
+            "       AutoCompleteListenerImpl autoCompleteListenerImpl = new AutoCompleteListenerImpl(target.getAlohaBrowserUi());",
+            "       target.listener = autoCompleteListenerImpl;",
+            "   }",
+            "}")
+
+        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(listener, logger, alohabrowser))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile)
+    }
 }

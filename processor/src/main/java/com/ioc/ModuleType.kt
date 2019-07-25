@@ -12,23 +12,23 @@ import javax.lang.model.type.TypeMirror
  * Created by sergeygolishnikov on 10/07/2017.
  */
 
-fun dependencyName(model: DependencyModel, userSingletons: Map<String, DependencyModel>) = when {
-    userSingletons.containsKey(model.typeElementString) -> model.fieldName
+fun dependencyName(model: DependencyModel) = when {
+    model.isSingleton -> model.fieldName
     model.asTarget -> "target"
     model.isLocal -> "target.${model.fieldOrGetterName()}"
     else -> model.generatedName
 }
 
-fun DependencyProvider.dependencyNames(userSingletons: Map<String, DependencyModel>): String {
-    return dependencyModels.joinToString { dependencyName(it, userSingletons) }
+fun DependencyProvider.dependencyNames(): String {
+    return dependencyModels.joinToString { dependencyName(it) }
 }
 
-fun SingletonWrapper.dependencyNames(userSingletons: Map<String, DependencyModel>): String {
-    return dependencies.joinToString { dependencyName(it, userSingletons) }
+fun SingletonWrapper.dependencyNames(): String {
+    return dependencies.joinToString { dependencyName(it) }
 }
 
-fun DependencyModel.dependencyNames(userSingletons: Map<String, DependencyModel>): String {
-    return dependencies.joinToString { dependencyName(it, userSingletons) }
+fun DependencyModel.dependencyNames(): String {
+    return dependencies.joinToString { dependencyName(it) }
 }
 
 class DependencyProvider constructor(

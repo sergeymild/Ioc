@@ -139,81 +139,75 @@ class ImplementationsSpec constructor(
                 throw ProcessorException("Can't find implementations of `${dependency.dependency.asType()} ${dependency.dependency}` maybe you forgot add correct @Named, @Qualifier or @Scope annotations or add @Dependency on provides method, `${target.element}`").setElement(target.element)
             }
 
-            try {
-                val builder = CodeBlock.builder()
-                for (usedSingleton in usedSingletons) {
-                    builder.add(singleton(usedSingleton.value.fieldName, usedSingleton.value))
-                }
-
-                if (dependency.isViewModel) {
-                    val code = CodeBlock.builder()
-                    DependencyTree.get(dependency.dependencies, typeUtils, usedSingletons, target).also { code.add(it) }
-                    applyIsLoadIfNeed(dependency, target)
-                    val names = dependency.dependencyNames(usedSingletons)
-                    code.addStatement("return (T) new \$T($names)", dependency.originalClassName())
-                    val originalGeneratedName = dependency.generatedName
-                    val factoryName = "factory_${dependency.generatedName}"
-                    //dependency.generatedName = "viewModel_${dependency.generatedName}"
-                    val viewModelBuilder = viewModelFactoryCode(originalGeneratedName, code)
-
-                    viewModelBuilder.addStatement("\$T \$N = \$T.of(target, \$N).get(\$T.class)",
-                        dependency.originalClassName(),
-                        dependency.generatedName,
-                        viewModelProvidersType,
-                        factoryName,
-                        dependency.originalType)
-                    return viewModelBuilder
-                }
-
-                dependency.implementations.firstOrNull { it.isMethod }?.let {
-                    if (it.isSingleton) {
-                        return singleton(dependency).toBuilder()
-                    }
-
-
-                    DependencyTree.get(dependency.dependencies, typeUtils, usedSingletons, target).also { builder.add(it) }
-                    applyIsLoadIfNeed(dependency, target)
-                    val names = dependency.dependencyNames(usedSingletons)
-                    return builder.addStatement("\$T \$N = \$T.\$N(\$L)",
-                        dependency.originalClassName(),
-                        dependency.generatedName,
-                        it.module,
-                        it.name,
-                        names)
-                }
-
-                dependency.implementations.firstOrNull { !it.isMethod }?.let {
-                    if (it.isSingleton) {
-                        return singleton(dependency).toBuilder()
-                    }
-
-                    DependencyTree.get(it.dependencyModels, typeUtils, usedSingletons, target).also { builder.add(it) }
-                    applyIsLoadIfNeed(dependency, target)
-                    val names = it.dependencyNames(usedSingletons)
-                    builder.addStatement("\$T \$N = new \$T(\$L)", dependency.originalClassName(), dependency.generatedName, it.returnType(), names)
-                    return builder
-                }
-
-                if (dependency.isSingleton)
-                    return singleton(dependency).toBuilder()
-
-                // Inject with arguments constructor
-                if (dependency.argumentsConstructor != null) {
-                    return argumentsConstructor(dependency, typeUtils, target, usedSingletons)
-                        .add(builder)
-                }
-
-                // Inject with no arguments constructor
-                if (dependency.emptyConstructor != null) {
-                    return CodeBlock.builder()
-                        .emptyConstructor(dependency)
-                        .add(builder)
-                }
-
-                return builder
-            } finally {
-                resetUniqueSingletons()
+            val builder = CodeBlock.builder()
+            for (usedSingleton in usedSingletons) {
+                builder.add(singleton(usedSingleton.value.simpleName, usedSingleton.value))
             }
+
+            if (dependency.isViewModel) {
+                val code = CodeBlock.builder()
+                code.add(builder.build())
+                DependencyTree.get(dependency.dependencies, typeUtils, usedSingletons, target).also { code.add(it) }
+                applyIsLoadIfNeed(dependency.dependencies, target, usedSingletons)
+                val names = dependency.dependencyNames()
+                code.addStatement("return (T) new \$T($names)", dependency.originalClassName())
+                val originalGeneratedName = dependency.generatedName
+                val factoryName = "factory_${dependency.generatedName}"
+                val viewModelBuilder = viewModelFactoryCode(originalGeneratedName, code)
+
+                viewModelBuilder.addStatement("\$T \$N = \$T.of(target, \$N).get(\$T.class)",
+                    dependency.originalClassName(),
+                    dependency.generatedName,
+                    viewModelProvidersType,
+                    factoryName,
+                    dependency.originalType)
+                return viewModelBuilder
+            }
+
+            dependency.implementations.firstOrNull { it.isMethod }?.let {
+                if (it.isSingleton) {
+                    return singleton(dependency).toBuilder()
+                }
+
+
+                DependencyTree.get(dependency.dependencies, typeUtils, usedSingletons, target).also { builder.add(it) }
+                applyIsLoadIfNeed(dependency.dependencies, target, usedSingletons)
+                val names = dependency.dependencyNames()
+                return builder.addStatement("\$T \$N = \$T.\$N(\$L)",
+                    dependency.originalClassName(),
+                    dependency.generatedName,
+                    it.module,
+                    it.name,
+                    names)
+            }
+
+            dependency.implementations.firstOrNull { !it.isMethod }?.let {
+                if (it.isSingleton) {
+                    return singleton(dependency).toBuilder()
+                }
+
+                DependencyTree.get(it.dependencyModels, typeUtils, usedSingletons, target).also { builder.add(it) }
+                applyIsLoadIfNeed(dependency.dependencies, target, usedSingletons)
+                val names = it.dependencyNames()
+                builder.addStatement("\$T \$N = new \$T(\$L)", dependency.originalClassName(), dependency.generatedName, it.returnType(), names)
+                return builder
+            }
+
+            if (dependency.isSingleton)
+                return singleton(dependency).toBuilder()
+
+            // Inject with arguments constructor
+            if (dependency.argumentsConstructor != null) {
+                return argumentsConstructor(dependency, typeUtils, target, usedSingletons)
+                    .add(builder)
+            }
+
+            // Inject with no arguments constructor
+            if (dependency.emptyConstructor != null) {
+                return CodeBlock.builder().emptyConstructor(dependency).add(builder)
+            }
+
+            return builder
         }
 
         fun injectInTarget(builder: MethodSpec.Builder, dependency: DependencyModel): MethodSpec {

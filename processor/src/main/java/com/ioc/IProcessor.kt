@@ -39,6 +39,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         var singletons = mutableMapOf<String, MutableList<DependencyModel>>()
         var messager: Messager by Delegates.notNull()
         var dependencyFinder: DependencyTypesFinder by Delegates.notNull()
+        var processingEnvironment: ProcessingEnvironment by Delegates.notNull()
         val qualifierFinder = QualifierFinder()
         lateinit var types: Types
 
@@ -65,6 +66,14 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
             type.postInitialization = postInitializationMethod(element)
             dependencyFinder.collectSuperTypes(type.element, type.supertypes)
 
+            // find all localScoped dependencies for use it later
+            val injectAnnotationType = processingEnvironment.elementUtils.getTypeElement(LocalScope::class.java.canonicalName)
+            val scanner = AnnotationSetScanner(processingEnvironment, mutableSetOf())
+            for (localScoped in scanner.scan(element, injectAnnotationType)) {
+                val getterName = findDependencyGetter(localScoped).toGetterName()
+                type.localScopeDependencies[localScoped.asType().toString()] = getterName
+            }
+
             // get first superclass
             type.superclass?.let {
                 type.parentTarget = createTarget(it.asTypeElement(), dependencyFinder)
@@ -86,6 +95,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         super.init(processingEnv)
         filer = processingEnv.filer
         messager = processingEnv.messager
+        processingEnvironment = processingEnv
     }
 
 
@@ -136,8 +146,6 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
     override fun throwError(element: Element?, message: String?) {
         throw RuntimeException(message)
     }
-
-    class Type(val typeSpec: TypeSpec, val packageName: String)
 
     @Throws(Throwable::class)
     fun newParse(roundEnv: RoundEnvironment): Boolean {
@@ -199,11 +207,11 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
             }
         }
 
-        singletons.map { Type(NewSingletonSpec(it, processingEnv.typeUtils).inject(), it.packageName) }
-                .forEach {
-                    writeClassFile(it.packageName, it.typeSpec)
-                    resetUniqueSingletons()
-                }
+        for (singleton in singletons) {
+            val usedSingletons = collectUsedSingletonsInMethodCreation(singleton.dependencies)
+            val spec = NewSingletonSpec(singleton, processingEnv.typeUtils, usedSingletons)
+            writeClassFile(singleton.packageName, spec.inject())
+        }
 
         // Generate target classesWithDependencyAnnotation
         for (target in targetsWithDependencies) {
@@ -213,19 +221,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
 
             for (dependency in sorted) {
                 trySetIsFromTarget(target.key, dependency)
-
-                // try to find all singleton used in creation of current inject
-                val usedSingletons = mutableMapOf<String, DependencyModel>()
-                val queue = LinkedList<DependencyModel>(dependency.dependencies)
-                while (queue.isNotEmpty()) {
-                    val dep = queue.pop()
-                    val key = dep.typeElement.asType().toString()
-                    if (dep.isSingleton && !usedSingletons.containsKey(key)) {
-                        usedSingletons[key] = dep
-                    }
-                    queue.addAll(dep.dependencies)
-                }
-
+                val usedSingletons = collectUsedSingletonsInMethodCreation(dependency.dependencies)
                 var code = dependencyInjectionCode(dependency, processingEnv.typeUtils, target.key, usedSingletons)
 
                 code = wrapInProviderIfNeed(code, dependency)
@@ -245,6 +241,22 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         return true
     }
 
+    private fun collectUsedSingletonsInMethodCreation(dependencies: List<DependencyModel>): MutableMap<String, DependencyModel> {
+        // try to find all singleton used in creation of current inject
+        val usedSingletons = mutableMapOf<String, DependencyModel>()
+        val queue = LinkedList(dependencies)
+        while (queue.isNotEmpty()) {
+            val dep = queue.pop()
+            val key = dep.typeElement.asType().toString()
+            if (dep.isSingleton && !usedSingletons.containsKey(key)) {
+                usedSingletons[key] = dep
+                continue
+            }
+            if (!dep.isSingleton) queue.addAll(dep.dependencies)
+        }
+        return usedSingletons
+    }
+
     // TODO проверить
     private fun trySetIsFromTarget(target: TargetType, dependency: DependencyModel) {
         if (target.isDeclaredAsMember(dependency)) {
@@ -258,10 +270,10 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
             for (implementation in model.implementations) {
                 collectAllDependencies(implementation.dependencyModels, list)
             }
-            for (depencency in model.dependencies) {
-                list.add(depencency)
-                collectAllDependencies(depencency.dependencies, list)
-                for (implementation in depencency.implementations) {
+            for (dependency in model.dependencies) {
+                list.add(dependency)
+                collectAllDependencies(dependency.dependencies, list)
+                for (implementation in dependency.implementations) {
                     collectAllDependencies(implementation.dependencyModels, list)
                 }
             }

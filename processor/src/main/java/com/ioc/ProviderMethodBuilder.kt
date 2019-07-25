@@ -32,7 +32,7 @@ object ProviderMethodBuilder {
                 .also { builder.add(it) }
         }
 
-        builder.add(generateWithDependencies(dependencyModel, provider, usedSingletons))
+        builder.add(generateWithDependencies(dependencyModel, provider, target, usedSingletons))
 
         return builder.build()
     }
@@ -41,11 +41,13 @@ object ProviderMethodBuilder {
     private fun generateWithDependencies(
         dependencyModel: DependencyModel,
         method: DependencyProvider,
+        target: TargetType?,
         usedSingletons: Map<String, DependencyModel>): CodeBlock {
         val builder = CodeBlock.builder()
 
         if (!method.isSingleton) {
-            val names = method.dependencyNames(usedSingletons)
+            applyIsLoadIfNeed(dependencyModel.dependencies, target, usedSingletons)
+            val names = method.dependencyNames()
             builder.addStatement("\$T \$N = \$T.\$N($names)",
                 dependencyModel.className,
                 dependencyModel.generatedName,

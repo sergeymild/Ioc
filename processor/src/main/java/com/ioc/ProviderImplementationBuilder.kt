@@ -19,9 +19,8 @@ object ProviderImplementationBuilder {
         val builder = CodeBlock.builder()
 
         if (!provider.isSingleton) {
-            DependencyTree.get(provider.dependencyModels, typeUtils, usedSingletons
-                , target)
-                    .also { builder.add(it) }
+            DependencyTree.get(provider.dependencyModels, typeUtils, usedSingletons, target)
+                .also { builder.add(it) }
         }
 
         if (provider.isSingleton) {
@@ -32,11 +31,12 @@ object ProviderImplementationBuilder {
             return singleton(dependencyModel)
         }
 
-        val names = provider.dependencyNames(usedSingletons)
+        applyIsLoadIfNeed(dependencyModel.dependencies, target, usedSingletons)
+        val names = provider.dependencyNames()
         builder.addStatement("\$T \$N = new \$T($names)",
-                dependencyModel.originalClassName(),
-                dependencyModel.generatedName,
-                provider.module)
+            dependencyModel.originalClassName(),
+            dependencyModel.generatedName,
+            provider.module)
         return builder.build()
     }
 }

@@ -39,13 +39,9 @@ class DependencyResolver(
         // If @Inject annotation is placed on private field
         // try to find setter method with one parameter and same type
         if (element.isPrivate()) {
-            setterMethod = findDependencySetter(element).orElse {
-                throw ProcessorException("@Inject annotation placed on field `${element.simpleName}` in `${element.enclosingElement.simpleName}` with private access and which does't have public setter method.").setElement(element)
-            }
-
-            getterMethod = findDependencyGetter(element).orElse {
-                throw ProcessorException("@Inject annotation placed on field `${element.simpleName}` in `${element.enclosingElement.simpleName}` with private access and which does't have public getter method.").setElement(element)
-            }.simpleName.toString() + "()"
+            val result = findSetterAndGetterMethods(element)
+            setterMethod = result.setter
+            getterMethod = result.getter.toGetterName()
         }
 
         // If @Inject annotation is placed on setter method
@@ -259,19 +255,5 @@ class DependencyResolver(
             .firstOrNull { it.parameters.isEmpty() && !it.isHasAnnotation(Inject::class.java) }
             ?.let { return it }
         return null
-    }
-
-    @Throws(ProcessorException::class)
-    private fun findDependencySetter(element: Element): ExecutableElement? {
-        return element.enclosingElement.methods {
-            it.isPublic() && it.parameters.size == 1 && it.parameters[0].isEqualTo(element)
-        }.firstOrNull()
-    }
-
-    @Throws(ProcessorException::class)
-    private fun findDependencyGetter(element: Element): ExecutableElement? {
-        return element.enclosingElement.methods {
-            it.isPublic() && it.parameters.isEmpty() && it.returnType.toString() == element.asType().toString()
-        }.firstOrNull()
     }
 }

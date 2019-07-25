@@ -1,30 +1,19 @@
 package com.ioc
 
-import com.example.mylibrary.MyLibraryActivity
+import android.support.v7.app.AppCompatActivity
 import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class Single
+class AlohaBrowserUi
 
-interface AlohaBrowserUi
+class AutoCompleteListenerImpl(val browserUi: AlohaBrowserUi)
 
-@Dependency
-class BrowserUi(val single: Single): AlohaBrowserUi
-
-class FullscreenWebVideoManager(val BrowserUi: AlohaBrowserUi, val single: Single)
-
-interface BrowserUiCallback
-
-@Dependency
-class BrowserUiCallbackImplementation(val FullscreenWebVideoManager: FullscreenWebVideoManager, val single: Single): BrowserUiCallback
+class AddressBarListenerImpl(@field:LocalScope val browserUi: AlohaBrowserUi) {
+    @Inject
+    lateinit var listener: AutoCompleteListenerImpl
+}
 
 //@InjectParentDependencies
-class MainActivity : MyLibraryActivity() {
+class MainActivity : AppCompatActivity() {
 
-    @Inject
-    var alohaBrowserUi: AlohaBrowserUi? = null
 
-    @Inject
-    lateinit var browserUiCallbackImplementation: BrowserUiCallback
 }

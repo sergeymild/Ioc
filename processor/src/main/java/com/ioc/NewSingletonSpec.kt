@@ -23,7 +23,8 @@ interface SingletonWrapper {
 
 class NewSingletonSpec(
     private val dependencyModel: SingletonWrapper,
-    private val typeUtils: Types) {
+    private val typeUtils: Types,
+    private val usedSingletons: Map<String, DependencyModel>) {
 
     @Throws(Throwable::class)
     fun inject(): TypeSpec {
@@ -41,7 +42,6 @@ class NewSingletonSpec(
     }
 
     private fun generateMethod(): MethodSpec {
-        resetUniqueSingletons()
         val builder = MethodSpec.methodBuilder("get")
             .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
             .addAnnotation(keepAnnotation)
@@ -49,8 +49,14 @@ class NewSingletonSpec(
             .returns(dependencyModel.className)
             .addStatement("if (singleton != null) return singleton")
 
-        DependencyTree.get(dependencyModel.dependencies, typeUtils, emptyMap()).also { builder.addCode(it) }
-        val names = dependencyModel.dependencyNames(emptyMap())
+        for (usedSingleton in usedSingletons) {
+            builder.addCode(singleton(usedSingleton.value.simpleName, usedSingleton.value))
+        }
+
+        DependencyTree.get(dependencyModel.dependencies, typeUtils, usedSingletons).also { builder.addCode(it) }
+
+        applyIsLoadIfNeed(dependencyModel.dependencies, null, usedSingletons)
+        val names = dependencyModel.dependencyNames()
 
         dependencyModel.implementations.firstOrNull { it.isMethod }?.let {
             return builder.addStatement("singleton = \$T.\$N(\$L)", it.module, it.name, names)
