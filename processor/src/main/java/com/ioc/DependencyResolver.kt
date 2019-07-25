@@ -85,9 +85,6 @@ class DependencyResolver(
             isTarget = TargetChecker.isSubtype(target, dependencyElement)
         }
 
-        val order = dependencyElement.getAnnotation(InjectPriority::class.java)?.value
-            ?: Int.MAX_VALUE
-
         val dependencyImplementations = if (isTarget) emptyList() else dependencyTypesFinder.findFor(dependencyElement, named, target, dependencyTypeElement)
 
         // if we did't find any providers of this type, try to find constructors of concrete type
@@ -119,7 +116,6 @@ class DependencyResolver(
         depdendency.dependency = depdendency.implementations.firstOrNull()?.method
             ?: dependencyTypeElement
         depdendency.dependencies = dependencies
-        depdendency.order = order
         depdendency.named = named
 
         depdendency.isViewModel = isViewModel
@@ -137,6 +133,7 @@ class DependencyResolver(
         if (dependency.asTarget) dependency.name = "target"
         dependency.isSingleton = isSingleton || dependency.implementations.any { it.isSingleton }
         if (dependency.isSingleton) {
+            // TODO
             if (dependency.implementations.isNotEmpty()) {
                 dependency.generatedName = "singleton_${dependency.implementations[0].name.decapitalize()}"
             } else {

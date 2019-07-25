@@ -90,7 +90,6 @@ class SingletonNameTests : BaseTest {
             "package test;",
             "",
             importType(Inject::class.java),
-            importType(InjectPriority::class.java),
             "",
             "public class Activity {",
             "",

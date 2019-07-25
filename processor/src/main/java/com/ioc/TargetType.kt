@@ -17,7 +17,6 @@ import javax.lang.model.type.TypeMirror
 class TargetType(val element: TypeElement) {
     var name = element.simpleName.toString()
     var className = ClassName.get(element)
-    var flatDependencies = emptyList<DependencyModel>()
     var dependencies = emptyList<DependencyModel>()
     var parentTarget: TargetType? = null
     var childTarget: TargetType? = null
@@ -30,12 +29,6 @@ class TargetType(val element: TypeElement) {
 
     var parentDependencies = mutableListOf<DependencyModel>()
 
-    fun uniqueFlat(): MutableSet<DependencyModel> {
-        val uniqueDependencies = mutableSetOf<DependencyModel>()
-        flatDependencies.forEach { uniqueDependencies.add(it) }
-        return uniqueDependencies
-    }
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other?.javaClass != javaClass) return false
@@ -45,10 +38,6 @@ class TargetType(val element: TypeElement) {
         if (element != other.element) return false
 
         return true
-    }
-
-    fun isDeclaredAsMember(dependency: DependencyModel): Boolean {
-        return flatDependencies.filter { it.dependency.isEqualTo(dependency.dependency) }.any()
     }
 
 

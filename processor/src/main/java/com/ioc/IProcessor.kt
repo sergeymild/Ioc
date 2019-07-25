@@ -182,7 +182,6 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
                 sorting.sortTargetDependencies(dependencies)
 
                 target.key.dependencies = target.value
-                target.key.flatDependencies = dependencies.sortedBy { it.order }.reversed()
 
                 rootElements
                     .firstOrNull { typeUtils.directSupertypes(it.asType()).contains(target.key.element.asType()) }
@@ -216,11 +215,10 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         // Generate target classesWithDependencyAnnotation
         for (target in targetsWithDependencies) {
 
-            val sorted = target.key.dependencies.sortedBy { it.order }.asReversed()
+            val sorted = target.key.dependencies.sortedByDescending { it.sortOrder }//.asReversed()
             val methods = mutableListOf<MethodSpec>()
 
             for (dependency in sorted) {
-                trySetIsFromTarget(target.key, dependency)
                 val usedSingletons = collectUsedSingletonsInMethodCreation(dependency.dependencies)
                 var code = dependencyInjectionCode(dependency, processingEnv.typeUtils, target.key, usedSingletons)
 
@@ -275,13 +273,6 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
             if (!dep.isSingleton) queue.addAll(dep.dependencies)
         }
         return usedSingletons
-    }
-
-    // TODO проверить
-    private fun trySetIsFromTarget(target: TargetType, dependency: DependencyModel) {
-        if (target.isDeclaredAsMember(dependency)) {
-            dependency.isFromTarget = true
-        }
     }
 
     private fun collectAllDependencies(models: List<DependencyModel>, list: MutableList<DependencyModel>) {

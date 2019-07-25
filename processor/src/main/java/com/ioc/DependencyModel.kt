@@ -60,8 +60,7 @@ class DependencyModel constructor(
         return implementations.firstOrNull { it.isMethod }
     }
 
-    //var packageName: String? = null
-    var order: Int = Int.MAX_VALUE
+    var sortOrder = Int.MAX_VALUE
     var injectMethodName: String = "inject${name.capitalize()}In${fieldName.capitalize()}"
     var named: String? = ""
     var setterMethod: ExecutableElement? = null
