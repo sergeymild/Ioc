@@ -35,7 +35,6 @@ class DependencyModel constructor(
     var emptyConstructor: ExecutableElement? = null
     var asTarget: Boolean = false
     var isSingleton: Boolean = false
-    var isFromTarget: Boolean = false
     var isLocal: Boolean = false
     var isViewModel: Boolean = false
     override val typeElement: TypeElement

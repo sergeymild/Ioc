@@ -133,12 +133,7 @@ class DependencyResolver(
         if (dependency.asTarget) dependency.name = "target"
         dependency.isSingleton = isSingleton || dependency.implementations.any { it.isSingleton }
         if (dependency.isSingleton) {
-            // TODO
-            if (dependency.implementations.isNotEmpty()) {
-                dependency.generatedName = "singleton_${dependency.implementations[0].name.decapitalize()}"
-            } else {
-                dependency.generatedName = "singleton_${dependency.name}"
-            }
+            dependency.generatedName = dependency.simpleName
         } else {
             dependency.generatedName = uniqueName(dependency.name).decapitalize()
         }
