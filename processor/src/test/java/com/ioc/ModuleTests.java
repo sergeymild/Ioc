@@ -1814,4 +1814,82 @@ public class ModuleTests {
             .compilesWithoutError()
             .and().generatesSources(injectedFile);
     }
+
+    @Test
+    public void injectIntegerFromModuleMethod() throws Exception {
+        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            "package test;",
+            "",
+            Helpers.importType(Inject.class),
+            Helpers.importType(Named.class),
+            "",
+            "public class Activity {",
+            "",
+            "   @Inject",
+            "   @Named(\"named\")",
+            "   public Integer serviceNumber;",
+            "   @Inject",
+            "   public Service service;",
+            "}");
+
+        JavaFileObject service = JavaFileObjects.forSourceLines("test.Service",
+            "package test;",
+            "",
+            Helpers.importType(Inject.class),
+            Helpers.importType(Named.class),
+            "",
+            "public class Service {",
+            "   Service(@Named(\"named\") Integer serviceNumber) {}",
+            "",
+            "   @Inject",
+            "   @Named(\"named\")",
+            "   public Integer serviceNumber;",
+            "}");
+
+        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
+            "package test;",
+            "",
+            Helpers.importType(Dependency.class),
+            Helpers.importType(Named.class),
+            "",
+            "public abstract class ModuleFile {",
+            "   @Dependency",
+            "   @Named(\"named\")",
+            "   public static Integer getServiceName() { return 10; }",
+            "}");
+
+        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+            "package test;",
+            "",
+            "import android.support.annotation.Keep;",
+            "import android.support.annotation.NonNull;",
+            "import java.lang.Integer;",
+            "",
+            "@Keep",
+            "public final class ActivityInjector {",
+            "",
+            "   @Keep",
+            "   public final void inject(@NonNull final Activity target) {",
+            "       injectIntegerInServiceNumber(target);",
+            "       injectServiceInService(target);",
+            "   }",
+            "",
+            "   private final void injectIntegerInServiceNumber(@NonNull final Activity target) {",
+            "       Integer integer = ModuleFile.getServiceName();",
+            "       target.serviceNumber = integer;",
+            "   }",
+            "",
+            "   private final void injectServiceInService(@NonNull final Activity target) {",
+            "       Integer integer2 = ModuleFile.getServiceName();",
+            "       Service service = new Service(integer2);",
+            "       target.service = service;",
+            "   }",
+            "}");
+
+        assertAbout(javaSources())
+            .that(Arrays.asList(activityFile, service, moduleFile))
+            .processedWith(new IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile);
+    }
 }

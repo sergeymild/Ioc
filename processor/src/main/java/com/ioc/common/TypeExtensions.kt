@@ -20,10 +20,6 @@ import javax.lang.model.util.Types
  * Created by sergeygolishnikov on 31/10/2017.
  */
 
-fun TypeElement.asClassName(): ClassName {
-    return ClassName.get(this)
-}
-
 @Throws(ProcessorException::class)
 fun Element.asTypeElement(): TypeElement {
     if (!isSupportedType()) throw ProcessorException("Unsupported type $simpleName in $enclosingElement").setElement(this)
@@ -55,10 +51,6 @@ fun Element.getGenericFirstType(): Element {
 
 fun <A : Annotation> Element.isHasAnnotation(annotation: Class<A>): Boolean {
     return getAnnotation(annotation) != null
-}
-
-fun <A : Annotation> Element.isNotHasAnnotation(annotation: Class<A>): Boolean {
-    return getAnnotation(annotation) == null
 }
 
 

@@ -95,7 +95,7 @@ class ConstructorTests: BaseTest {
                 "",
                 "class DependencyModel {",
                 "   @Inject",
-                "   public DependencyModel(String string) {};",
+                "   public DependencyModel(int number) {};",
                 "}")
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())

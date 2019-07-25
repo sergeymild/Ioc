@@ -115,8 +115,6 @@ fun Element?.isSupportedType(): Boolean {
     if (asType().kind == TypeKind.OTHER) return false
     if (asType().kind == TypeKind.UNION) return false
     if (asType().kind == TypeKind.INTERSECTION) return false
-    //if (asType().toString() == String::class.java.canonicalName) return false
-    if (TypeName.get(asType()).isBoxedPrimitive) return false
     if (asType().kind.isPrimitive) return false
     return true
 }
