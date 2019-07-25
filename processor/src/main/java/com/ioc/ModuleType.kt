@@ -15,7 +15,7 @@ import javax.lang.model.type.TypeMirror
 fun dependencyName(model: DependencyModel) = when {
     model.isSingleton -> model.fieldName
     model.asTarget -> "target"
-    model.isLocal -> "target.${model.fieldOrGetterName()}"
+    model.isLocal -> "target.${model.fieldName}"
     else -> model.generatedName
 }
 

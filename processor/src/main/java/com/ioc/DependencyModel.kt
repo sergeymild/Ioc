@@ -90,10 +90,5 @@ class DependencyModel constructor(
         return CodeBlock.builder().addStatement("$target = $value", *arguments).build()
     }
 
-    fun fieldOrGetterName(): String {
-        return if (setterMethod == null) fieldName
-        else "get${fieldName.capitalize()}()"
-    }
-
     val simpleName get() = typeElement.simpleName.toString().decapitalize()
 }
