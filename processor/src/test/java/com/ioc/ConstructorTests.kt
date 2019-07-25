@@ -99,7 +99,7 @@ class ConstructorTests: BaseTest {
                 "}")
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
-                .that(Arrays.asList(activityFile, dependencyFile))
+                .that(listOf(activityFile, dependencyFile))
                 .processedWith(IProcessor())
                 .failsToCompile()
                 .withErrorContaining("@Inject annotation placed on constructor in test.DependencyModel which have unsupported parameters.")

@@ -19,7 +19,6 @@ class TargetType(val element: TypeElement) {
     var className = ClassName.get(element)
     var dependencies = emptyList<DependencyModel>()
     var parentTarget: TargetType? = null
-    var childTarget: TargetType? = null
     var postInitialization: ExecutableElement? = null
     var supertypes = mutableListOf<TypeMirror>()
     var localScopeDependencies = mutableMapOf<String, String>()

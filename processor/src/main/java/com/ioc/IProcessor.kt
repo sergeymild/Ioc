@@ -169,10 +169,6 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
             SingletonFilter.findAll(v, singletons, uniqueSingletons)
         }
 
-
-        val rootElements = roundEnv.rootElements
-        val typeUtils = processingEnv.typeUtils
-
         measure("targetWith") {
             for (target in targetsWithDependencies) {
                 val dependencies = mutableListOf<DependencyModel>()
@@ -182,11 +178,6 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
                 sorting.sortTargetDependencies(dependencies)
 
                 target.key.dependencies = target.value
-
-                rootElements
-                    .firstOrNull { typeUtils.directSupertypes(it.asType()).contains(target.key.element.asType()) }
-                    ?.transform { root -> targetTypes.firstOrNull { it.element.isEqualTo(root) } }
-                    ?.let { target.key.childTarget = it }
             }
 
             // set for every parent its own classesWithDependencyAnnotation

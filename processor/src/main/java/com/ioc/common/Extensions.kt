@@ -21,11 +21,6 @@ inline fun <T: Any, R> T?.transform(block: (T) -> R) : R? {
     return if (this != null) block(this) else null
 }
 
-inline fun <T> List<T>?.forEachIfNotNull(predicate: (T) -> Unit) {
-    if (this == null) return
-    forEach(predicate)
-}
-
 
 fun weakType(parameterizedType: Element): TypeName {
     return ParameterizedTypeName.get(ClassName.get(WeakReference::class.java), ClassName.get(parameterizedType.asType()))
@@ -72,7 +67,6 @@ fun viewModelFactoryCode(name: String, code: CodeBlock.Builder): CodeBlock.Build
 }
 
 fun weak(typeMirror: Element): TypeName {
-    val type = ClassName.get(typeMirror.asType())
     return weakType(typeMirror)
 }
 
