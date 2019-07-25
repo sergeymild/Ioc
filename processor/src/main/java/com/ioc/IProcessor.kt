@@ -159,6 +159,9 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         val targetsWithDependencies = mapToTargetWithDependencies(dependencyResolver)
         val targetTypes = targetsWithDependencies.keys
 
+
+        validateSingletonUsage(targetsWithDependencies)
+
         // generate singleton classesWithDependencyAnnotation
         val singletons = mutableListOf<SingletonWrapper>()
         val uniqueSingletons = mutableSetOf<String>()
@@ -235,6 +238,27 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         }
 
         return true
+    }
+
+    private fun validateSingletonUsage(
+        targetsWithDependencies: Map<TargetType, MutableList<DependencyModel>>) {
+        // check how ofter used singletons
+        val counter = mutableMapOf<String, Int>()
+        for (target in targetsWithDependencies) {
+            val queue = LinkedList(target.value)
+            while (queue.isNotEmpty()) {
+                val dep = queue.pop()
+                if (dep.isSingleton) {
+                    val count = counter.getOrPut(dep.typeElementString) { 0 }
+                    counter[dep.typeElementString] = count + 1
+                }
+                queue.addAll(dep.dependencies)
+            }
+        }
+
+        for (entry in counter) {
+            if (entry.value == 1) message("@Singleton is redundant for dependency: ${entry.key}")
+        }
     }
 
     private fun collectUsedSingletonsInMethodCreation(dependencies: List<DependencyModel>): MutableMap<String, DependencyModel> {

@@ -3,7 +3,9 @@ package com.ioc
 import android.arch.lifecycle.ViewModel
 import android.support.v7.app.AppCompatActivity
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 open class BrowserUi
 
 class AlohaBrowserUi(val s: S): BrowserUi() {
