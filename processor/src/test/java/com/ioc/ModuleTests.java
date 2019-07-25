@@ -1648,12 +1648,20 @@ public class ModuleTests {
             "",
             "   @Inject",
             "   public CountryService service;",
+            "   @Inject",
+            "   public DependencyService dependencyService;",
             "}");
 
         JavaFileObject countryServiceFile = JavaFileObjects.forSourceLines("test.CountryService",
             "package test;",
             "",
             "public interface CountryService {",
+            "}");
+
+        JavaFileObject dependencyService = JavaFileObjects.forSourceLines("test.DependencyService",
+            "package test;",
+            "",
+            "public class DependencyService {",
             "}");
 
         JavaFileObject countryServiceImplementation = JavaFileObjects.forSourceLines("test.CountryServiceImplementation",
@@ -1672,6 +1680,8 @@ public class ModuleTests {
             "   @Dependency",
             "   @Singleton",
             "   public abstract CountryService getService(CountryServiceImplementation implementation);",
+            "   @Dependency",
+            "   public abstract DependencyService getDependencyService();",
             "}");
 
         JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
@@ -1686,19 +1696,105 @@ public class ModuleTests {
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
             "       injectCountryServiceInService(target);",
+            "       injectDependencyServiceInDependencyService(target);",
             "   }",
             "",
             "   private final void injectCountryServiceInService(@NonNull final Activity target) {",
             "       CountryServiceImplementation countryServiceImplementation = CountryServiceImplementationSingleton.get();",
             "       target.service = countryServiceImplementation;",
             "   }",
+            "",
+            "   private final void injectDependencyServiceInDependencyService(@NonNull final Activity target) {",
+            "       DependencyService dependencyService = new DependencyService();",
+            "       target.dependencyService = dependencyService;",
+            "   }",
             "}");
 
         assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, countryServiceImplementation, countryServiceFile, moduleFile))
+            .that(Arrays.asList(activityFile, dependencyService, countryServiceImplementation, countryServiceFile, moduleFile))
             .processedWith(new IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile);
+    }
+
+    @Test
+    public void failNotReturnImplementation() throws Exception {
+        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            "package test;",
+            "",
+            Helpers.importType(Inject.class),
+            "",
+            "public class Activity {",
+            "",
+            "   @Inject",
+            "   public CountryService service;",
+            "   @Inject",
+            "   public DependencyService dependencyService;",
+            "}");
+
+        JavaFileObject countryServiceFile = JavaFileObjects.forSourceLines("test.CountryService",
+            "package test;",
+            "",
+            "public interface CountryService {",
+            "}");
+
+        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
+            "package test;",
+            "",
+            Helpers.importType(Dependency.class),
+            "",
+            "public abstract class ModuleFile {",
+            "   @Dependency",
+            "   public abstract CountryService getService();",
+            "}");
+
+        assertAbout(javaSources())
+            .that(Arrays.asList(activityFile, countryServiceFile, moduleFile))
+            .processedWith(new IProcessor())
+            .failsToCompile()
+            .withErrorContaining("ModuleFile.getService() returns test.CountryService which is interface also must contain implementation as parameter")
+            .in(moduleFile)
+            .onLine(7);
+    }
+
+    @Test
+    public void failPassInterfaceAsParameter() throws Exception {
+        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            "package test;",
+            "",
+            Helpers.importType(Inject.class),
+            "",
+            "public class Activity {",
+            "",
+            "   @Inject",
+            "   public CountryService service;",
+            "   @Inject",
+            "   public DependencyService dependencyService;",
+            "}");
+
+        JavaFileObject countryServiceFile = JavaFileObjects.forSourceLines("test.CountryService",
+            "package test;",
+            "",
+            "public interface CountryService {",
+            "}");
+
+        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
+            "package test;",
+            "",
+            Helpers.importType(Dependency.class),
+            "",
+            "public abstract class ModuleFile {",
+            "   @Dependency",
+            "   public abstract CountryService getService(CountryService service);",
+            "}");
+
+        assertAbout(javaSources())
+            .that(Arrays.asList(activityFile, countryServiceFile, moduleFile))
+            .processedWith(new IProcessor())
+            .failsToCompile()
+            .withErrorContaining("ModuleFile.getService(test.CountryService) returns test.CountryService which is interface also contains interface as parameter must be implementation")
+            .in(moduleFile)
+            .onLine(7);
     }
 
     @Test
@@ -1774,7 +1870,7 @@ public class ModuleTests {
             Helpers.importType(Dependency.class),
             Helpers.importType(Named.class),
             "",
-            "public abstract class ModuleFile {",
+            "public class ModuleFile {",
             "   @Dependency",
             "   @Named(\"named\")",
             "   public static String getServiceName() { return \"some name\"; }",
@@ -1852,7 +1948,7 @@ public class ModuleTests {
             Helpers.importType(Dependency.class),
             Helpers.importType(Named.class),
             "",
-            "public abstract class ModuleFile {",
+            "public class ModuleFile {",
             "   @Dependency",
             "   @Named(\"named\")",
             "   public static Integer getServiceName() { return 10; }",

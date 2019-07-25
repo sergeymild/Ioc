@@ -63,12 +63,22 @@ class DependencyTypesFinder(
         // try to find in interface's abstract methods
         for (method in abstractMethodsWithDependencyAnnotations()) {
             // method must contain only one parameter and must be interface
-            val implementation = method.parameters[0].asTypeElement()
-            val `interface` = method.returnType.asTypeElement()
+            val originalType = method.parameters.firstOrNull()?.asTypeElement()
+            val type = method.returnType.asTypeElement()
             val isSingleton = method.getAnnotation(Singleton::class.java) != null
 
-            if (isSubtype(element, `interface`, named)) {
-                val dependencyProvider = createProvider(implementation, typeElement, target)
+            //public abstract InterfaceType method();
+            if (originalType == null && type.isInterface()) {
+                throw ProcessorException("${method.enclosingElement.simpleName}.${method.simpleName}() returns $type which is interface also must contain implementation as parameter").setElement(method)
+            }
+
+            //public abstract InterfaceType method(InterfaceType);
+            if (originalType?.isInterface() == true) {
+                throw ProcessorException("${method.enclosingElement.simpleName}.${method.simpleName}($originalType) returns $type which is interface also contains interface as parameter must be implementation").setElement(method)
+            }
+
+            if (isSubtype(element, type, named)) {
+                val dependencyProvider = createProvider(originalType ?: type, typeElement, target)
                 if (!dependencyProvider.isSingleton) dependencyProvider.isSingleton = isSingleton
                 implementations.add(dependencyProvider)
             }
