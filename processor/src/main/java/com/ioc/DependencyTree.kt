@@ -15,9 +15,10 @@ object DependencyTree {
 
     fun get(dependencyModels: List<DependencyModel>,
             typeUtils: Types,
+            usedSingletons: Map<String, DependencyModel>,
             target: TargetType? = null): CodeBlock {
 
-        var builder = CodeBlock.builder()
+        val builder = CodeBlock.builder()
         for (dependency in dependencyModels) {
             if (target?.localScopeDependencies?.containsKey(dependency.originalTypeString) == true) continue
             if (dependency.asTarget) continue
@@ -26,7 +27,7 @@ object DependencyTree {
             if (dependency.provideMethod() == null && isAllowedPackage) {
                 throw ProcessorException("Can't find implementations of `${dependency.dependency.asType()} ${dependency.dependency}` maybe you forgot add correct @Named, @Qualifier or @Scope annotations or add @Dependency on provides method, `${target?.element}`").setElement(target?.element)
             }
-            val code = generateCode(dependency, typeUtils, target)
+            val code = generateCode(dependency, typeUtils, usedSingletons, target)
 
             val wrapInProviderIfNeed = wrapInProviderIfNeed(code.toBuilder(), dependency)
             builder.add(wrapInLazyIfNeed(wrapInProviderIfNeed, dependency).build())
@@ -35,30 +36,38 @@ object DependencyTree {
         return builder.build()
     }
 
-    private fun generateCode(dependency: DependencyModel, typeUtils: Types, target: TargetType?): CodeBlock {
+    private fun generateCode(
+        dependency: DependencyModel,
+        typeUtils: Types,
+        usedSingletons: Map<String, DependencyModel>,
+        target: TargetType?): CodeBlock {
+
         val builder = CodeBlock.builder()
 
         if (dependency.isSingleton) {
+            if (usedSingletons.containsKey(dependency.typeElementString)) {
+                return CodeBlock.builder().build()
+            }
             return singleton(dependency)
         }
 
         // Generate dependency from method provider
         dependency.implementations.filter { it.isMethod }
-                .map { ProviderMethodBuilder.build(it, dependency, typeUtils, target) }
+                .map { ProviderMethodBuilder.build(it, dependency, typeUtils, target, usedSingletons) }
                 .firstOrNull()
                 ?.let { return it }
 
 
         // Generate dependency from implementations (i.e. interface implementations)
         dependency.implementations.filter { !it.isMethod }
-                .map { buildForSingleton(it, dependency, typeUtils, target) }
+                .map { buildForSingleton(it, dependency, typeUtils, target, usedSingletons) }
                 .firstOrNull()
                 ?.let { return it }
 
         // if we here it's mean what we have dependency with arguments constructor or empty constructor
         if (dependency.argumentsConstructor != null) {
 
-            return argumentsConstructor(dependency, typeUtils, target)
+            return argumentsConstructor(dependency, typeUtils, target, usedSingletons)
                     .add(builder)
                     .build()
         }

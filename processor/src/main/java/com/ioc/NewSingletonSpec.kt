@@ -49,8 +49,8 @@ class NewSingletonSpec(
             .returns(dependencyModel.className)
             .addStatement("if (singleton != null) return singleton")
 
-        DependencyTree.get(dependencyModel.dependencies, typeUtils).also { builder.addCode(it) }
-        val names = dependencyModel.dependencyNames()
+        DependencyTree.get(dependencyModel.dependencies, typeUtils, emptyMap()).also { builder.addCode(it) }
+        val names = dependencyModel.dependencyNames(emptyMap())
 
         dependencyModel.implementations.firstOrNull { it.isMethod }?.let {
             return builder.addStatement("singleton = \$T.\$N(\$L)", it.module, it.name, names)

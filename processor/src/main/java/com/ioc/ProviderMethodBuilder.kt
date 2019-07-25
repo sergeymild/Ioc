@@ -8,12 +8,17 @@ import javax.lang.model.util.Types
  */
 
 object ProviderMethodBuilder {
-    fun build(provider: DependencyProvider, dependencyModel: DependencyModel, typeUtils: Types, target: TargetType?): CodeBlock {
+    fun build(
+        provider: DependencyProvider,
+        dependencyModel: DependencyModel,
+        typeUtils: Types,
+        target: TargetType?,
+        usedSingletons: Map<String, DependencyModel>): CodeBlock {
         if (provider.isFromTarget) {
             return CodeBlock.builder().addStatement("\$T \$N = target.\$N()",
-                    dependencyModel.originalClassName(),
-                    dependencyModel.generatedName,
-                    provider.name).build()
+                dependencyModel.originalClassName(),
+                dependencyModel.generatedName,
+                provider.name).build()
         }
 
         if (provider.dependencyModels.isEmpty()) {
@@ -23,27 +28,33 @@ object ProviderMethodBuilder {
         val builder = CodeBlock.builder()
 
         if (!provider.isSingleton) {
-            DependencyTree.get(provider.dependencyModels, typeUtils, target)
-                    .also { builder.add(it) }
+            DependencyTree.get(provider.dependencyModels, typeUtils, usedSingletons, target)
+                .also { builder.add(it) }
         }
 
-        builder.add(generateWithDependencies(dependencyModel, provider))
+        builder.add(generateWithDependencies(dependencyModel, provider, usedSingletons))
 
         return builder.build()
     }
 
     @Throws(Throwable::class)
-    private fun generateWithDependencies(dependencyModel: DependencyModel, method: DependencyProvider): CodeBlock {
+    private fun generateWithDependencies(
+        dependencyModel: DependencyModel,
+        method: DependencyProvider,
+        usedSingletons: Map<String, DependencyModel>): CodeBlock {
         val builder = CodeBlock.builder()
 
         if (!method.isSingleton) {
-            val names = method.dependencyNames()
+            val names = method.dependencyNames(usedSingletons)
             builder.addStatement("\$T \$N = \$T.\$N($names)",
-                    dependencyModel.className,
-                    dependencyModel.generatedName,
-                    method.module,
-                    method.name)
+                dependencyModel.className,
+                dependencyModel.generatedName,
+                method.module,
+                method.name)
         } else {
+            if (usedSingletons.containsKey(dependencyModel.typeElementString)) {
+                return CodeBlock.builder().build()
+            }
             return singleton(dependencyModel)
         }
 
@@ -59,10 +70,10 @@ object ProviderMethodBuilder {
         var code = CodeBlock.builder()
 
         code = code.addStatement("\$T \$N = \$T.\$N()",
-                dependencyModel.originalClassName(),
-                dependencyModel.generatedName,
-                method.module,
-                method.name)
+            dependencyModel.originalClassName(),
+            dependencyModel.generatedName,
+            method.module,
+            method.name)
 
         return code.build()
     }

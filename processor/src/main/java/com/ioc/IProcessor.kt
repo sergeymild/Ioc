@@ -10,6 +10,7 @@ import com.ioc.common.*
 import com.squareup.javapoet.JavaFile
 import com.squareup.javapoet.MethodSpec
 import com.squareup.javapoet.TypeSpec
+import java.util.*
 import javax.annotation.processing.*
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.Element
@@ -213,7 +214,19 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
             for (dependency in sorted) {
                 trySetIsFromTarget(target.key, dependency)
 
-                var code = dependencyInjectionCode(dependency, processingEnv.typeUtils, target.key)
+                // try to find all singleton used in creation of current inject
+                val usedSingletons = mutableMapOf<String, DependencyModel>()
+                val queue = LinkedList<DependencyModel>(dependency.dependencies)
+                while (queue.isNotEmpty()) {
+                    val dep = queue.pop()
+                    val key = dep.typeElement.asType().toString()
+                    if (dep.isSingleton && !usedSingletons.containsKey(key)) {
+                        usedSingletons[key] = dep
+                    }
+                    queue.addAll(dep.dependencies)
+                }
+
+                var code = dependencyInjectionCode(dependency, processingEnv.typeUtils, target.key, usedSingletons)
 
                 code = wrapInProviderIfNeed(code, dependency)
                 code = wrapInLazyIfNeed(code, dependency)

@@ -29,6 +29,8 @@ class DependencyModel constructor(
 
     val originalTypeString: String
         get() = originalType.asType().toString()
+    val typeElementString: String
+        get() = typeElement.asType().toString()
     var argumentsConstructor: ExecutableElement? = null
     var emptyConstructor: ExecutableElement? = null
     var asTarget: Boolean = false

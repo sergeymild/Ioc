@@ -130,7 +130,8 @@ class ImplementationsSpec constructor(
         fun dependencyInjectionCode(
             dependency: DependencyModel,
             typeUtils: Types,
-            target: TargetType): CodeBlock.Builder {
+            target: TargetType,
+            usedSingletons: Map<String, DependencyModel>): CodeBlock.Builder {
 
             val packageName = dependency.originalType.asTypeElement().getPackage()
             val isAllowedPackage = excludedPackages.any { packageName.toString().startsWith(it) }
@@ -140,12 +141,15 @@ class ImplementationsSpec constructor(
 
             try {
                 val builder = CodeBlock.builder()
+                for (usedSingleton in usedSingletons) {
+                    builder.add(singleton(usedSingleton.value.fieldName, usedSingleton.value))
+                }
 
                 if (dependency.isViewModel) {
                     val code = CodeBlock.builder()
-                    DependencyTree.get(dependency.dependencies, typeUtils, target).also { code.add(it) }
+                    DependencyTree.get(dependency.dependencies, typeUtils, usedSingletons, target).also { code.add(it) }
                     applyIsLoadIfNeed(dependency, target)
-                    val names = dependency.dependencyNames()
+                    val names = dependency.dependencyNames(usedSingletons)
                     code.addStatement("return (T) new \$T($names)", dependency.originalClassName())
                     val originalGeneratedName = dependency.generatedName
                     val factoryName = "factory_${dependency.generatedName}"
@@ -167,9 +171,9 @@ class ImplementationsSpec constructor(
                     }
 
 
-                    DependencyTree.get(dependency.dependencies, typeUtils, target).also { builder.add(it) }
+                    DependencyTree.get(dependency.dependencies, typeUtils, usedSingletons, target).also { builder.add(it) }
                     applyIsLoadIfNeed(dependency, target)
-                    val names = dependency.dependencyNames()
+                    val names = dependency.dependencyNames(usedSingletons)
                     return builder.addStatement("\$T \$N = \$T.\$N(\$L)",
                         dependency.originalClassName(),
                         dependency.generatedName,
@@ -183,9 +187,9 @@ class ImplementationsSpec constructor(
                         return singleton(dependency).toBuilder()
                     }
 
-                    DependencyTree.get(it.dependencyModels, typeUtils, target).also { builder.add(it) }
+                    DependencyTree.get(it.dependencyModels, typeUtils, usedSingletons, target).also { builder.add(it) }
                     applyIsLoadIfNeed(dependency, target)
-                    val names = it.dependencyNames()
+                    val names = it.dependencyNames(usedSingletons)
                     builder.addStatement("\$T \$N = new \$T(\$L)", dependency.originalClassName(), dependency.generatedName, it.returnType(), names)
                     return builder
                 }
@@ -195,7 +199,7 @@ class ImplementationsSpec constructor(
 
                 // Inject with arguments constructor
                 if (dependency.argumentsConstructor != null) {
-                    return argumentsConstructor(dependency, typeUtils, target)
+                    return argumentsConstructor(dependency, typeUtils, target, usedSingletons)
                         .add(builder)
                 }
 

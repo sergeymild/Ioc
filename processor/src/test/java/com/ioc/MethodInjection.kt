@@ -8,6 +8,7 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import java.util.*
 import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Created by sergeygolishnikov on 03/09/2017.
@@ -648,4 +649,89 @@ class MethodInjection : BaseTest {
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
     }
+
+    @Test
+    @Throws(Exception::class)
+    fun singletons() {
+
+        val baseFile = JavaFileObjects.forSourceLines("test.BaseActivity",
+            "package test;",
+            "",
+            Inject::class.java.import(),
+            "",
+            "public class BaseActivity {",
+            "   @Inject",
+            "   ParentDependency parentDependency;",
+            "}")
+
+        val singletonDependency = JavaFileObjects.forSourceLines("test.SingletonDependency",
+            "package test;",
+            "",
+            Singleton::class.java.import(),
+            "",
+            "@Singleton",
+            "public class SingletonDependency {",
+            "}")
+
+        val nextSingleton = JavaFileObjects.forSourceLines("test.NextSingleton",
+            "package test;",
+            "",
+            Singleton::class.java.import(),
+            "",
+            "@Singleton",
+            "public class NextSingleton {",
+            "}")
+
+        val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
+            "package test;",
+            "",
+            "",
+            "public class ParentDependency {",
+            "   public ParentDependency(SingletonDependency singletonDependency, NextSingleton nextSingleton, DependencyModel model, Resources resources) {}",
+            "}")
+
+        val resourcesFile = JavaFileObjects.forSourceLines("test.Resources",
+            "package test;",
+            "",
+            "public class Resources {",
+            "   public Resources(SingletonDependency singletonDependency) {}",
+            "}")
+
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+            "package test;",
+            "",
+            "public class DependencyModel {",
+            "   public DependencyModel(SingletonDependency singletonDependency, NextSingleton nextSingleton) {}",
+            "}")
+
+        val injectedFile = JavaFileObjects.forSourceLines("test.ParentActivityInjector",
+            "package test;",
+            "",
+            keepAnnotation,
+            nonNullAnnotation,
+            "",
+            "@Keep",
+            "public final class BaseActivityInjector {",
+            "   @Keep",
+            "   public final void inject(@NonNull final BaseActivity target) {",
+            "       injectParentDependencyInParentDependency(target);",
+            "   }",
+            "",
+            "   private final void injectParentDependencyInParentDependency(@NonNull final BaseActivity target) {",
+            "       SingletonDependency singletonDependency = SingletonDependencySingleton.get();",
+            "       NextSingleton nextSingleton = NextSingletonSingleton.get();",
+            "       DependencyModel dependencyModel = new DependencyModel(singletonDependency, nextSingleton);",
+            "       Resources resources = new Resources(singletonDependency);",
+            "       ParentDependency parentDependency = new ParentDependency(singletonDependency, nextSingleton, dependencyModel, resources);",
+            "       target.parentDependency = parentDependency;",
+            "   }",
+            "}")
+
+        Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
+            .that(Arrays.asList(singletonDependency, nextSingleton, resourcesFile, baseFile, dependencyFile, parentDependencyFile))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile)
+    }
+
 }
