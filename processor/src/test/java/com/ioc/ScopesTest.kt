@@ -110,20 +110,20 @@ class ScopesTest : BaseTest {
             "",
             "   @Keep",
             "   public final void inject(@NonNull final MainActivity target) {",
-            "       injectBrowserUiInBrowserUi(target);",
             "       injectSecondScopedInSecondScoped(target);",
+            "       injectBrowserUiInBrowserUi(target);",
             "       injectLoggerInLogger(target);",
             "       injectSessionInSession(target);",
             "   }",
             "",
-            "   private final void injectBrowserUiInBrowserUi(@NonNull final MainActivity target) {",
-            "       BrowserUi browserUi3 = new PhoneBrowserUi(target);",
-            "       target.browserUi = browserUi3;",
+            "   private final void injectSecondScopedInSecondScoped(@NonNull final MainActivity target) {",
+            "       SecondScoped secondScoped = new SecondScoped();",
+            "       target.setSecondScoped(secondScoped);",
             "   }",
             "",
-            "   private final void injectSecondScopedInSecondScoped(@NonNull final MainActivity target) {",
-            "       SecondScoped secondScoped2 = new SecondScoped();",
-            "       target.setSecondScoped(secondScoped2);",
+            "   private final void injectBrowserUiInBrowserUi(@NonNull final MainActivity target) {",
+            "       BrowserUi browserUi2 = new PhoneBrowserUi(target);",
+            "       target.browserUi = browserUi2;",
             "   }",
             "",
             "   private final void injectLoggerInLogger(@NonNull final MainActivity target) {",
@@ -147,17 +147,30 @@ class ScopesTest : BaseTest {
     @Test
     @Throws(Exception::class)
     fun localScopeInConstructor() {
-
-        val listener = JavaFileObjects.forSourceLines("test.AutoCompleteListenerImpl",
-            "package test;",
-            "public class AutoCompleteListenerImpl {",
-            "   AutoCompleteListenerImpl(AlohaBrowserUi browserUi) {}",
-            "}")
-
         val alohabrowser = JavaFileObjects.forSourceLines("test.AlohaBrowserUi",
             "package test;",
             "public class AlohaBrowserUi {",
             "}")
+
+        val autoCompleteListener = JavaFileObjects.forSourceLines("test.AutoCompleteListener",
+            "package test;",
+            "public interface AutoCompleteListener {",
+            "}")
+
+        val autoCompleteListenerImpl = JavaFileObjects.forSourceLines("test.AutoCompleteListenerImpl",
+            "package test;",
+            Dependency::class.java.import(),
+            "@Dependency",
+            "public class AutoCompleteListenerImpl implements AutoCompleteListener {",
+            "   public AutoCompleteListenerImpl(AlohaBrowserUi browserUi) {}",
+            "}")
+
+        val autocompleteController = JavaFileObjects.forSourceLines("test.AutocompleteController",
+            "package test;",
+            "public class AutocompleteController {",
+            "   public AutocompleteController(AutoCompleteListener listener) {}",
+            "}")
+
 
         val logger = JavaFileObjects.forSourceLines("test.AddressBarListenerImpl",
             "package test;",
@@ -165,7 +178,7 @@ class ScopesTest : BaseTest {
             Inject::class.java.import(),
             "public class AddressBarListenerImpl {",
             "   @Inject",
-            "   public AutoCompleteListenerImpl listener;",
+            "   public AutocompleteController controller;",
             "   @LocalScope",
             "   private AlohaBrowserUi browserUi;",
             "   AddressBarListenerImpl(AlohaBrowserUi browserUi) {}",
@@ -184,17 +197,18 @@ class ScopesTest : BaseTest {
             "",
             "   @Keep",
             "   public final void inject(@NonNull final AddressBarListenerImpl target) {",
-            "       injectAutoCompleteListenerImplInListener(target);",
+            "       injectAutocompleteControllerInController(target);",
             "   }",
             "",
-            "   private final void injectAutoCompleteListenerImplInListener(@NonNull final AddressBarListenerImpl target) {",
-            "       AutoCompleteListenerImpl autoCompleteListenerImpl = new AutoCompleteListenerImpl(target.getAlohaBrowserUi());",
-            "       target.listener = autoCompleteListenerImpl;",
+            "   private final void injectAutocompleteControllerInController(@NonNull final AddressBarListenerImpl target) {",
+            "       AutoCompleteListener autoCompleteListener = new AutoCompleteListenerImpl(target.getAlohaBrowserUi());",
+            "       AutocompleteController autocompleteController = new AutocompleteController(autoCompleteListener);",
+            "       target.controller = autocompleteController;",
             "   }",
             "}")
 
         Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(listOf(listener, logger, alohabrowser))
+            .that(listOf(autoCompleteListener, autoCompleteListenerImpl, autocompleteController, logger, alohabrowser))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)

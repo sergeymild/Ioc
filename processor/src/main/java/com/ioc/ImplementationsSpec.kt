@@ -18,9 +18,7 @@ internal fun targetParameter(className: ClassName): ParameterSpec {
 
 class ImplementationsSpec constructor(
     private val target: TargetType,
-    private val typeUtils: Types,
-    private val methods: List<MethodSpec>,
-    private val dependencies: Set<DependencyModel>) {
+    private val methods: List<MethodSpec>) {
 
     init {
         target.parentsDependencies()
@@ -54,11 +52,6 @@ class ImplementationsSpec constructor(
             val injectorType = ClassName.get(parentType.packageName(), "${parentType.simpleName()}Injector")
             builder.addStatement("new \$T().inject(target)", injectorType)
         }
-
-        // generate methods for scoped classesWithDependencyAnnotation
-        //val cachedMethods = generateScopeCachedMethods()
-
-        //cachedMethods.forEach { builder.addStatement("\$N(target)", it.name) }
 
         this.methods.forEach {
             builder.addStatement("\$N(target)", it.name)

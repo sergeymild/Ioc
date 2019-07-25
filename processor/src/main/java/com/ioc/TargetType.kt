@@ -23,10 +23,9 @@ class TargetType(val element: TypeElement) {
     var childTarget: TargetType? = null
     var postInitialization: ExecutableElement? = null
     var supertypes = mutableListOf<TypeMirror>()
-    var methods = mutableListOf<ExecutableElement>()
     var localScopeDependencies = mutableMapOf<String, String>()
 
-    var superclass: TypeMirror? = null
+    val superclass: TypeMirror?
         get() = supertypes.firstOrNull { !it.asTypeElement().isInterface() }
 
     var parentDependencies = mutableListOf<DependencyModel>()

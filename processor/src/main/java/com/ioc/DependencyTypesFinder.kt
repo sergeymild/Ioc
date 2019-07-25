@@ -19,7 +19,6 @@ import javax.lang.model.type.TypeMirror
 val excludedPackages = setOf("java", "sun", "org.jetbrains", "android.content", "android.util", "android.app", "android.view")
 
 class DependencyTypesFinder(
-    private val roundEnv: RoundEnvironment,
     private val qualifierFinder: QualifierFinder) {
 
     lateinit var dependencyResolver: DependencyResolver
@@ -29,35 +28,18 @@ class DependencyTypesFinder(
         element: Element,
         named: String?,
         target: TargetType,
-        typeElement: Element,
-        skipCheckFromTarget: Boolean = false): List<DependencyProvider> {
+        typeElement: Element): List<DependencyProvider> {
 
         val isInterface = typeElement.kind == ElementKind.INTERFACE
         val isAbstractClass = typeElement.modifiers.contains(Modifier.ABSTRACT)
 
         val implementations = mutableListOf<DependencyProvider>()
 
-
-        if (!skipCheckFromTarget) {
-            // try check maybe target has dependency implementation method
-            TargetChecker.isFromTarget(target, element.asType())?.let {
-                val returnType = it.returnType.asDeclared().asTypeElement()
-                val type = DependencyProvider(returnType, false, returnType.asClassName())
-                type.methodType = it
-                type.isMethod = true
-                type.isLocal = true
-                type.name = it.simpleName.toString()
-                type.isFromTarget = true
-                implementations.add(type)
-                return implementations
-            }
-        }
-
         // Try find dependency by annotated @Dependency method
         findMethodProviders(element, named, typeElement, target, implementations)
 
         if (implementations.size > 1) {
-            throw ProcessorException("Ambiguous classesWithDependencyAnnotation for type [${element.asType()}] with qualifiers [${if (named?.isBlank() == true) "@Default" else "@" + named}] founded [${implementations.joinToString { it.method.asType().toString() }}]")
+            throw ProcessorException("Ambiguous classesWithDependencyAnnotation for type [${element.asType()}] with qualifiers [${if (named?.isBlank() == true) "@Default" else "@$named"}] founded [${implementations.joinToString { it.method.asType().toString() }}]")
                 .setElement(element)
         }
 
@@ -124,7 +106,7 @@ class DependencyTypesFinder(
         }
 
         if ((isInterface || isAbstractClass) && implementations.isEmpty()) {
-            throw ProcessorException("Can't find implementations of `${element.asType()} $element` forTarget: ${target.element} maybe you forgot add correct @Named, @Qualifier or @Scope annotations or add @Dependency on provides method.").setElement(element)
+            throw ProcessorException("Can't find implementations of `${element.asType()} ${element.enclosingElement}` forTarget: ${target.element} maybe you forgot add correct @Named, @Qualifier or @Scope annotations or add @Dependency on provides method.").setElement(element)
                 .setElement(element)
         }
 
@@ -192,11 +174,6 @@ class DependencyTypesFinder(
 
         val constructor = implementation.argumentsConstructor() ?: return provider
 
-//        if (parents.containsAny(constructor.parameters)) {
-//            val params = constructor.parameters.joinToString(prefix = "(", postfix = ")") { it.asType().toString() }
-//            throw ProcessorException("Cyclic graph creating: $implementation parents: $parents parameters: $params")
-//        }
-
         IProcessor.singletons["${provider.method.asType()}"]?.let {
             provider.dependencyModels.addAll(it)
             return provider
@@ -206,6 +183,14 @@ class DependencyTypesFinder(
             if (parameter.isEqualTo(parent.asType())) {
                 throw ProcessorException("Cyclic graph detected building ${parameter.asType()} cyclic: ${parameter.asType()}").setElement(parent)
             }
+
+            if (target.localScopeDependencies.containsKey(parameter.asType().toString())) {
+                provider.dependencyModels.add(DependencyModel(
+                    parameter, parameter, parameter.simpleName.toString(), parameter.asType(), false, false, false
+                ))
+                continue
+            }
+
             val dependency = dependencyResolver.resolveDependency(parameter, target = target)
             provider.dependencyModels.add(dependency)
             if (provider.isSingleton) {

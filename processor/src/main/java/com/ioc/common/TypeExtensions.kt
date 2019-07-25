@@ -3,7 +3,7 @@ package com.ioc.common
 import com.ioc.*
 import com.squareup.javapoet.ClassName
 import java.lang.ref.WeakReference
-import java.util.LinkedHashSet
+import java.util.*
 import javax.annotation.processing.ProcessingEnvironment
 import javax.annotation.processing.RoundEnvironment
 import javax.inject.Inject
@@ -166,7 +166,7 @@ fun mapToTargetWithDependencies(dependencyResolver: DependencyResolver): Map<Tar
         val injectElements = targetDependencies.getValue(targetTypeElement.asType().toString())
         for (injectElement in injectElements) {
             if (injectElement.kind == ElementKind.CONSTRUCTOR) continue
-            val resolved = dependencyResolver.resolveDependency(injectElement, target = targetType, skipCheckFromTarget = true)
+            val resolved = dependencyResolver.resolveDependency(injectElement, target = targetType)
             dependencies.add(resolved)
         }
     }
@@ -228,32 +228,6 @@ fun TypeMirror.asElement(): Element {
 
 fun TypeMirror.asTypeElement(): TypeElement {
     return MoreTypes.asTypeElement(this)
-}
-
-fun TypeMirror.safeTypeElement(): TypeElement? {
-    try {
-        return MoreTypes.asTypeElement(this)
-    } catch (e: IllegalArgumentException) {
-        return null
-    }
-}
-
-fun List<TypeMirror>.methodsWithTargetDependency(): List<ExecutableElement> {
-    val methods = mutableListOf<ExecutableElement>()
-
-    for (supertype in this) {
-        for (method in ElementFilter.methodsIn(supertype.asTypeElement().enclosedElements)) {
-            if (method.isNotHasAnnotation(TargetDependency::class.java)) continue
-            if (method.modifiers.contains(Modifier.PRIVATE)) continue
-            if (method.parameters.isNotEmpty()) continue
-            val element = method.returnType.safeTypeElement() ?: continue
-            if (!element.isSupportedType()) continue
-            methods.add(method)
-        }
-
-    }
-
-    return methods
 }
 
 fun TypeMirror.asDeclared(): DeclaredType {

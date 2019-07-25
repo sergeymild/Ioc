@@ -35,13 +35,11 @@ class DependencyProvider constructor(
     var method: Element,
     var isSingleton: Boolean,
     var module: TypeName) {
-    var methodType: ExecutableElement? = null
     var returnTypes = mutableListOf<TypeMirror>()
     var dependencyModels: MutableList<DependencyModel> = mutableListOf()
     var name = method.simpleName.toString()
     var named: String? = null
     var isMethod: Boolean = true
-    var isLocal: Boolean = false
     var isFromTarget: Boolean = false
     var packageName: String = ""
 

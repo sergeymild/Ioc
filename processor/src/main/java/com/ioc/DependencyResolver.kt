@@ -22,15 +22,11 @@ class DependencyResolver(
     fun resolveDependency(
         element: Element,
         target: TargetType,
-        named: String? = null,
-        skipCheckFromTarget: Boolean = false): DependencyModel {
+        named: String? = null): DependencyModel {
 
         var setterMethod: ExecutableElement? = null
         var dependencyElement = element
         val fieldName = dependencyElement.simpleName.toString()
-        var getterMethod = fieldName
-
-        val isLocalScope = element.isHasAnnotation(LocalScope::class.java)
 
         if (element.isMethod() && element.isPrivate()) {
             throw ProcessorException("@Inject annotation is placed on method `$element` in `${element.enclosingElement}` with private access").setElement(element)
@@ -41,7 +37,6 @@ class DependencyResolver(
         if (element.isPrivate()) {
             val result = findSetterAndGetterMethods(element)
             setterMethod = result.setter
-            getterMethod = result.getter.toGetterName()
         }
 
         // If @Inject annotation is placed on setter method
@@ -93,9 +88,10 @@ class DependencyResolver(
         val order = dependencyElement.getAnnotation(InjectPriority::class.java)?.value
             ?: Int.MAX_VALUE
 
-        val dependencyImplementations = if (isTarget) emptyList() else dependencyTypesFinder.findFor(dependencyElement, named, target, dependencyTypeElement, isSingleton || skipCheckFromTarget)
+        val dependencyImplementations = if (isTarget) emptyList() else dependencyTypesFinder.findFor(dependencyElement, named, target, dependencyTypeElement)
+
         // if we did't find any providers of this type, try to find constructors of concrete type
-        var argumentConstructor = if (dependencyImplementations.isEmpty()) findArgumentConstructor(dependencyTypeElement) else null
+        val argumentConstructor = if (dependencyImplementations.isEmpty()) findArgumentConstructor(dependencyTypeElement) else null
         val noArgsConstructor = if (dependencyImplementations.isEmpty()) findEmptyConstructor(dependencyTypeElement) else null
 
         val dependencies = IProcessor.singletons.getOrDefault("${dependencyTypeElement.asType()}", mutableListOf())
@@ -128,24 +124,6 @@ class DependencyResolver(
 
         depdendency.isViewModel = isViewModel
 
-
-        if (isLocalScope) {
-            target.localScopeDependencies[element.asType().toString()] = getterMethod
-//            if (dependencyImplementations.none { it.isFromTarget } && argumentConstructor == null) {
-//                TargetChecker.isFromTarget(target, dependencyTypeElement.asType())?.let {
-//                    // if we have in target field with @Inject annotation
-//                    // which means we must pass this dependency instead create new one
-//                    val fields = target.fields + target.supertypes.map { it.asTypeElement() }.flatMap { it.fields() }
-//                    val field = fields.firstOrNull { it.isHasAnnotation(Inject::class.java) && it.isEqualTo(depdendency.dependency) }
-//                    // prefer argument constructor
-//                    argumentConstructor = depdendency.implementations.map { findArgumentConstructor(it.returnType()) }.firstOrNull()
-//                        ?: argumentConstructor
-//                    depdendency.isFromTarget = (argumentConstructor == null || field != null) && !isSingleton
-//                    depdendency.isLocal = true
-//                    depdendency.targetMethod = it
-//                }
-//            }
-        }
         depdendency.asTarget = isTarget
         resolveDependencyName(depdendency, isSingleton)
         depdendency.setterMethod = setterMethod
@@ -178,11 +156,9 @@ class DependencyResolver(
 
         val constructorArguments = argumentConstructor?.parameters ?: emptyList()
 
-//        val typeElementSupertypes = mutableListOf<TypeMirror>()
-//        dependencyTypesFinder.collectSuperTypes(typeElement, typeElementSupertypes)
-
         // TODO generic type
         for (argument in constructorArguments) {
+
             // Ioc not supported primitive types for now
             if (argument.asType().kind.isPrimitive) return
             var element: Element = argument
@@ -211,8 +187,8 @@ class DependencyResolver(
             if (isParentSingleton) {
                 newTarget = IProcessor.createTarget(typeElement, dependencyTypesFinder)
             }
-            // TODO зачем это делать, если мы нашли implementations
-            resolveDependency(element, newTarget, named, isParentSingleton).let {
+
+            resolveDependency(element, newTarget, named).let {
                 it.isWeakDependency = isWeakDependency
                 it.isProvider = isProvider
                 it.isLazy = isLazy

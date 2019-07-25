@@ -79,9 +79,6 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
                 type.parentTarget = createTarget(it.asTypeElement(), dependencyFinder)
             }
 
-            val methods = (type.supertypes + listOf(type.element.asType())).methodsWithTargetDependency()
-            type.methods.addAll(methods)
-
             return type
         }
 
@@ -108,13 +105,13 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         val libraries = roundEnv.getElementsAnnotatedWith(LibraryModules::class.java)
 
         dependencies
-                .filter { it.isNotMethodAndInterface() }
-                .addTo(classesWithDependencyAnnotation)
+            .filter { it.isNotMethodAndInterface() }
+            .addTo(classesWithDependencyAnnotation)
 
         dependencies
-                .filter { it.kind == ElementKind.METHOD }
-                .map { it as ExecutableElement }
-                .addTo(methodsWithDependencyAnnotation)
+            .filter { it.kind == ElementKind.METHOD }
+            .map { it as ExecutableElement }
+            .addTo(methodsWithDependencyAnnotation)
 
         val alreadyReadModules = mutableSetOf<String>()
         libraries.forEach { findLibraryModules(it.getAnnotation(LibraryModules::class.java), alreadyReadModules) }
@@ -152,7 +149,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         createdSingletones.clear()
 
 
-        dependencyFinder = DependencyTypesFinder(roundEnv, qualifierFinder)
+        dependencyFinder = DependencyTypesFinder(qualifierFinder)
         dependencyResolver = DependencyResolver(processingEnv.typeUtils, qualifierFinder, dependencyFinder)
         dependencyFinder.dependencyResolver = dependencyResolver
 
@@ -185,9 +182,9 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
                 target.key.flatDependencies = dependencies.sortedBy { it.order }.reversed()
 
                 rootElements
-                        .firstOrNull { typeUtils.directSupertypes(it.asType()).contains(target.key.element.asType()) }
-                        ?.transform { root -> targetTypes.firstOrNull { it.element.isEqualTo(root) } }
-                        ?.let { target.key.childTarget = it }
+                    .firstOrNull { typeUtils.directSupertypes(it.asType()).contains(target.key.element.asType()) }
+                    ?.transform { root -> targetTypes.firstOrNull { it.element.isEqualTo(root) } }
+                    ?.let { target.key.childTarget = it }
             }
 
             // set for every parent its own classesWithDependencyAnnotation
@@ -230,12 +227,11 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
 
                 val methodBuilder = dependencyInjectionMethod(target.key.className, dependency, code.build())
                 injectInTarget(methodBuilder, dependency)
-                        .also { methods.add(it) }
+                    .also { methods.add(it) }
             }
 
-            ImplementationsSpec(target.key, processingEnv.typeUtils, methods, target.key.uniqueFlat())
-                    .inject()
-                    .also { writeClassFile(target.key.className.packageName(), it) }
+            ImplementationsSpec(target.key, methods).inject()
+                .also { writeClassFile(target.key.className.packageName(), it) }
         }
 
         return true
