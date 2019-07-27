@@ -1,6 +1,6 @@
 package com.ioc
 
-import com.ioc.ImplementationsSpec.Companion.wrapInProviderIfNeed
+
 import com.ioc.ImplementationsSpec.Companion.wrapInWakIfNeed
 import com.ioc.ProviderImplementationBuilder.buildForSingleton
 import com.ioc.common.*
@@ -30,7 +30,7 @@ object DependencyTree {
 
 
 
-            code = wrapInProviderIfNeed(code, dependency)
+            code = ProviderGeneration.wrapInProviderClassIfNeed(dependency, code)
             code = LazyGeneration.wrapInLazyClassIfNeed(dependency, code)
             code.add(wrapInWakIfNeed(dependency))
             builder.add(code.build())

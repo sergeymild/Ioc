@@ -2,7 +2,6 @@ package com.ioc
 
 import com.ioc.common.*
 import com.squareup.javapoet.*
-import javax.inject.Provider
 import javax.lang.model.element.Modifier
 import javax.lang.model.util.Types
 
@@ -82,23 +81,6 @@ class ImplementationsSpec constructor(
                 .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
                 .addParameter(targetParameter(target))
                 .addCode(codeBlock)
-        }
-
-        fun wrapInProviderIfNeed(
-            codeBlock: CodeBlock.Builder,
-            dependencyModel: DependencyModel): CodeBlock.Builder {
-
-            if (!dependencyModel.isProvider) return codeBlock
-
-            val originalGeneratedName = dependencyModel.generatedName
-            dependencyModel.generatedName = "provider_$originalGeneratedName"
-            val providerGeneric = ClassName.get(dependencyModel.erasuredType)
-            val providerType = ParameterizedTypeName.get(ClassName.get(Provider::class.java), providerGeneric)
-            val code = codeBlock.addStatement("return \$N", originalGeneratedName).build()
-            return CodeBlock.builder().add("\$T \$N = \$L;\n",
-                providerType,
-                dependencyModel.generatedName,
-                ProviderAnonymousClass.get(code, providerGeneric))
         }
 
         fun wrapInWakIfNeed(dependencyModel: DependencyModel): CodeBlock {

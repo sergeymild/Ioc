@@ -3,7 +3,6 @@ package com.ioc
 import com.ioc.ImplementationsSpec.Companion.dependencyInjectionCode
 import com.ioc.ImplementationsSpec.Companion.dependencyInjectionMethod
 import com.ioc.ImplementationsSpec.Companion.injectInTarget
-import com.ioc.ImplementationsSpec.Companion.wrapInProviderIfNeed
 import com.ioc.ImplementationsSpec.Companion.wrapInWakIfNeed
 import com.ioc.common.*
 import com.squareup.javapoet.JavaFile
@@ -217,7 +216,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
                 // if dependency is lazy, generate lazy class
 
 
-                code = wrapInProviderIfNeed(code, dependency)
+                code = ProviderGeneration.wrapInProviderClassIfNeed(dependency, code)
                 code = LazyGeneration.wrapInLazyClassIfNeed(dependency, code)
                 code.add(wrapInWakIfNeed(dependency))
 

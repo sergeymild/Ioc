@@ -21,7 +21,7 @@ class MainActivity : AppCompatActivity() {
 
 
     @Inject
-    lateinit var lazyDep: Lazy<DepI>
+    lateinit var lazyDep: Provider<DepI>
 
 
     override fun onCreate(savedInstanceState: Bundle?) {

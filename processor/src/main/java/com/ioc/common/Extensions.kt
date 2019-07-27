@@ -2,6 +2,7 @@ package com.ioc.common
 
 import com.ioc.IProcessor
 import com.ioc.IocLazy
+import com.ioc.IocProvider
 import com.ioc.ViewModelFactoryAnonymousClass
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.CodeBlock
@@ -9,7 +10,6 @@ import com.squareup.javapoet.ParameterizedTypeName
 import com.squareup.javapoet.TypeName
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeUnit
-import javax.inject.Provider
 import javax.lang.model.element.Element
 import javax.lang.model.type.TypeKind
 import javax.tools.Diagnostic
@@ -22,8 +22,8 @@ fun weakType(parameterizedType: Element): TypeName {
     return ParameterizedTypeName.get(ClassName.get(WeakReference::class.java), ClassName.get(parameterizedType.asType()))
 }
 
-val providerType = ClassName.get(Provider::class.java)
 val iocLazyType = ClassName.get(IocLazy::class.java)
+val iocProviderType = ClassName.get(IocProvider::class.java)
 val viewModelFactoryType = ClassName.bestGuess("android.arch.lifecycle.ViewModelProvider.Factory")
 val keepAnnotation = ClassName.bestGuess("android.support.annotation.Keep")
 val nonNullAnnotation = ClassName.bestGuess("android.support.annotation.NonNull")
@@ -45,6 +45,10 @@ fun CodeBlock.add(block: CodeBlock.Builder): CodeBlock.Builder {
 
 fun Element.asLazyType(): TypeName {
     return ParameterizedTypeName.get(iocLazyType, asTypeName())
+}
+
+fun Element.asProviderType(): TypeName {
+    return ParameterizedTypeName.get(iocProviderType, asTypeName())
 }
 
 fun viewModelFactoryCode(name: String, code: CodeBlock.Builder): CodeBlock.Builder {
