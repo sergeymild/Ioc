@@ -74,18 +74,19 @@ class ImplementationsSpec constructor(
 
         fun dependencyInjectionMethod(
             target: ClassName,
-            dependencyModel: DependencyModel,
-            codeBlock: CodeBlock,
-            methodName: String = dependencyModel.injectMethodName): MethodSpec.Builder {
+            model: DependencyModel,
+            codeBlock: CodeBlock): MethodSpec.Builder {
 
+            val methodName = "inject${model.name.capitalize()}In${model.fieldName.capitalize()}"
             return MethodSpec.methodBuilder(methodName)
                 .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
                 .addParameter(targetParameter(target))
                 .addCode(codeBlock)
         }
 
-        fun wrapInLazyIfNeed(codeBlock: CodeBlock.Builder,
-                             dependencyModel: DependencyModel): CodeBlock.Builder {
+        fun wrapInLazyIfNeed(
+            codeBlock: CodeBlock.Builder,
+            dependencyModel: DependencyModel): CodeBlock.Builder {
 
             if (!dependencyModel.isLazy) return codeBlock
             val providerGeneric = dependencyModel.erasuredType.asTypeElement()
@@ -94,8 +95,9 @@ class ImplementationsSpec constructor(
             return lazyCodeBlock(providerGeneric, originalGeneratedName, codeBlock)
         }
 
-        fun wrapInProviderIfNeed(codeBlock: CodeBlock.Builder,
-                                 dependencyModel: DependencyModel): CodeBlock.Builder {
+        fun wrapInProviderIfNeed(
+            codeBlock: CodeBlock.Builder,
+            dependencyModel: DependencyModel): CodeBlock.Builder {
 
             if (!dependencyModel.isProvider) return codeBlock
 

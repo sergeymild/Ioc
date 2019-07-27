@@ -60,7 +60,6 @@ class DependencyModel constructor(
     }
 
     var sortOrder = Int.MAX_VALUE
-    var injectMethodName: String = "inject${name.capitalize()}In${fieldName.capitalize()}"
     var named: String? = ""
     var setterMethod: ExecutableElement? = null
 
@@ -72,7 +71,8 @@ class DependencyModel constructor(
     }
 
     fun setterName(): String {
-        return if (setterMethod != null) setterMethod!!.simpleName.toString() else fieldName
+        setterMethod?.let { return it.simpleName.toString() }
+        return fieldName
     }
 
     override fun equals(other: Any?): Boolean {
@@ -83,11 +83,11 @@ class DependencyModel constructor(
         return className.hashCode()
     }
 
-    fun setDependency(target: String, value: String, vararg arguments: Any): CodeBlock {
-        if (setterMethod != null) {
-            return CodeBlock.builder().addStatement("$target($value)", *arguments).build()
-        }
-        return CodeBlock.builder().addStatement("$target = $value", *arguments).build()
+    fun setDependency(target: String, value: String): CodeBlock {
+        val builder = CodeBlock.builder()
+        if (setterMethod != null) builder.addStatement("$target($value)")
+        else builder.addStatement("$target = $value")
+        return builder.build()
     }
 
     val simpleName get() = typeElement.simpleName.toString().decapitalize()
