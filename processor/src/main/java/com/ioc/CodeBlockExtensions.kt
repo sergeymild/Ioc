@@ -10,16 +10,9 @@ import javax.lang.model.util.Types
  */
 private val SINGLETON = "Singleton"
 
-fun CodeBlock.Builder.emptyConstructor(model: DependencyModel, isFromScope: Boolean = false): CodeBlock {
-    if (!isFromScope) {
-        return addStatement("\$T \$N = new \$T()",
-            model.originalType.asType(),
-            model.generatedName,
-            model.className)
-            .build()
-    }
-
-    return addStatement("\$N = new \$T()",
+fun CodeBlock.Builder.emptyConstructor(model: DependencyModel): CodeBlock {
+    return addStatement("\$T \$N = new \$T()",
+        model.originalType.asType(),
         model.generatedName,
         model.className)
         .build()
@@ -43,8 +36,7 @@ fun argumentsConstructor(
     model: DependencyModel,
     typeUtils: Types,
     target: TargetType?,
-    usedSingletons: Map<String, DependencyModel>,
-    isFromScope: Boolean = false): CodeBlock {
+    usedSingletons: Map<String, DependencyModel>): CodeBlock {
 
     val dependencies = DependencyTree.get(model.dependencies, typeUtils, usedSingletons, target)
     val builder = CodeBlock.builder().add(dependencies)
@@ -53,14 +45,8 @@ fun argumentsConstructor(
 
     val names = model.dependencyNames()
 
-    if (!isFromScope) {
-        return builder.addStatement("\$T \$N = new \$T($names)",
-            model.originalType.asType(),
-            model.generatedName,
-            model.className).build()
-    }
-
-    return builder.addStatement("\$N = new \$T($names)",
+    return builder.addStatement("\$T \$N = new \$T($names)",
+        model.originalType.asType(),
         model.generatedName,
         model.className).build()
 }
