@@ -83,14 +83,6 @@ class ImplementationsSpec constructor(
                 .addCode(codeBlock)
         }
 
-        fun wrapInWakIfNeed(dependencyModel: DependencyModel): CodeBlock {
-            if (!dependencyModel.isWeakDependency) return emptyCodBlock
-            val providerGeneric = dependencyModel.erasuredType.asTypeElement()
-            val originalGeneratedName = dependencyModel.generatedName
-            dependencyModel.generatedName = "weak_$originalGeneratedName"
-            return weakCodeBlock(providerGeneric, originalGeneratedName)
-        }
-
         // Root scope
         //  scope
         fun dependencyInjectionCode(

@@ -18,12 +18,9 @@ import javax.tools.Diagnostic
  * Created by sergeygolishnikov on 20/11/2017.
  */
 
-fun weakType(parameterizedType: Element): TypeName {
-    return ParameterizedTypeName.get(ClassName.get(WeakReference::class.java), ClassName.get(parameterizedType.asType()))
-}
-
 val iocLazyType = ClassName.get(IocLazy::class.java)
 val iocProviderType = ClassName.get(IocProvider::class.java)
+val weakType = ClassName.get(WeakReference::class.java)
 val viewModelFactoryType = ClassName.bestGuess("android.arch.lifecycle.ViewModelProvider.Factory")
 val keepAnnotation = ClassName.bestGuess("android.support.annotation.Keep")
 val nonNullAnnotation = ClassName.bestGuess("android.support.annotation.NonNull")
@@ -51,23 +48,15 @@ fun Element.asProviderType(): TypeName {
     return ParameterizedTypeName.get(iocProviderType, asTypeName())
 }
 
+fun Element.asWeakType(): TypeName {
+    return ParameterizedTypeName.get(weakType, asTypeName())
+}
+
 fun viewModelFactoryCode(name: String, code: CodeBlock.Builder): CodeBlock.Builder {
     return CodeBlock.builder().add("\$T \$N = \$L;\n",
         viewModelFactoryType,
         "factory_$name",
         ViewModelFactoryAnonymousClass.get(code.build()))
-}
-
-fun weak(typeMirror: Element): TypeName {
-    return weakType(typeMirror)
-}
-
-fun weakCodeBlock(type: Element, name: String): CodeBlock {
-    return CodeBlock.builder().addStatement("\$T \$N = new \$T(\$N)",
-        weak(type),
-        "weak_$name",
-        weakType(type),
-        name).build()
 }
 
 

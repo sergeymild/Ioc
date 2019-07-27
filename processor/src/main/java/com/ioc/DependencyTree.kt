@@ -1,7 +1,6 @@
 package com.ioc
 
 
-import com.ioc.ImplementationsSpec.Companion.wrapInWakIfNeed
 import com.ioc.ProviderImplementationBuilder.buildForSingleton
 import com.ioc.common.*
 import com.squareup.javapoet.CodeBlock
@@ -32,7 +31,7 @@ object DependencyTree {
 
             code = ProviderGeneration.wrapInProviderClassIfNeed(dependency, code)
             code = LazyGeneration.wrapInLazyClassIfNeed(dependency, code)
-            code.add(wrapInWakIfNeed(dependency))
+            code = WeakGeneration.wrapInWeakIfNeed(dependency, code)
             builder.add(code.build())
         }
         return builder.build()

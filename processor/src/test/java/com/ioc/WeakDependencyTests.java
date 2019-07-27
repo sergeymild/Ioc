@@ -56,8 +56,8 @@ public class WeakDependencyTests {
             "",
             "   private final void injectDependencyModelInWeakDependency(@NonNull final Activity target) {",
             "       DependencyModel dependencyModel = new DependencyModel();",
-            "       WeakReference<DependencyModel> weak_dependencyModel = new WeakReference<DependencyModel>(dependencyModel);",
-            "       target.weakDependency = weak_dependencyModel;",
+            "       WeakReference<DependencyModel> weakDependencyModel = new WeakReference<DependencyModel>(dependencyModel);",
+            "       target.weakDependency = weakDependencyModel;",
             "   }",
             "}");
 
@@ -119,8 +119,8 @@ public class WeakDependencyTests {
             "   private final void injectDependencyModelInWeakDependency(@NonNull final Activity target) {",
             "       Context context = new Context();",
             "       DependencyModel dependencyModel = new DependencyModel(context);",
-            "       WeakReference<DependencyModel> weak_dependencyModel = new WeakReference<DependencyModel>(dependencyModel);",
-            "       target.weakDependency = weak_dependencyModel;",
+            "       WeakReference<DependencyModel> weakDependencyModel = new WeakReference<DependencyModel>(dependencyModel);",
+            "       target.weakDependency = weakDependencyModel;",
             "   }",
             "}");
 
@@ -170,8 +170,8 @@ public class WeakDependencyTests {
             "",
             "   private final void injectDependencyModelInWeakDependency(@NonNull final Activity target) {",
             "       DependencyModel dependencyModel = new DependencyModel();",
-            "       WeakReference<DependencyModel> weak_dependencyModel = new WeakReference<DependencyModel>(dependencyModel);",
-            "       target.weakDependency(weak_dependencyModel);",
+            "       WeakReference<DependencyModel> weakDependencyModel = new WeakReference<DependencyModel>(dependencyModel);",
+            "       target.weakDependency(weakDependencyModel);",
             "   }",
             "}");
 
@@ -236,8 +236,8 @@ public class WeakDependencyTests {
             "   private final void injectDependencyModelInWeakDependency(@NonNull final Activity target) {",
             "       Context context = new Context();",
             "       DependencyModel dependencyModel = new DependencyModel(context);",
-            "       WeakReference<DependencyModel> weak_dependencyModel = new WeakReference<DependencyModel>(dependencyModel);",
-            "       target.weakDependency(weak_dependencyModel);",
+            "       WeakReference<DependencyModel> weakDependencyModel = new WeakReference<DependencyModel>(dependencyModel);",
+            "       target.weakDependency(weakDependencyModel);",
             "   }",
             "}");
 
@@ -307,8 +307,8 @@ public class WeakDependencyTests {
             "",
             "   private final void injectDependencyModelInDependency(@NonNull final Activity target) {",
             "       Context context = new Context();",
-            "       WeakReference<Context> weak_context = new WeakReference<Context>(context);",
-            "       DependencyModel dependencyModel = DependencyProvide.getDependency(weak_context);",
+            "       WeakReference<Context> weakContext = new WeakReference<Context>(context);",
+            "       DependencyModel dependencyModel = DependencyProvide.getDependency(weakContext);",
             "       target.dependency = dependencyModel;",
             "   }",
             "}");
@@ -386,8 +386,8 @@ public class WeakDependencyTests {
             "   private final void injectDependencyModelInDependency(@NonNull final Activity target) {",
             "       Resource resource = new Resource();",
             "       Context context = new Context(resource);",
-            "       WeakReference<Context> weak_context = new WeakReference<Context>(context);",
-            "       DependencyModel dependencyModel = DependencyProvide.getDependency(weak_context);",
+            "       WeakReference<Context> weakContext = new WeakReference<Context>(context);",
+            "       DependencyModel dependencyModel = DependencyProvide.getDependency(weakContext);",
             "       target.dependency = dependencyModel;",
             "   }",
             "}");
@@ -451,8 +451,8 @@ public class WeakDependencyTests {
             "",
             "   private final void injectDependencyModelInDependency(@NonNull final Activity target) {",
             "       DependencyModel dependencyModel = DependencyProvide.getDependency();",
-            "       WeakReference<DependencyModel> weak_dependencyModel = new WeakReference<DependencyModel>(dependencyModel);",
-            "       target.dependency = weak_dependencyModel;",
+            "       WeakReference<DependencyModel> weakDependencyModel = new WeakReference<DependencyModel>(dependencyModel);",
+            "       target.dependency = weakDependencyModel;",
             "   }",
             "}");
 
@@ -522,8 +522,8 @@ public class WeakDependencyTests {
             "   private final void injectDependencyModelInDependency(@NonNull final Activity target) {",
             "       Context context = new Context();",
             "       DependencyModel dependencyModel = DependencyProvide.getDependency(context);",
-            "       WeakReference<DependencyModel> weak_dependencyModel = new WeakReference<DependencyModel>(dependencyModel);",
-            "       target.dependency = weak_dependencyModel;",
+            "       WeakReference<DependencyModel> weakDependencyModel = new WeakReference<DependencyModel>(dependencyModel);",
+            "       target.dependency = weakDependencyModel;",
             "   }",
             "}");
 
@@ -585,8 +585,8 @@ public class WeakDependencyTests {
             "",
             "   private final void injectDependencyModelInDependency(@NonNull final Activity target) {",
             "       Context context = new Context();",
-            "       WeakReference<Context> weak_context = new WeakReference<Context>(context);",
-            "       DependencyModel dependencyModel = new DependencyModel(weak_context);",
+            "       WeakReference<Context> weakContext = new WeakReference<Context>(context);",
+            "       DependencyModel dependencyModel = new DependencyModel(weakContext);",
             "       target.dependency = dependencyModel;",
             "   }",
             "}");

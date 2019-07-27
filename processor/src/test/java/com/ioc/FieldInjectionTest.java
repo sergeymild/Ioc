@@ -2382,8 +2382,8 @@ public class FieldInjectionTest {
             "",
             "   private final void injectPresenterInPresenter(@NonNull final Activity target) {",
             "       Context context = ContextModule.context();",
-            "       WeakReference<Context> weak_context = new WeakReference<Context>(context);",
-            "       Presenter presenter = new Presenter(weak_context);",
+            "       WeakReference<Context> weakContext = new WeakReference<Context>(context);",
+            "       Presenter presenter = new Presenter(weakContext);",
             "       target.presenter = presenter;",
             "   }",
             "}");

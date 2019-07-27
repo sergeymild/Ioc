@@ -3,7 +3,6 @@ package com.ioc
 import com.ioc.ImplementationsSpec.Companion.dependencyInjectionCode
 import com.ioc.ImplementationsSpec.Companion.dependencyInjectionMethod
 import com.ioc.ImplementationsSpec.Companion.injectInTarget
-import com.ioc.ImplementationsSpec.Companion.wrapInWakIfNeed
 import com.ioc.common.*
 import com.squareup.javapoet.JavaFile
 import com.squareup.javapoet.MethodSpec
@@ -218,7 +217,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
 
                 code = ProviderGeneration.wrapInProviderClassIfNeed(dependency, code)
                 code = LazyGeneration.wrapInLazyClassIfNeed(dependency, code)
-                code.add(wrapInWakIfNeed(dependency))
+                code = WeakGeneration.wrapInWeakIfNeed(dependency, code)
 
                 val methodBuilder = dependencyInjectionMethod(target.key.className, dependency, code.build())
                 injectInTarget(methodBuilder, dependency)
