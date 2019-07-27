@@ -1,30 +1,20 @@
 package com.ioc
 
-import android.arch.lifecycle.ViewModel
-import android.support.v7.app.AppCompatActivity
+
+import android.os.Bundle
+import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import com.ios.injector.R
 import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-open class BrowserUi
+abstract class RootModule {
+    abstract fun getStr()
 
-class AlohaBrowserUi(val s: S): BrowserUi() {
-
-}
-
-interface AutoCompleteListener
-
-@Dependency
-class AutoCompleteListenerImpl(val browserUi: AlohaBrowserUi): AutoCompleteListener
-
-class AutocompleteController(private var autoCompleteListener: AutoCompleteListener)
-
-
-class S
-
-class AddressBarListenerImpl(@field:LocalScope val browserUi: AlohaBrowserUi) {
-    @Inject
-    lateinit var autocompleteController: AutocompleteController
+    object NestedModule {
+        @Dependency
+        @JvmStatic
+        fun getString() = "strin"
+    }
 }
 
 //@InjectParentDependencies
@@ -32,6 +22,19 @@ class MainActivity : AppCompatActivity() {
 
 
     @Inject
-    @LocalScope
-    lateinit var alohaBrowserUi: AlohaBrowserUi
+    lateinit var string: String
+
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+//        try {
+//            Class.forName("androidx.test.espresso.Espresso")
+//            findViewById<TextView>(R.id.test_text).setText("Test")
+//        } catch (e: ClassNotFoundException) {
+//        }
+//
+
+    }
 }

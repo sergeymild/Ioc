@@ -1988,4 +1988,75 @@ public class ModuleTests {
             .compilesWithoutError()
             .and().generatesSources(injectedFile);
     }
+
+    @Test
+    public void nestedModule() throws Exception {
+        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            "package test;",
+            "",
+            Helpers.importType(Inject.class),
+            "",
+            "public class Activity {",
+            "",
+            "   @Inject",
+            "   public CountryService service;",
+            "",
+            "   @Inject",
+            "   public String someString;",
+            "}");
+
+        JavaFileObject countryService = JavaFileObjects.forSourceLines("test.CountryService",
+            "package test;",
+            "",
+            Helpers.importType(Inject.class),
+            "",
+            "public class CountryService {}");
+
+        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
+            "package test;",
+            "",
+            Helpers.importType(Dependency.class),
+            "",
+            "public abstract class ModuleFile {",
+            "   public abstract static class NestedModule {",
+            "       @Dependency",
+            "       public abstract CountryService getService();",
+            "       @Dependency",
+            "       public static String getString() { return null; };",
+            "   }",
+            "}");
+
+        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+            "package test;",
+            "",
+            "import android.support.annotation.Keep;",
+            "import android.support.annotation.NonNull;",
+            "import java.lang.String;",
+            "",
+            "@Keep",
+            "public final class ActivityInjector {",
+            "",
+            "   @Keep",
+            "   public final void inject(@NonNull final Activity target) {",
+            "       injectCountryServiceInService(target);",
+            "       injectStringInSomeString(target);",
+            "   }",
+            "",
+            "   private final void injectCountryServiceInService(@NonNull final Activity target) {",
+            "       CountryService countryService = new CountryService();",
+            "       target.service = countryService;",
+            "   }",
+            "",
+            "   private final void injectStringInSomeString(@NonNull final Activity target) {",
+            "       String string = ModuleFile.NestedModule.getString();",
+            "       target.someString = string;",
+            "   }",
+            "}");
+
+        assertAbout(javaSources())
+            .that(Arrays.asList(activityFile, moduleFile, countryService))
+            .processedWith(new IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile);
+    }
 }

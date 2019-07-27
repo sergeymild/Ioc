@@ -4,16 +4,11 @@
     android:orientation="vertical"
     android:layout_height="match_parent">
 
-    <Button
-        android:id="@+id/login"
+    <TextView
+        android:id="@+id/test_text"
+        android:layout_marginTop="100dp"
+        android:textColor="@android:color/black"
         android:layout_width="match_parent"
-        android:text="LoginActivity"
-        android:layout_height="wrap_content" />
-
-    <Button
-        android:id="@+id/fragment"
-        android:layout_width="match_parent"
-        android:text="fragment"
         android:layout_height="wrap_content" />
 
 
