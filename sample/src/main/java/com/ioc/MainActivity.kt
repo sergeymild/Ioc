@@ -1,27 +1,27 @@
 package com.ioc
 
 
-import android.content.Context
 import android.os.Bundle
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.ios.injector.R
 import javax.inject.Inject
-import javax.inject.Provider
-import javax.inject.Singleton
 
+class Dep
 
-interface DepI
+object Module {
+    @Dependency
+    fun getDependency(s: String) = Dep()
 
-@Dependency
-class Dep(context: Context): DepI
+    @Dependency
+    fun geString() = "some"
+}
 
 //@InjectParentDependencies
 class MainActivity : AppCompatActivity() {
 
 
     @Inject
-    lateinit var lazyDep: Provider<DepI>
+    lateinit var dep: Dep
 
 
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -13,6 +13,9 @@ import java.util.concurrent.TimeUnit
 import javax.lang.model.element.Element
 import javax.lang.model.type.TypeKind
 import javax.tools.Diagnostic
+import kotlinx.metadata.Flag
+import javax.lang.model.element.TypeElement
+
 
 /**
  * Created by sergeygolishnikov on 20/11/2017.
@@ -76,6 +79,11 @@ inline fun measure(message: String, block: () -> Unit) {
     }
 }
 
+
+fun isModuleKotlinObject(typeElement: TypeElement): Boolean {
+    val kmClass = KotlinUtil.kmClassOf(typeElement) ?: return false
+    return Flag.Class.IS_OBJECT.invoke(kmClass.flags)
+}
 
 fun Element?.isSupportedType(): Boolean {
     this ?: return false

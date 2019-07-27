@@ -131,7 +131,9 @@ class ImplementationsSpec constructor(
                 DependencyTree.get(dependency.dependencies, typeUtils, usedSingletons, target).also { builder.add(it) }
                 applyIsLoadIfNeed(dependency.dependencies, target, usedSingletons)
                 val names = dependency.dependencyNames()
-                return builder.addStatement("\$T \$N = \$T.\$N(\$L)",
+                var statementString = "\$T \$N = \$T.\$N(\$L)"
+                if (it.isKotlinModule) statementString = "\$T \$N = \$T.INSTANCE.\$N(\$L)"
+                return builder.addStatement(statementString,
                     dependency.originalClassName(),
                     dependency.generatedName,
                     it.module,

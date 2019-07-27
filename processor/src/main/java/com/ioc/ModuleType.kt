@@ -35,6 +35,7 @@ class DependencyProvider constructor(
     var method: Element,
     var isSingleton: Boolean,
     var module: TypeName) {
+    var isKotlinModule = false
     var returnTypes = mutableListOf<TypeMirror>()
     var dependencyModels: MutableList<DependencyModel> = mutableListOf()
     var name = method.simpleName.toString()

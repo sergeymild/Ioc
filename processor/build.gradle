@@ -12,6 +12,7 @@ dependencies {
     compileOnly 'javax.inject:javax.inject:1'
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation "com.squareup:javapoet:1.9.0"
+    implementation "org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.1.0"
 
     testImplementation("com.android.support.test.espresso:espresso-core:+")
     testImplementation 'javax.inject:javax.inject:1'

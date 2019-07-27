@@ -125,11 +125,11 @@ class DependencyTypesFinder(
 
     private fun findMethodProviders(element: Element, named: String?, typeElement: Element, target: TargetType, implementations: MutableList<DependencyProvider>) {
         for (provider in methodsWithDependencyAnnotation()) {
-
+            val isKotlinModule = isModuleKotlinObject(provider.enclosingElement.asTypeElement())
             // if method is abstract skip
             if (provider.modifiers.contains(Modifier.ABSTRACT)) continue
 
-            if (!provider.modifiers.contains(Modifier.STATIC)) {
+            if (!provider.modifiers.contains(Modifier.STATIC) && !isKotlinModule) {
                 throw ProcessorException("${provider.enclosingElement.simpleName}.${provider.simpleName}() is annotated with @Dependency must be static and public").setElement(provider)
             }
 
@@ -139,6 +139,7 @@ class DependencyTypesFinder(
 
             val type = createProvider(returnType, typeElement, target, provider.parameters, isMethod = true)
             type.isMethod = true
+            type.isKotlinModule = isKotlinModule
             type.name = provider.simpleName.toString()
             type.module = ClassName.get(provider.enclosingElement.asTypeElement())
             type.isSingleton = type.isSingleton || provider.isHasAnnotation(Singleton::class.java)

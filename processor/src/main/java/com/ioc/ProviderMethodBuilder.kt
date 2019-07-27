@@ -48,7 +48,11 @@ object ProviderMethodBuilder {
         if (!method.isSingleton) {
             applyIsLoadIfNeed(dependencyModel.dependencies, target, usedSingletons)
             val names = method.dependencyNames()
-            builder.addStatement("\$T \$N = \$T.\$N($names)",
+
+            var statementString = "\$T \$N = \$T.\$N($names)"
+            if (method.isKotlinModule) statementString = "\$T \$N = \$T.INSTANCE.\$N($names)"
+
+            builder.addStatement(statementString,
                 dependencyModel.className,
                 dependencyModel.generatedName,
                 method.module,
@@ -71,7 +75,9 @@ object ProviderMethodBuilder {
 
         var code = CodeBlock.builder()
 
-        code = code.addStatement("\$T \$N = \$T.\$N()",
+        var statementString = "\$T \$N = \$T.\$N()"
+        if (method.isKotlinModule) statementString = "\$T \$N = \$T.INSTANCE.\$N()"
+        code = code.addStatement(statementString,
             dependencyModel.originalClassName(),
             dependencyModel.generatedName,
             method.module,

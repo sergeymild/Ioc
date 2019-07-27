@@ -13,6 +13,8 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.tools.JavaFileObject;
 
+import kotlin.Metadata;
+
 import static com.google.common.truth.Truth.assertAbout;
 import static com.google.testing.compile.JavaSourcesSubjectFactory.javaSources;
 
@@ -2055,6 +2057,292 @@ public class ModuleTests {
 
         assertAbout(javaSources())
             .that(Arrays.asList(activityFile, moduleFile, countryService))
+            .processedWith(new IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile);
+    }
+
+    @Test
+    public void kotlinModuleInField() throws Exception {
+        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            "package test;",
+            "",
+            Helpers.importType(Inject.class),
+            "",
+            "public class Activity {",
+            "",
+            "   @Inject",
+            "   public CountryService service;",
+            "}");
+
+        JavaFileObject countryService = JavaFileObjects.forSourceLines("test.CountryService",
+            "package test;",
+            "",
+            Helpers.importType(Inject.class),
+            "",
+            "public class CountryService {}");
+
+        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.Module",
+            "package test;",
+            "",
+            Helpers.importType(Dependency.class),
+            Helpers.importType(Metadata.class),
+            "",
+            "@Metadata(mv = {1, 1, 15}, bv = {1, 0, 3}, k = 1, d1 = {\"\\u0000\\u0012\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0002\\b\\u0002\\n\\u0002\\u0018\\u0002\\n\\u0000\\bÆ\\u0002\\u0018\\u00002\\u00020\\u0001B\\u0007\\b\\u0002¢\\u0006\\u0002\\u0010\\u0002J\\b\\u0010\\u0003\\u001a\\u00020\\u0004H\\u0007¨\\u0006\\u0005\"}, d2 = {\"Ltest/Module;\", \"\", \"()V\", \"getCountryService\", \"Ltest/CountryService;\", \"sample_debug\"})",
+            "public final class Module {",
+            "   public static final Module INSTANCE;",
+            "   @Dependency",
+            "   public final CountryService getCountryService() { return new CountryService(); }",
+            "",
+            "   static {",
+            "     Module var0 = new Module();",
+            "     INSTANCE = var0;",
+            "   }",
+            "}");
+
+        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+            "package test;",
+            "",
+            "import android.support.annotation.Keep;",
+            "import android.support.annotation.NonNull;",
+            "",
+            "@Keep",
+            "public final class ActivityInjector {",
+            "",
+            "   @Keep",
+            "   public final void inject(@NonNull final Activity target) {",
+            "       injectCountryServiceInService(target);",
+            "   }",
+            "",
+            "   private final void injectCountryServiceInService(@NonNull final Activity target) {",
+            "       CountryService countryService = Module.INSTANCE.getCountryService();",
+            "       target.service = countryService;",
+            "   }",
+            "}");
+
+        assertAbout(javaSources())
+            .that(Arrays.asList(activityFile, moduleFile, countryService))
+            .processedWith(new IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile);
+    }
+
+    @Test
+    public void kotlinModuleInFieldWithParameter() throws Exception {
+        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            "package test;",
+            "",
+            Helpers.importType(Inject.class),
+            "",
+            "public class Activity {",
+            "",
+            "   @Inject",
+            "   public CountryService service;",
+            "}");
+
+        JavaFileObject countryService = JavaFileObjects.forSourceLines("test.CountryService",
+            "package test;",
+            "",
+            Helpers.importType(Inject.class),
+            "",
+            "public class CountryService {}");
+
+        JavaFileObject countryRepository = JavaFileObjects.forSourceLines("test.CountryRepository",
+            "package test;",
+            "",
+            "public class CountryRepository {",
+            "   CountryRepository() {}",
+            "}");
+
+        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.Module",
+            "package test;",
+            "",
+            Helpers.importType(Dependency.class),
+            Helpers.importType(Metadata.class),
+            "",
+            "@Metadata(mv = {1, 1, 15}, bv = {1, 0, 3}, k = 1, d1 = {\"\\u0000\\u0012\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0002\\b\\u0002\\n\\u0002\\u0018\\u0002\\n\\u0000\\bÆ\\u0002\\u0018\\u00002\\u00020\\u0001B\\u0007\\b\\u0002¢\\u0006\\u0002\\u0010\\u0002J\\b\\u0010\\u0003\\u001a\\u00020\\u0004H\\u0007¨\\u0006\\u0005\"}, d2 = {\"Ltest/Module;\", \"\", \"()V\", \"getCountryService\", \"Ltest/CountryService;\", \"sample_debug\"})",
+            "public final class Module {",
+            "   public static final Module INSTANCE;",
+            "   @Dependency",
+            "   public final CountryService getCountryService(CountryRepository repository) { return new CountryService(); }",
+            "",
+            "   static {",
+            "     Module var0 = new Module();",
+            "     INSTANCE = var0;",
+            "   }",
+            "}");
+
+        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+            "package test;",
+            "",
+            "import android.support.annotation.Keep;",
+            "import android.support.annotation.NonNull;",
+            "",
+            "@Keep",
+            "public final class ActivityInjector {",
+            "",
+            "   @Keep",
+            "   public final void inject(@NonNull final Activity target) {",
+            "       injectCountryServiceInService(target);",
+            "   }",
+            "",
+            "   private final void injectCountryServiceInService(@NonNull final Activity target) {",
+            "       CountryRepository countryRepository = new CountryRepository();",
+            "       CountryService countryService = Module.INSTANCE.getCountryService(countryRepository);",
+            "       target.service = countryService;",
+            "   }",
+            "}");
+
+        assertAbout(javaSources())
+            .that(Arrays.asList(activityFile, moduleFile, countryRepository, countryService))
+            .processedWith(new IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile);
+    }
+
+    @Test
+    public void kotlinModuleInConstructor() throws Exception {
+        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            "package test;",
+            "",
+            Helpers.importType(Inject.class),
+            "",
+            "public class Activity {",
+            "",
+            "   @Inject",
+            "   public CountryProvider service;",
+            "}");
+
+        JavaFileObject countryService = JavaFileObjects.forSourceLines("test.CountryService",
+            "package test;",
+            "public class CountryService {}");
+
+        JavaFileObject countryProvider = JavaFileObjects.forSourceLines("test.CountryProvider",
+            "package test;",
+            "",
+            "public class CountryProvider {",
+            "   CountryProvider(CountryService service) {}",
+            "}");
+
+        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.Module",
+            "package test;",
+            "",
+            Helpers.importType(Dependency.class),
+            Helpers.importType(Metadata.class),
+            "",
+            "@Metadata(mv = {1, 1, 15}, bv = {1, 0, 3}, k = 1, d1 = {\"\\u0000\\u0012\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0002\\b\\u0002\\n\\u0002\\u0018\\u0002\\n\\u0000\\bÆ\\u0002\\u0018\\u00002\\u00020\\u0001B\\u0007\\b\\u0002¢\\u0006\\u0002\\u0010\\u0002J\\b\\u0010\\u0003\\u001a\\u00020\\u0004H\\u0007¨\\u0006\\u0005\"}, d2 = {\"Ltest/Module;\", \"\", \"()V\", \"getCountryService\", \"Ltest/CountryService;\", \"sample_debug\"})",
+            "public final class Module {",
+            "   public static final Module INSTANCE;",
+            "   @Dependency",
+            "   public final CountryService getCountryService() { return new CountryService(); }",
+            "",
+            "   static {",
+            "     Module var0 = new Module();",
+            "     INSTANCE = var0;",
+            "   }",
+            "}");
+
+        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+            "package test;",
+            "",
+            "import android.support.annotation.Keep;",
+            "import android.support.annotation.NonNull;",
+            "",
+            "@Keep",
+            "public final class ActivityInjector {",
+            "",
+            "   @Keep",
+            "   public final void inject(@NonNull final Activity target) {",
+            "       injectCountryProviderInService(target);",
+            "   }",
+            "",
+            "   private final void injectCountryProviderInService(@NonNull final Activity target) {",
+            "       CountryService countryService = Module.INSTANCE.getCountryService();",
+            "       CountryProvider countryProvider = new CountryProvider(countryService);",
+            "       target.service = countryProvider;",
+            "   }",
+            "}");
+
+        assertAbout(javaSources())
+            .that(Arrays.asList(activityFile, moduleFile, countryProvider, countryService))
+            .processedWith(new IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile);
+    }
+
+    @Test
+    public void kotlinModuleInConstructorWithParameters() throws Exception {
+        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            "package test;",
+            "",
+            Helpers.importType(Inject.class),
+            "",
+            "public class Activity {",
+            "",
+            "   @Inject",
+            "   public CountryProvider service;",
+            "}");
+
+        JavaFileObject countryService = JavaFileObjects.forSourceLines("test.CountryService",
+            "package test;",
+            "public class CountryService {}");
+
+        JavaFileObject countryRepository = JavaFileObjects.forSourceLines("test.CountryRepository",
+            "package test;",
+            "",
+            "public class CountryRepository {",
+            "   CountryRepository() {}",
+            "}");
+
+        JavaFileObject countryProvider = JavaFileObjects.forSourceLines("test.CountryProvider",
+            "package test;",
+            "",
+            "public class CountryProvider {",
+            "   CountryProvider(CountryService service) {}",
+            "}");
+
+        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.Module",
+            "package test;",
+            "",
+            Helpers.importType(Dependency.class),
+            Helpers.importType(Metadata.class),
+            "",
+            "@Metadata(mv = {1, 1, 15}, bv = {1, 0, 3}, k = 1, d1 = {\"\\u0000\\u0012\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0002\\b\\u0002\\n\\u0002\\u0018\\u0002\\n\\u0000\\bÆ\\u0002\\u0018\\u00002\\u00020\\u0001B\\u0007\\b\\u0002¢\\u0006\\u0002\\u0010\\u0002J\\b\\u0010\\u0003\\u001a\\u00020\\u0004H\\u0007¨\\u0006\\u0005\"}, d2 = {\"Ltest/Module;\", \"\", \"()V\", \"getCountryService\", \"Ltest/CountryService;\", \"sample_debug\"})",
+            "public final class Module {",
+            "   public static final Module INSTANCE;",
+            "   @Dependency",
+            "   public final CountryService getCountryService(CountryRepository repository) { return new CountryService(); }",
+            "",
+            "   static {",
+            "     Module var0 = new Module();",
+            "     INSTANCE = var0;",
+            "   }",
+            "}");
+
+        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+            "package test;",
+            "",
+            "import android.support.annotation.Keep;",
+            "import android.support.annotation.NonNull;",
+            "",
+            "@Keep",
+            "public final class ActivityInjector {",
+            "",
+            "   @Keep",
+            "   public final void inject(@NonNull final Activity target) {",
+            "       injectCountryProviderInService(target);",
+            "   }",
+            "",
+            "   private final void injectCountryProviderInService(@NonNull final Activity target) {",
+            "       CountryRepository countryRepository = new CountryRepository();",
+            "       CountryService countryService = Module.INSTANCE.getCountryService(countryRepository);",
+            "       CountryProvider countryProvider = new CountryProvider(countryService);",
+            "       target.service = countryProvider;",
+            "   }",
+            "}");
+
+        assertAbout(javaSources())
+            .that(Arrays.asList(activityFile, moduleFile, countryProvider, countryRepository, countryService))
             .processedWith(new IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile);
