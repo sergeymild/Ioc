@@ -17,7 +17,7 @@ import javax.tools.Diagnostic
 /**
  * Created by sergeygolishnikov on 20/11/2017.
  */
-inline fun <T: Any, R> T?.transform(block: (T) -> R) : R? {
+inline fun <T : Any, R> T?.transform(block: (T) -> R): R? {
     return if (this != null) block(this) else null
 }
 
@@ -39,7 +39,7 @@ fun Element.asTypeName(): TypeName {
     return ClassName.get(asType())
 }
 
-fun CodeBlock.add(codeBlock: CodeBlock) : CodeBlock {
+fun CodeBlock.add(codeBlock: CodeBlock): CodeBlock {
     return toBuilder().add(codeBlock).build()
 }
 
@@ -54,16 +54,16 @@ fun lazy(typeMirror: Element): TypeName {
 
 fun lazyCodeBlock(type: Element, name: String, code: CodeBlock.Builder): CodeBlock.Builder {
     return CodeBlock.builder().add("\$T \$N = \$L;\n",
-            lazy(type),
-            "lazy_$name",
-            LazyAnonymousClass.get(code.build(), name, type))
+        lazy(type),
+        name,
+        LazyAnonymousClass.get(code.build(), name, type))
 }
 
 fun viewModelFactoryCode(name: String, code: CodeBlock.Builder): CodeBlock.Builder {
     return CodeBlock.builder().add("\$T \$N = \$L;\n",
-            viewModelFactoryType,
-            "factory_$name",
-            ViewModelFactoryAnonymousClass.get(code.build()))
+        viewModelFactoryType,
+        "factory_$name",
+        ViewModelFactoryAnonymousClass.get(code.build()))
 }
 
 fun weak(typeMirror: Element): TypeName {
@@ -72,10 +72,10 @@ fun weak(typeMirror: Element): TypeName {
 
 fun weakCodeBlock(type: Element, name: String): CodeBlock {
     return CodeBlock.builder().addStatement("\$T \$N = new \$T(\$N)",
-            weak(type),
-            "weak_$name",
-            weakType(type),
-            name).build()
+        weak(type),
+        "weak_$name",
+        weakType(type),
+        name).build()
 }
 
 

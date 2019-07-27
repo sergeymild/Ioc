@@ -1,28 +1,24 @@
 package com.ioc
 
 
+import android.content.Context
 import android.os.Bundle
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.ios.injector.R
 import javax.inject.Inject
+import javax.inject.Provider
+import javax.inject.Singleton
 
-abstract class RootModule {
-    abstract fun getStr()
 
-    object NestedModule {
-        @Dependency
-        @JvmStatic
-        fun getString() = "strin"
-    }
-}
+class Dep(context: Context)
 
 //@InjectParentDependencies
 class MainActivity : AppCompatActivity() {
 
 
     @Inject
-    lateinit var string: String
+    lateinit var lazyDep: Provider<Lazy<Dep>>
 
 
     override fun onCreate(savedInstanceState: Bundle?) {

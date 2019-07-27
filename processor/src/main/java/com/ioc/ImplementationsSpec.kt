@@ -91,7 +91,7 @@ class ImplementationsSpec constructor(
             if (!dependencyModel.isLazy) return codeBlock
             val providerGeneric = dependencyModel.erasuredType.asTypeElement()
             val originalGeneratedName = dependencyModel.generatedName
-            dependencyModel.generatedName = "lazy_${dependencyModel.generatedName}"
+            //dependencyModel.generatedName = "lazy_${dependencyModel.generatedName}"
             return lazyCodeBlock(providerGeneric, originalGeneratedName, codeBlock)
         }
 

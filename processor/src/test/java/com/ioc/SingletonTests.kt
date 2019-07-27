@@ -645,7 +645,7 @@ class SingletonTests : BaseTest {
                 "",
                 "   private final void injectMainPresenterInPresenter(@NonNull final Activity target) {",
                 "       SingletonDependency singletonDependency = SingletonDependencySingleton.get();",
-                "       Lazy<DependencyModel> lazy_dependencyModel = new Lazy<DependencyModel>() {",
+                "       Lazy<DependencyModel> dependencyModel = new Lazy<DependencyModel>() {",
                 "           private DependencyModel value;",
                 "           public boolean isInitialized() {",
                 "               return value != null;",
@@ -660,7 +660,7 @@ class SingletonTests : BaseTest {
                 "               return value;",
                 "           }",
                 "       };",
-                "       MainPresenter mainPresenter = new MainPresenter(lazy_dependencyModel, singletonDependency);",
+                "       MainPresenter mainPresenter = new MainPresenter(dependencyModel, singletonDependency);",
                 "       target.presenter = mainPresenter;",
                 "   }",
                 "}")
