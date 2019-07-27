@@ -11,14 +11,17 @@ import javax.inject.Provider
 import javax.inject.Singleton
 
 
-class Dep(context: Context)
+interface DepI
+
+@Dependency
+class Dep(context: Context): DepI
 
 //@InjectParentDependencies
 class MainActivity : AppCompatActivity() {
 
 
     @Inject
-    lateinit var lazyDep: Provider<Lazy<Dep>>
+    lateinit var lazyDep: Lazy<DepI>
 
 
     override fun onCreate(savedInstanceState: Bundle?) {

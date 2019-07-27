@@ -1,8 +1,10 @@
 package com.ioc
 
-import com.ioc.common.*
+import com.ioc.common.nonNullAnnotation
+import com.ioc.common.providerType
+import com.ioc.common.viewModelFactoryType
+import com.ioc.common.viewModelType
 import com.squareup.javapoet.*
-import javax.lang.model.element.Element
 import javax.lang.model.element.Modifier
 
 /**
@@ -23,33 +25,6 @@ object ProviderAnonymousClass {
                 .build()
     }
 }
-
-object LazyAnonymousClass {
-    operator fun get(methodBody: CodeBlock, name: String, type: Element): TypeSpec {
-
-        val code = CodeBlock.builder()
-        code.addStatement("if (isInitialized()) return value")
-        code.add(methodBody)
-        code.addStatement("value = \$N", name)
-        code.addStatement("return value")
-        return TypeSpec.anonymousClassBuilder("")
-                .addSuperinterface(lazy(type))
-                .addField(FieldSpec.builder(ClassName.get(type.asType()), "value", Modifier.PRIVATE).build())
-                .addMethod(MethodSpec.methodBuilder("isInitialized")
-                        .addModifiers(Modifier.PUBLIC)
-                        .addStatement("return value != null")
-                        .returns(TypeName.BOOLEAN).build())
-                .addMethod(MethodSpec.methodBuilder("get")
-                        .addAnnotation(Override::class.java)
-                        .addAnnotation(nonNullAnnotation)
-                        .addModifiers(Modifier.PUBLIC)
-                        .returns(type.asTypeName())
-                        .addCode(code.build())
-                        .build())
-                .build()
-    }
-}
-
 
 object ViewModelFactoryAnonymousClass {
     operator fun get(methodBody: CodeBlock): TypeSpec {

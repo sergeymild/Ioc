@@ -3,7 +3,6 @@ package com.ioc
 import com.ioc.ImplementationsSpec.Companion.dependencyInjectionCode
 import com.ioc.ImplementationsSpec.Companion.dependencyInjectionMethod
 import com.ioc.ImplementationsSpec.Companion.injectInTarget
-import com.ioc.ImplementationsSpec.Companion.wrapInLazyIfNeed
 import com.ioc.ImplementationsSpec.Companion.wrapInProviderIfNeed
 import com.ioc.ImplementationsSpec.Companion.wrapInWakIfNeed
 import com.ioc.common.*
@@ -211,10 +210,15 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
 
             for (dependency in sorted) {
                 val usedSingletons = collectUsedSingletonsInMethodCreation(dependency.dependencies)
+
+                // generate base injection code
                 var code = dependencyInjectionCode(dependency, processingEnv.typeUtils, target.key, usedSingletons)
 
+                // if dependency is lazy, generate lazy class
+
+
                 code = wrapInProviderIfNeed(code, dependency)
-                code = wrapInLazyIfNeed(code, dependency)
+                code = LazyGeneration.wrapInLazyClassIfNeed(dependency, code)
                 code.add(wrapInWakIfNeed(dependency))
 
                 val methodBuilder = dependencyInjectionMethod(target.key.className, dependency, code.build())
@@ -280,5 +284,15 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
                 }
             }
         }
+    }
+
+    private fun isNeedPassTarget(dependency: DependencyModel): Boolean {
+        val queue = LinkedList(dependency.dependencies)
+        while (queue.isNotEmpty()) {
+            val dep = queue.pop()
+            if (dep.asTarget) return true
+            queue.addAll(dep.dependencies)
+        }
+        return false
     }
 }

@@ -1,7 +1,7 @@
 package com.ioc.common
 
 import com.ioc.IProcessor
-import com.ioc.LazyAnonymousClass
+import com.ioc.IocLazy
 import com.ioc.ViewModelFactoryAnonymousClass
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.CodeBlock
@@ -17,17 +17,13 @@ import javax.tools.Diagnostic
 /**
  * Created by sergeygolishnikov on 20/11/2017.
  */
-inline fun <T : Any, R> T?.transform(block: (T) -> R): R? {
-    return if (this != null) block(this) else null
-}
-
 
 fun weakType(parameterizedType: Element): TypeName {
     return ParameterizedTypeName.get(ClassName.get(WeakReference::class.java), ClassName.get(parameterizedType.asType()))
 }
 
 val providerType = ClassName.get(Provider::class.java)
-val lazyType = ClassName.get(com.ioc.Lazy::class.java)
+val iocLazyType = ClassName.get(IocLazy::class.java)
 val viewModelFactoryType = ClassName.bestGuess("android.arch.lifecycle.ViewModelProvider.Factory")
 val keepAnnotation = ClassName.bestGuess("android.support.annotation.Keep")
 val nonNullAnnotation = ClassName.bestGuess("android.support.annotation.NonNull")
@@ -47,16 +43,8 @@ fun CodeBlock.add(block: CodeBlock.Builder): CodeBlock.Builder {
     return block.add(this)
 }
 
-fun lazy(typeMirror: Element): TypeName {
-    val type = ClassName.get(typeMirror.asType())
-    return ParameterizedTypeName.get(lazyType, type)
-}
-
-fun lazyCodeBlock(type: Element, name: String, code: CodeBlock.Builder): CodeBlock.Builder {
-    return CodeBlock.builder().add("\$T \$N = \$L;\n",
-        lazy(type),
-        name,
-        LazyAnonymousClass.get(code.build(), name, type))
+fun Element.asLazyType(): TypeName {
+    return ParameterizedTypeName.get(iocLazyType, asTypeName())
 }
 
 fun viewModelFactoryCode(name: String, code: CodeBlock.Builder): CodeBlock.Builder {

@@ -1,6 +1,5 @@
 package com.ioc
 
-import com.ioc.ImplementationsSpec.Companion.wrapInLazyIfNeed
 import com.ioc.ImplementationsSpec.Companion.wrapInProviderIfNeed
 import com.ioc.ImplementationsSpec.Companion.wrapInWakIfNeed
 import com.ioc.ProviderImplementationBuilder.buildForSingleton
@@ -27,11 +26,14 @@ object DependencyTree {
             if (dependency.provideMethod() == null && isAllowedPackage) {
                 throw ProcessorException("Can't find implementations of `${dependency.dependency.asType()} ${dependency.dependency}` maybe you forgot add correct @Named, @Qualifier or @Scope annotations or add @Dependency on provides method, `${target?.element}`").setElement(target?.element)
             }
-            val code = generateCode(dependency, typeUtils, usedSingletons, target)
+            var code = generateCode(dependency, typeUtils, usedSingletons, target).toBuilder()
 
-            val wrapInProviderIfNeed = wrapInProviderIfNeed(code.toBuilder(), dependency)
-            builder.add(wrapInLazyIfNeed(wrapInProviderIfNeed, dependency).build())
-            builder.add(wrapInWakIfNeed(dependency))
+
+
+            code = wrapInProviderIfNeed(code, dependency)
+            code = LazyGeneration.wrapInLazyClassIfNeed(dependency, code)
+            code.add(wrapInWakIfNeed(dependency))
+            builder.add(code.build())
         }
         return builder.build()
     }

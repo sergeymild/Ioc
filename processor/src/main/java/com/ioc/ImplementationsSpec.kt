@@ -84,17 +84,6 @@ class ImplementationsSpec constructor(
                 .addCode(codeBlock)
         }
 
-        fun wrapInLazyIfNeed(
-            codeBlock: CodeBlock.Builder,
-            dependencyModel: DependencyModel): CodeBlock.Builder {
-
-            if (!dependencyModel.isLazy) return codeBlock
-            val providerGeneric = dependencyModel.erasuredType.asTypeElement()
-            val originalGeneratedName = dependencyModel.generatedName
-            //dependencyModel.generatedName = "lazy_${dependencyModel.generatedName}"
-            return lazyCodeBlock(providerGeneric, originalGeneratedName, codeBlock)
-        }
-
         fun wrapInProviderIfNeed(
             codeBlock: CodeBlock.Builder,
             dependencyModel: DependencyModel): CodeBlock.Builder {
