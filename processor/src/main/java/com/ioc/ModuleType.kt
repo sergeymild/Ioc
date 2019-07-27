@@ -1,10 +1,8 @@
 package com.ioc
 
-import com.ioc.common.asElement
 import com.ioc.common.asTypeElement
 import com.squareup.javapoet.TypeName
 import javax.lang.model.element.Element
-import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.TypeElement
 import javax.lang.model.type.TypeMirror
 
@@ -31,7 +29,7 @@ fun DependencyModel.dependencyNames(): String {
     return dependencies.joinToString { dependencyName(it) }
 }
 
-class DependencyProvider constructor(
+class DependencyProvider(
     var method: Element,
     var isSingleton: Boolean,
     var module: TypeName) {
@@ -41,11 +39,10 @@ class DependencyProvider constructor(
     var name = method.simpleName.toString()
     var named: String? = null
     var isMethod: Boolean = true
-    var isFromTarget: Boolean = false
     var packageName: String = ""
 
     fun returnType(): TypeElement {
-        return returnTypes[0].asElement().asTypeElement()
+        return returnTypes[0].asTypeElement()
     }
 
     override fun toString(): String {

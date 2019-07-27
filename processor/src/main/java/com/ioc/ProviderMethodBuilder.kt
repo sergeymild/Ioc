@@ -14,12 +14,6 @@ object ProviderMethodBuilder {
         typeUtils: Types,
         target: TargetType?,
         usedSingletons: Map<String, DependencyModel>): CodeBlock {
-        if (provider.isFromTarget) {
-            return CodeBlock.builder().addStatement("\$T \$N = target.\$N()",
-                dependencyModel.originalClassName(),
-                dependencyModel.generatedName,
-                provider.name).build()
-        }
 
         if (provider.dependencyModels.isEmpty()) {
             return generateWithoutDependencies(dependencyModel, provider)
