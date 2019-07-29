@@ -10,12 +10,14 @@ import javax.lang.model.element.Modifier
 object ProviderGeneration {
     fun wrapInProviderClassIfNeed(model: DependencyModel, body: CodeBlock.Builder): CodeBlock.Builder {
         if (!model.isProvider) return body
+        val originalName = model.generatedName
+        model.generatedName = "provider${model.generatedName.capitalize()}"
         return CodeBlock
             .builder()
             .add("\$T \$N = \$L;\n",
                 model.originalType.asProviderType(),
                 model.generatedName,
-                anonymousClass(model.originalType, model.generatedName, body.build()))
+                anonymousClass(model.originalType, originalName, body.build()))
     }
 
 

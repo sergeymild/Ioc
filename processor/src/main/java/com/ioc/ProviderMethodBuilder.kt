@@ -1,5 +1,6 @@
 package com.ioc
 
+import com.ioc.common.emptyCodBlock
 import com.squareup.javapoet.CodeBlock
 import javax.lang.model.util.Types
 
@@ -52,10 +53,11 @@ object ProviderMethodBuilder {
                 method.module,
                 method.name)
         } else {
-            if (usedSingletons.containsKey(dependencyModel.typeElementString)) {
-                return CodeBlock.builder().build()
-            }
-            return singleton(dependencyModel)
+            return emptyCodBlock
+//            if (usedSingletons.containsKey(dependencyModel.typeElementString)) {
+//                return CodeBlock.builder().build()
+//            }
+//            return singleton(dependencyModel)
         }
 
         return builder.build()
@@ -64,7 +66,8 @@ object ProviderMethodBuilder {
     @Throws(Throwable::class)
     private fun generateWithoutDependencies(dependencyModel: DependencyModel, method: DependencyProvider): CodeBlock {
         if (method.isSingleton) {
-            return singleton(dependencyModel)
+//            return singleton(dependencyModel)
+            return emptyCodBlock
         }
 
         var code = CodeBlock.builder()

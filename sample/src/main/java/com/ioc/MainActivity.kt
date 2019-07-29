@@ -5,28 +5,35 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.ios.injector.R
 import javax.inject.Inject
+import javax.inject.Singleton
 
-class Dep
+class CategoriesRepository
+class CategoriesProvider
+@Singleton
+class RoomDataSource
 
-object Module {
-    @Dependency
-    fun getDependency(s: String) = Dep()
+@Dependency
+fun provideCategoriesRepository(dataSource: RoomDataSource): CategoriesRepository = CategoriesRepository()
 
-    @Dependency
-    fun geString() = "some"
-}
+@Singleton
+@Dependency
+fun provideCategoriesProvider(
+    categoriesRepository: CategoriesRepository
+): CategoriesProvider = CategoriesProvider()
+
 
 //@InjectParentDependencies
 class MainActivity : AppCompatActivity() {
 
 
     @Inject
-    lateinit var dep: Dep
-
+    lateinit var categoriesProvider: CategoriesProvider
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        println(Ioc.singleton(RoomDataSource::class.java))
 
 //        try {
 //            Class.forName("androidx.test.espresso.Espresso")

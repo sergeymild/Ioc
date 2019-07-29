@@ -195,7 +195,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         }
 
         for (singleton in singletons) {
-            val usedSingletons = collectUsedSingletonsInMethodCreation(singleton.dependencies)
+            val usedSingletons = collectUsedSingletonsInMethodCreation(singleton.dependencies, false)
             val spec = NewSingletonSpec(singleton, processingEnv.typeUtils, usedSingletons)
             writeClassFile(singleton.packageName, spec.inject())
         }
@@ -207,17 +207,17 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
             val methods = mutableListOf<MethodSpec>()
 
             for (dependency in sorted) {
-                val usedSingletons = collectUsedSingletonsInMethodCreation(dependency.dependencies)
+                val usedSingletons = collectUsedSingletonsInMethodCreation(dependency.dependencies, dependency.isSingleton)
 
                 // generate base injection code
                 var code = dependencyInjectionCode(dependency, processingEnv.typeUtils, target.key, usedSingletons)
+                println(code.build())
 
                 // if dependency is lazy, generate lazy class
 
-
-                code = ProviderGeneration.wrapInProviderClassIfNeed(dependency, code)
-                code = LazyGeneration.wrapInLazyClassIfNeed(dependency, code)
-                code = WeakGeneration.wrapInWeakIfNeed(dependency, code)
+//                code = ProviderGeneration.wrapInProviderClassIfNeed(dependency, code)
+//                code = LazyGeneration.wrapInLazyClassIfNeed(dependency, code)
+//                code = WeakGeneration.wrapInWeakIfNeed(dependency, code)
 
                 val methodBuilder = dependencyInjectionMethod(target.key.className, dependency, code.build())
                 injectInTarget(methodBuilder, dependency)
@@ -252,17 +252,20 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         }
     }
 
-    private fun collectUsedSingletonsInMethodCreation(dependencies: List<DependencyModel>): MutableMap<String, DependencyModel> {
+    // TODO isParentDependencySingleton
+    private fun collectUsedSingletonsInMethodCreation(dependencies: List<DependencyModel>, isParentDependencySingleton: Boolean): MutableMap<String, DependencyModel> {
         // try to find all singleton used in creation of current inject
+        var isLocalParentDependencySingleton = isParentDependencySingleton
         val usedSingletons = mutableMapOf<String, DependencyModel>()
         val queue = LinkedList(dependencies)
         while (queue.isNotEmpty()) {
             val dep = queue.pop()
             val key = dep.typeElement.asType().toString()
-            if (dep.isSingleton && !usedSingletons.containsKey(key)) {
+            if (dep.isSingleton && !usedSingletons.containsKey(key) && !isLocalParentDependencySingleton) {
                 usedSingletons[key] = dep
                 continue
             }
+            isLocalParentDependencySingleton = dep.isSingleton
             if (!dep.isSingleton) queue.addAll(dep.dependencies)
         }
         return usedSingletons

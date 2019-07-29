@@ -51,6 +51,11 @@ fun argumentsConstructor(
         model.className).build()
 }
 
+fun singletonProvider(model: DependencyModel): String {
+    val singletonName = model.dependency.asTypeElement().qualifiedName.toString()
+    return "com.ioc.Ioc.singleton($singletonName.class)"
+}
+
 fun singleton(model: DependencyModel): CodeBlock {
     val name = model.dependency.simpleName.toString()
     model.generatedName = uniqueName(name).decapitalize()

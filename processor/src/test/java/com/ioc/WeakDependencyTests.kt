@@ -1,51 +1,49 @@
-package com.ioc;
+package com.ioc
 
-import com.google.testing.compile.JavaFileObjects;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-
-import java.lang.ref.WeakReference;
-import java.util.Arrays;
-
-import javax.inject.Inject;
-import javax.tools.JavaFileObject;
-
-import static com.google.common.truth.Truth.assertAbout;
-import static com.google.testing.compile.JavaSourcesSubjectFactory.javaSources;
-import static com.ioc.Helpers.importType;
+import com.google.common.truth.Truth.assertAbout
+import com.google.testing.compile.JavaFileObjects
+import com.google.testing.compile.JavaSourcesSubject
+import com.google.testing.compile.JavaSourcesSubjectFactory.javaSources
+import com.ioc.Helpers.importType
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.JUnit4
+import java.lang.ref.WeakReference
+import java.util.*
+import javax.inject.Inject
+import javax.tools.JavaFileObject
 
 /**
  * Created by sergeygolishnikov on 01/11/2017.
  */
-@RunWith(JUnit4.class)
-public class WeakDependencyTests {
+@RunWith(JUnit4::class)
+class WeakDependencyTests {
     @Test
-    public void fieldInjectWithoutParams() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun fieldInjectWithoutParams() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            importType(Inject.class),
-            importType(WeakReference.class),
+            importType(Inject::class.java),
+            importType(WeakReference::class.java),
             "",
             "public class Activity {",
             "",
             "   @Inject",
             "   public WeakReference<DependencyModel> weakDependency;",
-            "}");
+            "}")
 
-        JavaFileObject dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "public class DependencyModel {}");
+            "public class DependencyModel {}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep",
             "import android.support.annotation.NonNull",
-            importType(WeakReference.class),
+            importType(WeakReference::class.java),
             "",
             "@Keep",
             "public final class ActivityInjector {",
@@ -59,55 +57,56 @@ public class WeakDependencyTests {
             "       WeakReference<DependencyModel> weakDependencyModel = new WeakReference<DependencyModel>(dependencyModel);",
             "       target.weakDependency = weakDependencyModel;",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, dependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(Arrays.asList<JavaFileObject>(activityFile, dependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void fieldInjectWithParam() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun fieldInjectWithParam() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            importType(Inject.class),
-            importType(WeakReference.class),
+            importType(Inject::class.java),
+            importType(WeakReference::class.java),
             "",
             "public class Activity {",
             "",
             "   @Inject",
             "   public WeakReference<DependencyModel> weakDependency;",
-            "}");
+            "}")
 
-        JavaFileObject contextFile = JavaFileObjects.forSourceLines("test.Context",
+        val contextFile = JavaFileObjects.forSourceLines("test.Context",
             "package test;",
             "",
-            importType(Dependency.class),
+            importType(Dependency::class.java),
             "",
             "@Dependency",
             "public class Context {",
-            "}");
+            "}")
 
-        JavaFileObject dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            importType(Inject.class),
+            importType(Inject::class.java),
             "",
             "public class DependencyModel {",
             "",
             "   @Inject",
             "   DependencyModel(Context context) {}",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep",
             "import android.support.annotation.NonNull",
-            importType(WeakReference.class),
+            importType(WeakReference::class.java),
             "",
             "@Keep",
             "public final class ActivityInjector {",
@@ -122,23 +121,24 @@ public class WeakDependencyTests {
             "       WeakReference<DependencyModel> weakDependencyModel = new WeakReference<DependencyModel>(dependencyModel);",
             "       target.weakDependency = weakDependencyModel;",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, contextFile, dependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(Arrays.asList<JavaFileObject>(activityFile, contextFile, dependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
 
     @Test
-    public void methodInjectWithoutParams() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun methodInjectWithoutParams() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            importType(Inject.class),
-            importType(WeakReference.class),
+            importType(Inject::class.java),
+            importType(WeakReference::class.java),
             "",
             "public class Activity {",
             "",
@@ -147,19 +147,19 @@ public class WeakDependencyTests {
             "",
             "   public void weakDependency(WeakReference<DependencyModel> dependency) {};",
             "   public WeakReference<DependencyModel> getWeakDependency() { return null; };",
-            "}");
+            "}")
 
-        JavaFileObject dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "public class DependencyModel {}");
+            "public class DependencyModel {}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep",
             "import android.support.annotation.NonNull",
-            importType(WeakReference.class),
+            importType(WeakReference::class.java),
             "",
             "@Keep",
             "public final class ActivityInjector {",
@@ -173,22 +173,23 @@ public class WeakDependencyTests {
             "       WeakReference<DependencyModel> weakDependencyModel = new WeakReference<DependencyModel>(dependencyModel);",
             "       target.weakDependency(weakDependencyModel);",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, dependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(Arrays.asList<JavaFileObject>(activityFile, dependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void methodInjectWithParam() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun methodInjectWithParam() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            importType(Inject.class),
-            importType(WeakReference.class),
+            importType(Inject::class.java),
+            importType(WeakReference::class.java),
             "",
             "public class Activity {",
             "",
@@ -197,34 +198,34 @@ public class WeakDependencyTests {
             "",
             "   public void weakDependency(WeakReference<DependencyModel> dependency) {};",
             "   public WeakReference<DependencyModel> getWeakDependency() {return null;};",
-            "}");
+            "}")
 
-        JavaFileObject contextFile = JavaFileObjects.forSourceLines("test.Context",
+        val contextFile = JavaFileObjects.forSourceLines("test.Context",
             "package test;",
             "",
-            importType(Dependency.class),
+            importType(Dependency::class.java),
             "",
             "@Dependency",
             "public class Context {",
-            "}");
+            "}")
 
-        JavaFileObject dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            importType(Inject.class),
+            importType(Inject::class.java),
             "",
             "public class DependencyModel {",
             "",
             "   @Inject",
             "   DependencyModel(Context context) {}",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep",
             "import android.support.annotation.NonNull",
-            importType(WeakReference.class),
+            importType(WeakReference::class.java),
             "",
             "@Keep",
             "public final class ActivityInjector {",
@@ -239,64 +240,65 @@ public class WeakDependencyTests {
             "       WeakReference<DependencyModel> weakDependencyModel = new WeakReference<DependencyModel>(dependencyModel);",
             "       target.weakDependency(weakDependencyModel);",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, contextFile, dependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(Arrays.asList<JavaFileObject>(activityFile, contextFile, dependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
 
     @Test
-    public void provideMethodInjectWithParam() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun provideMethodInjectWithParam() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            importType(Inject.class),
-            importType(WeakReference.class),
+            importType(Inject::class.java),
+            importType(WeakReference::class.java),
             "",
             "public class Activity {",
             "",
             "   @Inject",
             "   public DependencyModel dependency;",
-            "}");
+            "}")
 
-        JavaFileObject contextFile = JavaFileObjects.forSourceLines("test.Context",
+        val contextFile = JavaFileObjects.forSourceLines("test.Context",
             "package test;",
             "",
             "public class Context {",
-            "}");
+            "}")
 
-        JavaFileObject dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            importType(Inject.class),
+            importType(Inject::class.java),
             "",
             "public class DependencyModel {",
             "",
             "   DependencyModel(Context context) {}",
-            "}");
+            "}")
 
-        JavaFileObject dependencyProvideModuleFile = JavaFileObjects.forSourceLines("test.DependencyProvide",
+        val dependencyProvideModuleFile = JavaFileObjects.forSourceLines("test.DependencyProvide",
             "package test;",
             "",
-            importType(Dependency.class),
-            importType(WeakReference.class),
+            importType(Dependency::class.java),
+            importType(WeakReference::class.java),
             "",
             "public class DependencyProvide {",
             "",
             "   @Dependency",
             "   public static DependencyModel getDependency(WeakReference<Context> context) { return null; }",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep",
             "import android.support.annotation.NonNull",
-            importType(WeakReference.class),
+            importType(WeakReference::class.java),
             "",
             "@Keep",
             "public final class ActivityInjector {",
@@ -311,70 +313,71 @@ public class WeakDependencyTests {
             "       DependencyModel dependencyModel = DependencyProvide.getDependency(weakContext);",
             "       target.dependency = dependencyModel;",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, dependencyProvideModuleFile, contextFile, dependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(Arrays.asList<JavaFileObject>(activityFile, dependencyProvideModuleFile, contextFile, dependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void provideWeakMethodInjectWithParam() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun provideWeakMethodInjectWithParam() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            importType(Inject.class),
-            importType(WeakReference.class),
+            importType(Inject::class.java),
+            importType(WeakReference::class.java),
             "",
             "public class Activity {",
             "",
             "   @Inject",
             "   public DependencyModel dependency;",
-            "}");
+            "}")
 
-        JavaFileObject resourceFile = JavaFileObjects.forSourceLines("test.Resource",
+        val resourceFile = JavaFileObjects.forSourceLines("test.Resource",
             "package test;",
             "",
             "public class Resource {",
-            "}");
+            "}")
 
-        JavaFileObject contextFile = JavaFileObjects.forSourceLines("test.Context",
+        val contextFile = JavaFileObjects.forSourceLines("test.Context",
             "package test;",
             "",
             "public class Context {",
             "   Context(Resource resource) {}",
-            "}");
+            "}")
 
-        JavaFileObject dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            importType(Inject.class),
+            importType(Inject::class.java),
             "",
             "public class DependencyModel {",
             "",
             "   DependencyModel(Context context) {}",
-            "}");
+            "}")
 
-        JavaFileObject dependencyProvideModuleFile = JavaFileObjects.forSourceLines("test.DependencyProvide",
+        val dependencyProvideModuleFile = JavaFileObjects.forSourceLines("test.DependencyProvide",
             "package test;",
             "",
-            importType(Dependency.class),
-            importType(WeakReference.class),
+            importType(Dependency::class.java),
+            importType(WeakReference::class.java),
             "",
             "public class DependencyProvide {",
             "",
             "   @Dependency",
             "   public static DependencyModel getDependency(WeakReference<Context> context) { return null; }",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep",
             "import android.support.annotation.NonNull",
-            importType(WeakReference.class),
+            importType(WeakReference::class.java),
             "",
             "@Keep",
             "public final class ActivityInjector {",
@@ -390,57 +393,58 @@ public class WeakDependencyTests {
             "       DependencyModel dependencyModel = DependencyProvide.getDependency(weakContext);",
             "       target.dependency = dependencyModel;",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, resourceFile, dependencyProvideModuleFile, contextFile, dependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(Arrays.asList<JavaFileObject>(activityFile, resourceFile, dependencyProvideModuleFile, contextFile, dependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void provideMethodInject() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun provideMethodInject() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            importType(Inject.class),
-            importType(WeakReference.class),
+            importType(Inject::class.java),
+            importType(WeakReference::class.java),
             "",
             "public class Activity {",
             "",
             "   @Inject",
             "   public WeakReference<DependencyModel> dependency;",
-            "}");
+            "}")
 
-        JavaFileObject dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            importType(Inject.class),
+            importType(Inject::class.java),
             "",
             "public class DependencyModel {",
             "",
             "   DependencyModel() {}",
-            "}");
+            "}")
 
-        JavaFileObject dependencyProvideModuleFile = JavaFileObjects.forSourceLines("test.DependencyProvide",
+        val dependencyProvideModuleFile = JavaFileObjects.forSourceLines("test.DependencyProvide",
             "package test;",
             "",
-            importType(Dependency.class),
-            importType(WeakReference.class),
+            importType(Dependency::class.java),
+            importType(WeakReference::class.java),
             "",
             "public class DependencyProvide {",
             "",
             "   @Dependency",
             "   public static DependencyModel getDependency() { return null; }",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep",
             "import android.support.annotation.NonNull",
-            importType(WeakReference.class),
+            importType(WeakReference::class.java),
             "",
             "@Keep",
             "public final class ActivityInjector {",
@@ -454,63 +458,64 @@ public class WeakDependencyTests {
             "       WeakReference<DependencyModel> weakDependencyModel = new WeakReference<DependencyModel>(dependencyModel);",
             "       target.dependency = weakDependencyModel;",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, dependencyProvideModuleFile, dependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(Arrays.asList<JavaFileObject>(activityFile, dependencyProvideModuleFile, dependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void provideMethodInjectWithParamWeak() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun provideMethodInjectWithParamWeak() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            importType(Inject.class),
-            importType(WeakReference.class),
+            importType(Inject::class.java),
+            importType(WeakReference::class.java),
             "",
             "public class Activity {",
             "",
             "   @Inject",
             "   public WeakReference<DependencyModel> dependency;",
-            "}");
+            "}")
 
-        JavaFileObject contextFile = JavaFileObjects.forSourceLines("test.Context",
+        val contextFile = JavaFileObjects.forSourceLines("test.Context",
             "package test;",
             "",
             "public class Context {",
-            "}");
+            "}")
 
-        JavaFileObject dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            importType(Inject.class),
+            importType(Inject::class.java),
             "",
             "public class DependencyModel {",
             "",
             "   DependencyModel(Context context) {}",
-            "}");
+            "}")
 
-        JavaFileObject dependencyProvideModuleFile = JavaFileObjects.forSourceLines("test.DependencyProvide",
+        val dependencyProvideModuleFile = JavaFileObjects.forSourceLines("test.DependencyProvide",
             "package test;",
             "",
-            importType(Dependency.class),
-            importType(WeakReference.class),
+            importType(Dependency::class.java),
+            importType(WeakReference::class.java),
             "",
             "public class DependencyProvide {",
             "",
             "   @Dependency",
             "   public static DependencyModel getDependency(Context context) { return null; }",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep",
             "import android.support.annotation.NonNull",
-            importType(WeakReference.class),
+            importType(WeakReference::class.java),
             "",
             "@Keep",
             "public final class ActivityInjector {",
@@ -525,56 +530,57 @@ public class WeakDependencyTests {
             "       WeakReference<DependencyModel> weakDependencyModel = new WeakReference<DependencyModel>(dependencyModel);",
             "       target.dependency = weakDependencyModel;",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, dependencyProvideModuleFile, contextFile, dependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(Arrays.asList<JavaFileObject>(activityFile, dependencyProvideModuleFile, contextFile, dependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void fieldInjectWithConstructorParamWeak() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun fieldInjectWithConstructorParamWeak() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            importType(Inject.class),
-            importType(WeakReference.class),
+            importType(Inject::class.java),
+            importType(WeakReference::class.java),
             "",
             "public class Activity {",
             "",
             "   @Inject",
             "   public DependencyModel dependency;",
-            "}");
+            "}")
 
-        JavaFileObject contextFile = JavaFileObjects.forSourceLines("test.Context",
+        val contextFile = JavaFileObjects.forSourceLines("test.Context",
             "package test;",
             "",
-            importType(Dependency.class),
+            importType(Dependency::class.java),
             "",
             "@Dependency",
             "public class Context {",
-            "}");
+            "}")
 
-        JavaFileObject dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            importType(Inject.class),
-            importType(WeakReference.class),
+            importType(Inject::class.java),
+            importType(WeakReference::class.java),
             "",
             "public class DependencyModel {",
             "",
             "   @Inject",
             "   DependencyModel(WeakReference<Context> context) {}",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep",
             "import android.support.annotation.NonNull",
-            importType(WeakReference.class),
+            importType(WeakReference::class.java),
             "",
             "@Keep",
             "public final class ActivityInjector {",
@@ -589,13 +595,12 @@ public class WeakDependencyTests {
             "       DependencyModel dependencyModel = new DependencyModel(weakContext);",
             "       target.dependency = dependencyModel;",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, contextFile, dependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(Arrays.asList<JavaFileObject>(activityFile, contextFile, dependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
-
 }

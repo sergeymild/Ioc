@@ -10,12 +10,14 @@ import javax.lang.model.element.Modifier
 object LazyGeneration {
     fun wrapInLazyClassIfNeed(model: DependencyModel, body: CodeBlock.Builder): CodeBlock.Builder {
         if (!model.isLazy) return body
+        val originalName = model.generatedName
+        model.generatedName = "lazy${model.generatedName.capitalize()}"
         return CodeBlock
             .builder()
             .add("\$T \$N = \$L;\n",
                 model.originalType.asLazyType(),
                 model.generatedName,
-                anonymousClass(model.originalType, model.generatedName, body.build()))
+                anonymousClass(model.originalType, originalName, body.build()))
     }
 
 

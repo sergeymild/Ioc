@@ -91,4 +91,8 @@ class DependencyModel constructor(
     }
 
     val simpleName get() = typeElement.simpleName.toString().decapitalize()
+
+    override fun toString(): String {
+        return "type: $typeElementString - originalType: $originalTypeString"
+    }
 }

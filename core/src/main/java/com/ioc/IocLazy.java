@@ -1,5 +1,6 @@
 package com.ioc;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 public abstract class IocLazy<T> implements Lazy<T> {
@@ -11,9 +12,11 @@ public abstract class IocLazy<T> implements Lazy<T> {
         return value != null;
     }
 
+    @SuppressWarnings("WeakerAccess")
     protected abstract T initialize();
 
-    @Nullable
+    @NonNull
+    @SuppressWarnings("ConstantConditions")
     public T get() {
         if (isInitialized()) return value;
         value = initialize();

@@ -2311,7 +2311,7 @@ public class ModuleTests {
             "public final class Module {",
             "   public static final Module INSTANCE;",
             "   @Dependency",
-            "   public final CountryService getCountryService(CountryRepository repository) { return new CountryService(); }",
+            "   public final CountryService getCountryService(CountryRepository arg0) { return new CountryService(); }",
             "",
             "   static {",
             "     Module var0 = new Module();",
@@ -2343,6 +2343,112 @@ public class ModuleTests {
 
         assertAbout(javaSources())
             .that(Arrays.asList(activityFile, moduleFile, countryProvider, countryRepository, countryService))
+            .processedWith(new IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile);
+    }
+
+    @Test
+    public void kotlinModuleSingletonParameter() throws Exception {
+        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            "package test;",
+            "",
+            Helpers.importType(Inject.class),
+            "",
+            "public class Activity {",
+            "",
+            "   @Inject",
+            "   public Factory fy;",
+            "}");
+
+        JavaFileObject singletonParameter = JavaFileObjects.forSourceLines("test.SingletonParameter",
+            "package test;",
+            Helpers.importType(Singleton.class),
+            "@Singleton",
+            "public class SingletonParameter {}");
+
+        JavaFileObject countryProvider = JavaFileObjects.forSourceLines("test.CountryProvider",
+            "package test;",
+            "",
+            "public class CountryProvider {",
+            "   CountryProvider(SingletonParameter sp) {}",
+            "}");
+
+        JavaFileObject searchEngineService = JavaFileObjects.forSourceLines("test.SearchEngineService",
+            "package test;",
+            "",
+            "public class SearchEngineService {",
+            "}");
+
+        JavaFileObject factory = JavaFileObjects.forSourceLines("test.Factory",
+            "package test;",
+
+
+            "public class Factory {",
+            "   Factory(SearchEngineService s) {}",
+            "}");
+
+        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.Module",
+            "package test;",
+            "",
+            Helpers.importType(Dependency.class),
+            Helpers.importType(Metadata.class),
+            "",
+            "@Metadata(mv = {1, 1, 15}, bv = {1, 0, 3}, k = 1, d1 = {\"\\u0000\\u0012\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0002\\b\\u0002\\n\\u0002\\u0018\\u0002\\n\\u0000\\bÆ\\u0002\\u0018\\u00002\\u00020\\u0001B\\u0007\\b\\u0002¢\\u0006\\u0002\\u0010\\u0002J\\b\\u0010\\u0003\\u001a\\u00020\\u0004H\\u0007¨\\u0006\\u0005\"}, d2 = {\"Ltest/Module;\", \"\", \"()V\", \"getCountryService\", \"Ltest/CountryService;\", \"sample_debug\"})",
+            "public final class Module {",
+            "   public static final Module INSTANCE;",
+            "   @Dependency",
+            "   public final CountryProvider getCountryService(SingletonParameter arg0) { return null; }",
+            "",
+            "   static {",
+            "     Module var0 = new Module();",
+            "     INSTANCE = var0;",
+            "   }",
+            "}");
+
+        JavaFileObject suggestionModule = JavaFileObjects.forSourceLines("test.SuggestionModule",
+            "package test;",
+            "",
+            Helpers.importType(Dependency.class),
+            Helpers.importType(Metadata.class),
+            "",
+            "@Metadata(mv = {1, 1, 15}, bv = {1, 0, 3}, k = 1, d1 = {\"\\u0000\\u0012\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0002\\b\\u0002\\n\\u0002\\u0018\\u0002\\n\\u0000\\bÆ\\u0002\\u0018\\u00002\\u00020\\u0001B\\u0007\\b\\u0002¢\\u0006\\u0002\\u0010\\u0002J\\b\\u0010\\u0003\\u001a\\u00020\\u0004H\\u0007¨\\u0006\\u0005\"}, d2 = {\"Ltest/Module;\", \"\", \"()V\", \"getCountryService\", \"Ltest/CountryService;\", \"sample_debug\"})",
+            "public final class SuggestionModule {",
+            "   public static final SuggestionModule INSTANCE;",
+            "   @Dependency",
+            "   public final SearchEngineService getSearchEngineService(CountryProvider arg0) { return null; }",
+            "",
+            "   static {",
+            "     SuggestionModule var0 = new SuggestionModule();",
+            "     INSTANCE = var0;",
+            "   }",
+            "}");
+
+        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+            "package test;",
+            "",
+            "import android.support.annotation.Keep;",
+            "import android.support.annotation.NonNull;",
+            "",
+            "@Keep",
+            "public final class ActivityInjector {",
+            "",
+            "   @Keep",
+            "   public final void inject(@NonNull final Activity target) {",
+            "       injectFactoryInFy(target);",
+            "   }",
+            "",
+            "   private final void injectFactoryInFy(@NonNull final Activity target) {",
+            "       SingletonParameter singletonParameter = SingletonParameterSingleton.get();",
+            "       CountryProvider countryProvider = Module.INSTANCE.getCountryService(singletonParameter);",
+            "       SearchEngineService searchEngineService = SuggestionModule.INSTANCE.getSearchEngineService(countryProvider);",
+            "       Factory factory = new Factory(searchEngineService);",
+            "       target.fy = factory;",
+            "   }",
+            "}");
+
+        assertAbout(javaSources())
+            .that(Arrays.asList(activityFile, moduleFile, factory, suggestionModule, searchEngineService, singletonParameter, countryProvider))
             .processedWith(new IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile);

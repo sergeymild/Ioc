@@ -1,5 +1,6 @@
 package com.ioc
 
+import com.ioc.common.emptyCodBlock
 import com.squareup.javapoet.CodeBlock
 import javax.lang.model.util.Types
 
@@ -24,11 +25,13 @@ object ProviderImplementationBuilder {
         }
 
         if (provider.isSingleton) {
-            if (usedSingletons.containsKey(dependencyModel.typeElementString)) {
-                return CodeBlock.builder().build()
-            }
-            dependencyModel.name = provider.name
-            return singleton(dependencyModel)
+//            if (usedSingletons.containsKey(dependencyModel.typeElementString)) {
+//                return CodeBlock.builder().build()
+//            }
+            // TODO
+//            dependencyModel.name = provider.name
+//            return singleton(dependencyModel)
+            return emptyCodBlock
         }
 
         applyIsLoadIfNeed(dependencyModel.dependencies, target, usedSingletons)

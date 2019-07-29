@@ -273,7 +273,7 @@ fun Element.isViewModel(): Boolean {
 
     while (superType != null) {
         if (superType.kind == TypeKind.NONE) break
-        if (superType.toString() == "android.arch.lifecycle.ViewModel") return true
+        if (viewModelPackages.contains(superType.toString())) return true
         superType = superType.asTypeElement().superclass
     }
     return false
@@ -286,8 +286,7 @@ fun Element.isCanHaveViewModel(): Boolean {
 
     while (superType != null) {
         if (superType.kind == TypeKind.NONE) break
-        if (superType.toString() == "android.support.v4.app.Fragment") return true
-        if (superType.toString() == "android.support.v4.app.FragmentActivity") return true
+        if (allowedViewModelParents.contains(superType.toString())) return true
         superType = superType.asTypeElement().superclass
     }
     return false
