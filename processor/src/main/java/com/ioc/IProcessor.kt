@@ -100,14 +100,16 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         val dependencies = roundEnv.getElementsAnnotatedWith(Dependency::class.java)
         val libraries = roundEnv.getElementsAnnotatedWith(LibraryModules::class.java)
 
-        dependencies
-            .filter { it.isNotMethodAndInterface() }
-            .addTo(classesWithDependencyAnnotation)
+        for (dependency in dependencies) {
+            if (dependency.isNotMethodAndInterface()) {
+                classesWithDependencyAnnotation.add(dependency)
+                continue
+            }
 
-        dependencies
-            .filter { it.kind == ElementKind.METHOD }
-            .map { it as ExecutableElement }
-            .addTo(methodsWithDependencyAnnotation)
+            if (dependency.kind == ElementKind.METHOD) {
+                methodsWithDependencyAnnotation.add(dependency as ExecutableElement)
+            }
+        }
 
         val alreadyReadModules = mutableSetOf<String>()
         libraries.forEach { findLibraryModules(it.getAnnotation(LibraryModules::class.java), alreadyReadModules) }
