@@ -14,7 +14,6 @@ object DependencyTree {
     fun generateWithLocalScope(
         dependencyModels: List<DependencyModel>,
         typeUtils: Types,
-        usedSingletons: Map<String, DependencyModel>,
         target: TargetType? = null): CodeBlock {
 
         val builder = CodeBlock.builder()
@@ -25,8 +24,8 @@ object DependencyTree {
             if (dependency.provideMethod() == null && isAllowedPackage) {
                 throw ProcessorException("Can't find implementations of `${dependency.dependency.asType()} ${dependency.dependency}` maybe you forgot add correct @Named, @Qualifier or @Scope annotations or add @Dependency on provides method, `${target?.element}`").setElement(target?.element)
             }
-            var code = generateCode(dependency, typeUtils, usedSingletons, target).toBuilder()
-            applyIsLoadIfNeed(dependency.dependencies, target, usedSingletons)
+            var code = generateCode(dependency, typeUtils, target).toBuilder()
+            applyIsLoadIfNeed(dependency.dependencies, target)
 
 
             code = ProviderGeneration.wrapInProviderClassIfNeed(dependency, code)
@@ -38,10 +37,7 @@ object DependencyTree {
         return builder.build()
     }
 
-    fun get(dependencyModels: List<DependencyModel>,
-            typeUtils: Types,
-            usedSingletons: Map<String, DependencyModel>,
-            target: TargetType? = null): CodeBlock {
+    fun get(dependencyModels: List<DependencyModel>, typeUtils: Types, target: TargetType? = null): CodeBlock {
 
         val builder = CodeBlock.builder()
         for (dependency in dependencyModels) {
@@ -52,7 +48,7 @@ object DependencyTree {
             if (dependency.provideMethod() == null && isAllowedPackage) {
                 throw ProcessorException("Can't find implementations of `${dependency.dependency.asType()} ${dependency.dependency}` maybe you forgot add correct @Named, @Qualifier or @Scope annotations or add @Dependency on provides method, `${target?.element}`").setElement(target?.element)
             }
-            var code = generateCode(dependency, typeUtils, usedSingletons, target).toBuilder()
+            var code = generateCode(dependency, typeUtils, target).toBuilder()
 
 
 
@@ -67,40 +63,33 @@ object DependencyTree {
     private fun generateCode(
         dependency: DependencyModel,
         typeUtils: Types,
-        usedSingletons: Map<String, DependencyModel>,
         target: TargetType?): CodeBlock {
 
         val builder = CodeBlock.builder()
 
-        if (dependency.isSingleton) {
-            if (usedSingletons.containsKey(dependency.typeElementString)) {
-                return emptyCodBlock
-            }
-            return emptyCodBlock
-            //return singleton(dependency)
-        }
+        if (dependency.isSingleton) return emptyCodBlock
 
         if (dependency.isViewModel) {
-            return get(dependency.dependencies, typeUtils, usedSingletons, target)
+            return get(dependency.dependencies, typeUtils, target)
         }
 
         // Generate dependency from method provider
         dependency.implementations.filter { it.isMethod }
-            .map { ProviderMethodBuilder.build(it, dependency, typeUtils, target, usedSingletons) }
+            .map { ProviderMethodBuilder.build(it, dependency, typeUtils, target) }
             .firstOrNull()
             ?.let { return it }
 
 
         // Generate dependency from implementations (i.e. interface implementations)
         dependency.implementations.filter { !it.isMethod }
-            .map { buildForSingleton(it, dependency, typeUtils, target, usedSingletons) }
+            .map { buildForSingleton(it, dependency, typeUtils, target) }
             .firstOrNull()
             ?.let { return it }
 
         // if we here it's mean what we have dependency with arguments constructor or empty constructor
         if (dependency.argumentsConstructor != null) {
 
-            return argumentsConstructor(dependency, typeUtils, target, usedSingletons)
+            return argumentsConstructor(dependency, typeUtils, target)
                 .add(builder)
                 .build()
         }

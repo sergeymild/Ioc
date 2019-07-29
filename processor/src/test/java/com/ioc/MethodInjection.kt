@@ -657,7 +657,7 @@ class MethodInjection : BaseTest {
         val baseFile = JavaFileObjects.forSourceLines("test.BaseActivity",
             "package test;",
             "",
-            Inject::class.java.import(),
+            "import $inject;",
             "",
             "public class BaseActivity {",
             "   @Inject",
@@ -707,8 +707,8 @@ class MethodInjection : BaseTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ParentActivityInjector",
             "package test;",
             "",
-            "import $keep",
-            "import $nonNull",
+            "import $keep;",
+            "import $nonNull;",
             "",
             "@Keep",
             "public final class BaseActivityInjector {",
@@ -718,17 +718,15 @@ class MethodInjection : BaseTest {
             "   }",
             "",
             "   private final void injectParentDependencyInParentDependency(@NonNull final BaseActivity target) {",
-            "       SingletonDependency singletonDependency = SingletonDependencySingleton.get();",
-            "       NextSingleton nextSingleton = NextSingletonSingleton.get();",
-            "       DependencyModel dependencyModel = new DependencyModel(singletonDependency, nextSingleton);",
-            "       Resources resources = new Resources(singletonDependency);",
-            "       ParentDependency parentDependency = new ParentDependency(singletonDependency, nextSingleton, dependencyModel, resources);",
+            "       DependencyModel dependencyModel = new DependencyModel(com.ioc.Ioc.singleton(test.SingletonDependency.class), com.ioc.Ioc.singleton(test.NextSingleton.class));",
+            "       Resources resources = new Resources(com.ioc.Ioc.singleton(test.SingletonDependency.class));",
+            "       ParentDependency parentDependency = new ParentDependency(com.ioc.Ioc.singleton(test.SingletonDependency.class), com.ioc.Ioc.singleton(test.NextSingleton.class), dependencyModel, resources);",
             "       target.parentDependency = parentDependency;",
             "   }",
             "}")
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(singletonDependency, nextSingleton, resourcesFile, baseFile, dependencyFile, parentDependencyFile))
+            .that(listOf(singletonDependency, nextSingleton, resourcesFile, baseFile, dependencyFile, parentDependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)

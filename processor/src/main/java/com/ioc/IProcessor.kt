@@ -195,8 +195,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         }
 
         for (singleton in singletons) {
-            val usedSingletons = collectUsedSingletonsInMethodCreation(singleton.dependencies, false)
-            val spec = NewSingletonSpec(singleton, processingEnv.typeUtils, usedSingletons)
+            val spec = NewSingletonSpec(singleton, processingEnv.typeUtils)
             writeClassFile(singleton.packageName, spec.inject())
         }
 
@@ -207,18 +206,8 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
             val methods = mutableListOf<MethodSpec>()
 
             for (dependency in sorted) {
-                val usedSingletons = collectUsedSingletonsInMethodCreation(dependency.dependencies, dependency.isSingleton)
-
                 // generate base injection code
-                var code = dependencyInjectionCode(dependency, processingEnv.typeUtils, target.key, usedSingletons)
-                println(code.build())
-
-                // if dependency is lazy, generate lazy class
-
-//                code = ProviderGeneration.wrapInProviderClassIfNeed(dependency, code)
-//                code = LazyGeneration.wrapInLazyClassIfNeed(dependency, code)
-//                code = WeakGeneration.wrapInWeakIfNeed(dependency, code)
-
+                val code = dependencyInjectionCode(dependency, processingEnv.typeUtils, target.key)
                 val methodBuilder = dependencyInjectionMethod(target.key.className, dependency, code.build())
                 injectInTarget(methodBuilder, dependency)
                     .also { methods.add(it) }

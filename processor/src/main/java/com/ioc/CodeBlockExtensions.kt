@@ -18,13 +18,8 @@ fun CodeBlock.Builder.emptyConstructor(model: DependencyModel): CodeBlock {
         .build()
 }
 
-fun applyIsLoadIfNeed(dependencies: List<DependencyModel>, target: TargetType?, usedSingletons: Map<String, DependencyModel>) {
+fun applyIsLoadIfNeed(dependencies: List<DependencyModel>, target: TargetType?) {
     for (dependency in dependencies) {
-        if (usedSingletons.containsKey(dependency.typeElementString)) {
-            val singleton = usedSingletons[dependency.typeElementString]!!
-            dependency.fieldName = singleton.simpleName
-            continue
-        }
         val fieldName = target?.localScopeDependencies?.get(dependency.originalTypeString)
             ?: continue
         dependency.isLocal = true
@@ -35,13 +30,12 @@ fun applyIsLoadIfNeed(dependencies: List<DependencyModel>, target: TargetType?, 
 fun argumentsConstructor(
     model: DependencyModel,
     typeUtils: Types,
-    target: TargetType?,
-    usedSingletons: Map<String, DependencyModel>): CodeBlock {
+    target: TargetType?): CodeBlock {
 
-    val dependencies = DependencyTree.get(model.dependencies, typeUtils, usedSingletons, target)
+    val dependencies = DependencyTree.get(model.dependencies, typeUtils, target)
     val builder = CodeBlock.builder().add(dependencies)
 
-    applyIsLoadIfNeed(model.dependencies, target, usedSingletons)
+    applyIsLoadIfNeed(model.dependencies, target)
 
     val names = model.dependencyNames()
 

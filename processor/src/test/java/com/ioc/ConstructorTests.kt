@@ -327,28 +327,27 @@ class ConstructorTests : BaseTest {
             "package test;",
             "",
             "import $keep",
-            "import $nonNull",
+            "import $iocLazy",
             "",
             "@Keep",
-            "public final class ManagerSingleton {",
-            "   private static Manager singleton;",
+            "public final class ManagerSingleton extends IocLazy<Manager> {",
+            "   private static ManagerSingleton instance;",
             "",
-            "   private static final ManagerSingleton instance = new ManagerSingleton();",
+            "   public static final ManagerSingleton getInstance() {",
+            "       if (instance == null) instance = new ManagerSingleton();",
+            "       return instance;",
+            "   }",
             "",
-            "   @Keep",
-            "   @NonNull",
-            "   public static final Manager get() {",
-            "       if (singleton != null) return singleton;",
+            "   protected final Manager initialize() {",
             "       DbMapper dbMapper = new DbMapperImpl();",
             "       DbMapper dbMapper2 = new DbMapperImpl();",
             "       DbRepository dbRepository = new DbRepository(dbMapper2);",
-            "       singleton = new Manager(dbMapper, dbRepository);",
-            "       return singleton;",
+            "       return new Manager(dbMapper, dbRepository);",
             "   }",
             "}")
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(dbMapper, dbMapperImpl, dbRepository, managerFile, activityFile))
+            .that(listOf(dbMapper, dbMapperImpl, dbRepository, managerFile, activityFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)

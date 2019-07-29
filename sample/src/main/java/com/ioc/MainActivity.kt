@@ -22,6 +22,8 @@ fun provideCategoriesProvider(
 ): CategoriesProvider = CategoriesProvider()
 
 
+
+
 //@InjectParentDependencies
 class MainActivity : AppCompatActivity() {
 
@@ -32,6 +34,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+
 
         println(Ioc.singleton(RoomDataSource::class.java))
 

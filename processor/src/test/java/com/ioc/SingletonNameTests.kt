@@ -59,8 +59,8 @@ class SingletonNameTests : BaseTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import $keep",
-            "import $nonNull",
+            "import $keep;",
+            "import $nonNull;",
             "",
             "@Keep",
             "public final class ActivityInjector {",
@@ -70,13 +70,13 @@ class SingletonNameTests : BaseTest {
             "   }",
             "",
             "   private final void injectCrashlitycsServiceInService(@NonNull final Activity target) {",
-            "        CrashlyticsLogger crashlyticsLogger = CrashlyticsLoggerSingleton.get();",
+            "        CrashlyticsLogger crashlyticsLogger = com.ioc.Ioc.singleton(test.CrashlyticsLogger.class);",
             "        target.service = crashlyticsLogger;",
             "   }",
             "}")
 
-        Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(activityFile, release, dependencyFile))
+        Truth.assertAbout(javaSources())
+            .that(listOf(activityFile, release, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -134,26 +134,24 @@ class SingletonNameTests : BaseTest {
             "package test;",
             "",
             "import $keep",
-            "import $nonNull",
+            "import $iocLazy",
             "",
             "@Keep",
-            "public final class DependencyModelSingleton",
-            "   private static DependencyModel singleton;",
+            "public final class DependencyModelSingleton extends IocLazy<DependencyModel> {",
+            "   private static DependencyModelSingleton instance;",
             "",
-            "   private static final DependencyModelSingleton instance = new DependencyModelSingleton();",
+            "   public static final DependencyModelSingleton getInstance() {",
+            "       if (instance == null) instance = new DependencyModelSingleton();",
+            "       return instance;",
+            "   }",
             "",
-            "   @Keep",
-            "   @NonNull",
-            "   public static final DependencyModel get() {",
-            "       if (singleton != null) return singleton;",
-            "       CrashlyticsLogger crashlyticsLogger = CrashlyticsLoggerSingleton.get();",
-            "       singleton = new DependencyModel(crashlyticsLogger);",
-            "       return singleton;",
+            "   protected final DependencyModel initialize() {",
+            "       return new DependencyModel(com.ioc.Ioc.singleton(test.CrashlyticsLogger.class));",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList(activityFile, dependencyFile, moduleFile, release))
+            .that(listOf(activityFile, dependencyFile, moduleFile, release))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -165,7 +163,7 @@ class SingletonNameTests : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject::class.java),
+            "import $inject;",
             "",
             "public class Activity {",
             "",
@@ -178,8 +176,8 @@ class SingletonNameTests : BaseTest {
         val moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
             "package test;",
             "",
-            Helpers.importType(Dependency::class.java),
-            Helpers.importType(Singleton::class.java),
+            "import $dependency;",
+            "import $singleton;",
             "",
             "public class ModuleClass {",
             "",
@@ -214,8 +212,8 @@ class SingletonNameTests : BaseTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import $keep",
-            "import $nonNull",
+            "import $keep;",
+            "import $nonNull;",
             "",
             "@Keep",
             "public final class ActivityInjector {",
@@ -225,15 +223,14 @@ class SingletonNameTests : BaseTest {
             "   }",
             "",
             "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
-            "       Dependency2 dependency2 = Dependency2Singleton.get();",
             "       DependencyModel dependencyModel = ModuleClass.getDependency();",
-            "       ParentDependency parentDependency = ModuleClass.getParentDependency(dependencyModel, dependency2);",
+            "       ParentDependency parentDependency = ModuleClass.getParentDependency(dependencyModel, com.ioc.Ioc.singleton(test.Dependency2.class));",
             "       target.setDependency(parentDependency);",
             "   }",
             "}")
 
         assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, moduleFile, dependencyFile, dependencyFile2, parentDependencyFile))
+            .that(listOf(activityFile, moduleFile, dependencyFile, dependencyFile2, parentDependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -281,12 +278,12 @@ class SingletonNameTests : BaseTest {
             "   }",
             "",
             "   private final void injectCrashlyticsLoggerInService(@NonNull final Activity target) {",
-            "       CrashlyticsLogger crashlyticsLogger = CrashlyticsLoggerSingleton.get();",
+            "       CrashlyticsLogger crashlyticsLogger = com.ioc.Ioc.singleton(test.CrashlyticsLogger.class);",
             "       target.service = crashlyticsLogger;",
             "   }",
             "}")
 
-        Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
+        Truth.assertAbout(javaSources())
             .that(Arrays.asList(activityFile, release))
             .processedWith(IProcessor())
             .compilesWithoutError()

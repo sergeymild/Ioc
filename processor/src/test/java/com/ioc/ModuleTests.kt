@@ -1,58 +1,58 @@
-package com.ioc;
+package com.ioc
 
-import com.google.testing.compile.JavaFileObjects;
+import com.google.testing.compile.JavaFileObjects
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.JUnit4
 
-import java.util.Arrays;
+import java.util.Arrays
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
-import javax.tools.JavaFileObject;
+import javax.inject.Inject
+import javax.inject.Named
+import javax.inject.Singleton
+import javax.tools.JavaFileObject
 
-import kotlin.Metadata;
-
-import static com.google.common.truth.Truth.assertAbout;
-import static com.google.testing.compile.JavaSourcesSubjectFactory.javaSources;
+import com.google.common.truth.Truth.assertAbout
+import com.google.testing.compile.JavaSourcesSubject
+import com.google.testing.compile.JavaSourcesSubjectFactory.javaSources
 
 /**
  * Created by sergeygolishnikov on 08/08/2017.
  */
-@RunWith(JUnit4.class)
-public class ModuleTests {
+@RunWith(JUnit4::class)
+class ModuleTests {
     @Test
-    public void emptyParams() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun emptyParams() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
             "   @Inject",
             "   public DependencyModel dependency;",
-            "}");
+            "}")
 
-        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
+        val moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
             "package test;",
             "",
-            Helpers.importType(Dependency.class),
+            Helpers.importType(Dependency::class.java),
             "",
             "public class ModuleClass {",
             "",
             "   @Dependency",
             "   public static DependencyModel getDependency() { return new DependencyModel(); }",
-            "}");
+            "}")
 
-        JavaFileObject dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "public class DependencyModel {}");
+            "public class DependencyModel {}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep",
@@ -69,21 +69,22 @@ public class ModuleTests {
             "       DependencyModel dependencyModel = ModuleClass.getDependency();",
             "       target.dependency = dependencyModel;",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, moduleFile, dependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(Arrays.asList<JavaFileObject>(activityFile, moduleFile, dependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void emptyParamsMethodInjection() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun emptyParamsMethodInjection() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
@@ -91,25 +92,25 @@ public class ModuleTests {
             "   private DependencyModel dependency;",
             "   public void setDependency(DependencyModel dependency) {};",
             "   public DependencyModel getDependency() { return null; }",
-            "}");
+            "}")
 
-        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
+        val moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
             "package test;",
             "",
-            Helpers.importType(Dependency.class),
+            Helpers.importType(Dependency::class.java),
             "",
             "public class ModuleClass {",
             "",
             "   @Dependency",
             "   public static DependencyModel getDependency() { return new DependencyModel(); }",
-            "}");
+            "}")
 
-        JavaFileObject dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "public class DependencyModel {}");
+            "public class DependencyModel {}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep",
@@ -126,45 +127,46 @@ public class ModuleTests {
             "       DependencyModel dependencyModel = ModuleClass.getDependency();",
             "       target.setDependency(dependencyModel);",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, moduleFile, dependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(Arrays.asList<JavaFileObject>(activityFile, moduleFile, dependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void targetAsParam() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun targetAsParam() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
             "   @Inject",
             "   public DependencyModel dependency;",
-            "}");
+            "}")
 
-        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
+        val moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
             "package test;",
             "",
-            Helpers.importType(Dependency.class),
+            Helpers.importType(Dependency::class.java),
             "",
             "public class ModuleClass {",
             "",
             "   @Dependency",
             "   public static DependencyModel getDependency(Activity activity) { return new DependencyModel(); }",
-            "}");
+            "}")
 
-        JavaFileObject dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "public class DependencyModel {}");
+            "public class DependencyModel {}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep",
@@ -181,21 +183,22 @@ public class ModuleTests {
             "       DependencyModel dependencyModel = ModuleClass.getDependency(target);",
             "       target.dependency = dependencyModel;",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, moduleFile, dependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(Arrays.asList<JavaFileObject>(activityFile, moduleFile, dependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void targetAsParamMethodInjection() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun targetAsParamMethodInjection() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
@@ -203,25 +206,25 @@ public class ModuleTests {
             "   private DependencyModel dependency;",
             "   public void setDependency(DependencyModel dep) {};",
             "   public DependencyModel getDependency() { return null; }",
-            "}");
+            "}")
 
-        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
+        val moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
             "package test;",
             "",
-            Helpers.importType(Dependency.class),
+            Helpers.importType(Dependency::class.java),
             "",
             "public class ModuleClass {",
             "",
             "   @Dependency",
             "   public static DependencyModel getDependency(Activity activity) { return new DependencyModel(); }",
-            "}");
+            "}")
 
-        JavaFileObject dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "public class DependencyModel {}");
+            "public class DependencyModel {}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep",
@@ -238,56 +241,57 @@ public class ModuleTests {
             "       DependencyModel dependencyModel = ModuleClass.getDependency(target);",
             "       target.setDependency(dependencyModel);",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, moduleFile, dependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(Arrays.asList<JavaFileObject>(activityFile, moduleFile, dependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void targetAndDependencyAsParam() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun targetAndDependencyAsParam() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
             "   @Inject",
             "   public ParentDependency dependency;",
-            "}");
+            "}")
 
-        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
+        val moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
             "package test;",
             "",
-            Helpers.importType(Dependency.class),
+            Helpers.importType(Dependency::class.java),
             "",
             "public class ModuleClass {",
             "",
             "   @Dependency",
             "   public static ParentDependency getDependency(Activity activity, DependencyModel dependency) { return new ParentDependency(); }",
-            "}");
+            "}")
 
-        JavaFileObject parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
+        val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
             "package test;",
             "",
             "public class ParentDependency {",
             "   public ParentDependency() {}",
-            "}");
+            "}")
 
-        JavaFileObject dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class DependencyModel {",
             "   public DependencyModel() {}",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep",
@@ -305,21 +309,22 @@ public class ModuleTests {
             "       ParentDependency parentDependency = ModuleClass.getDependency(target, dependencyModel);",
             "       target.dependency = parentDependency;",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, moduleFile, parentDependencyFile, dependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(Arrays.asList<JavaFileObject>(activityFile, moduleFile, parentDependencyFile, dependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void targetAndDependencyAsParamMethodInjection() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun targetAndDependencyAsParamMethodInjection() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
@@ -327,36 +332,36 @@ public class ModuleTests {
             "   private ParentDependency dependency;",
             "   public void setDependency(ParentDependency dep) {};",
             "   public ParentDependency getDependency() { return null; }",
-            "}");
+            "}")
 
-        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
+        val moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
             "package test;",
             "",
-            Helpers.importType(Dependency.class),
+            Helpers.importType(Dependency::class.java),
             "",
             "public class ModuleClass {",
             "",
             "   @Dependency",
             "   public static ParentDependency getDependency(Activity activity, DependencyModel dependency) { return new ParentDependency(); }",
-            "}");
+            "}")
 
-        JavaFileObject parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
+        val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
             "package test;",
             "",
             "public class ParentDependency {",
             "   public ParentDependency() {}",
-            "}");
+            "}")
 
-        JavaFileObject dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class DependencyModel {",
             "   public DependencyModel() {}",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep",
@@ -374,57 +379,58 @@ public class ModuleTests {
             "       ParentDependency parentDependency = ModuleClass.getDependency(target, dependencyModel);",
             "       target.setDependency(parentDependency);",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, moduleFile, parentDependencyFile, dependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(Arrays.asList<JavaFileObject>(activityFile, moduleFile, parentDependencyFile, dependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void TargetInDependencyOfParentDependencyAsParam() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun TargetInDependencyOfParentDependencyAsParam() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
             "   @Inject",
             "   public ParentDependency dependency;",
-            "}");
+            "}")
 
-        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
+        val moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
             "package test;",
             "",
-            Helpers.importType(Dependency.class),
+            Helpers.importType(Dependency::class.java),
             "",
             "public class ModuleClass {",
             "",
             "   @Dependency",
             "   public static ParentDependency getDependency(Activity activity, DependencyModel dependency) { return new ParentDependency(); }",
-            "}");
+            "}")
 
-        JavaFileObject parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
+        val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
             "package test;",
             "",
             "public class ParentDependency {",
             "   public ParentDependency() {}",
-            "}");
+            "}")
 
-        JavaFileObject dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class DependencyModel {",
             "   @Inject",
             "   public DependencyModel(Activity activity) {}",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep",
@@ -442,21 +448,22 @@ public class ModuleTests {
             "       ParentDependency parentDependency = ModuleClass.getDependency(target, dependencyModel);",
             "       target.dependency = parentDependency;",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, moduleFile, parentDependencyFile, dependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(Arrays.asList<JavaFileObject>(activityFile, moduleFile, parentDependencyFile, dependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void TargetInDependencyOfParentDependencyAsParamMethodInjection() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun TargetInDependencyOfParentDependencyAsParamMethodInjection() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
@@ -464,37 +471,37 @@ public class ModuleTests {
             "   private ParentDependency dependency;",
             "   public void setDependency(ParentDependency dep) {};",
             "   public ParentDependency getDependency() { return null; }",
-            "}");
+            "}")
 
-        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
+        val moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
             "package test;",
             "",
-            Helpers.importType(Dependency.class),
+            Helpers.importType(Dependency::class.java),
             "",
             "public class ModuleClass {",
             "",
             "   @Dependency",
             "   public static ParentDependency getDependency(Activity activity, DependencyModel dependency) { return new ParentDependency(); }",
-            "}");
+            "}")
 
-        JavaFileObject parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
+        val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
             "package test;",
             "",
             "public class ParentDependency {",
             "   public ParentDependency() {}",
-            "}");
+            "}")
 
-        JavaFileObject dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class DependencyModel {",
             "   @Inject",
             "   public DependencyModel(Activity activity) {}",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep",
@@ -512,48 +519,49 @@ public class ModuleTests {
             "       ParentDependency parentDependency = ModuleClass.getDependency(target, dependencyModel);",
             "       target.setDependency(parentDependency);",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, moduleFile, parentDependencyFile, dependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(Arrays.asList<JavaFileObject>(activityFile, moduleFile, parentDependencyFile, dependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void singletonAsDependency() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun singletonAsDependency() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
             "   @Inject",
             "   public ParentDependency dependency;",
-            "}");
+            "}")
 
-        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
+        val moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
             "package test;",
             "",
-            Helpers.importType(Dependency.class),
-            Helpers.importType(Singleton.class),
+            Helpers.importType(Dependency::class.java),
+            Helpers.importType(Singleton::class.java),
             "",
             "public class ModuleClass {",
             "",
             "   @Dependency @Singleton",
             "   public static ParentDependency getDependency() { return new ParentDependency(); }",
-            "}");
+            "}")
 
-        JavaFileObject parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
+        val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
             "package test;",
             "",
             "public class ParentDependency {",
             "   public ParentDependency() {}",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep",
@@ -567,24 +575,25 @@ public class ModuleTests {
             "   }",
             "",
             "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
-            "       ParentDependency parentDependency = ParentDependencySingleton.get();",
+            "       ParentDependency parentDependency = com.ioc.Ioc.singleton(test.ParentDependency.class);",
             "       target.dependency = parentDependency;",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, moduleFile, parentDependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(activityFile, moduleFile, parentDependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void singletonAsDependencyMethodInjection() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun singletonAsDependencyMethodInjection() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
@@ -592,28 +601,28 @@ public class ModuleTests {
             "   private ParentDependency dependency;",
             "   public void setDependency(ParentDependency dep) {};",
             "   public ParentDependency getDependency() { return null; }",
-            "}");
+            "}")
 
-        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
+        val moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
             "package test;",
             "",
-            Helpers.importType(Dependency.class),
-            Helpers.importType(Singleton.class),
+            Helpers.importType(Dependency::class.java),
+            Helpers.importType(Singleton::class.java),
             "",
             "public class ModuleClass {",
             "",
             "   @Dependency @Singleton",
             "   public static ParentDependency getDependency() { return new ParentDependency(); }",
-            "}");
+            "}")
 
-        JavaFileObject parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
+        val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
             "package test;",
             "",
             "public class ParentDependency {",
             "   public ParentDependency() {}",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep",
@@ -627,126 +636,127 @@ public class ModuleTests {
             "   }",
             "",
             "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
-            "       ParentDependency parentDependency = ParentDependencySingleton.get();",
+            "       ParentDependency parentDependency = com.ioc.Ioc.singleton(test.ParentDependency.class);",
             "       target.setDependency(parentDependency);",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, moduleFile, parentDependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(activityFile, moduleFile, parentDependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void singletonWithArgumentsAsDependency() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun singletonWithArgumentsAsDependency() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
             "   @Inject",
             "   public ParentDependency dependency;",
-            "}");
+            "}")
 
-        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
+        val moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
             "package test;",
             "",
-            Helpers.importType(Dependency.class),
-            Helpers.importType(Singleton.class),
+            Helpers.importType(Dependency::class.java),
+            Helpers.importType(Singleton::class.java),
             "",
             "public class ModuleClass {",
             "",
             "   @Dependency @Singleton",
             "   public static ParentDependency getDependency(DependencyModel dependency) { return new ParentDependency(); }",
-            "}");
+            "}")
 
-        JavaFileObject dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
             "public class DependencyModel {",
             "   public DependencyModel() {}",
-            "}");
+            "}")
 
-        JavaFileObject parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
+        val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
             "package test;",
             "",
             "public class ParentDependency {",
             "   public ParentDependency() {}",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ParentDependencySingleton",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ParentDependencySingleton",
             "package test;",
             "",
-            "import android.support.annotation.Keep",
-            "import android.support.annotation.NonNull",
+            "import $keep;",
+            "import $iocLazy;",
             "",
             "@Keep",
-            "public final class ParentDependencySingleton {",
-            "   private static ParentDependency singleton;",
+            "public final class ParentDependencySingleton extends IocLazy<ParentDependency> {",
+            "   private static ParentDependencySingleton instance;",
             "",
-            "   private static final ParentDependencySingleton instance = new ParentDependencySingleton();",
-            "",
-            "   @Keep",
-            "   @NonNull",
-            "   public static final ParentDependency get() {",
-            "       if (singleton != null) return singleton;",
-            "       DependencyModel dependencyModel = new DependencyModel();",
-            "       singleton = ModuleClass.getDependency(dependencyModel);",
-            "       return singleton",
+            "   public static final ParentDependencySingleton getInstance() {",
+            "       if (instance == null) instance = new ParentDependencySingleton();",
+            "       return instance;",
             "   }",
-            "}");
+            "",
+            "   protected final ParentDependency initialize() {",
+            "       DependencyModel dependencyModel = new DependencyModel();",
+            "       return ModuleClass.getDependency(dependencyModel);",
+            "   }",
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, moduleFile, dependencyFile, parentDependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(activityFile, moduleFile, dependencyFile, parentDependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void singletonWithArgumentsAsDependencyInActivity() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun singletonWithArgumentsAsDependencyInActivity() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
             "   @Inject",
             "   public ParentDependency dependency;",
-            "}");
+            "}")
 
-        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
+        val moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
             "package test;",
             "",
-            Helpers.importType(Dependency.class),
-            Helpers.importType(Singleton.class),
+            Helpers.importType(Dependency::class.java),
+            Helpers.importType(Singleton::class.java),
             "",
             "public class ModuleClass {",
             "",
             "   @Dependency @Singleton",
             "   public static ParentDependency getDependency(DependencyModel dependency) { return new ParentDependency(); }",
-            "}");
+            "}")
 
-        JavaFileObject dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
             "public class DependencyModel {",
             "   public DependencyModel() {}",
-            "}");
+            "}")
 
-        JavaFileObject parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
+        val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
             "package test;",
             "",
             "public class ParentDependency {",
             "   public ParentDependency() {}",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep",
@@ -760,36 +770,37 @@ public class ModuleTests {
             "   }",
             "",
             "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
-            "       ParentDependency parentDependency = ParentDependencySingleton.get();",
+            "       ParentDependency parentDependency = com.ioc.Ioc.singleton(test.ParentDependency.class);",
             "       target.dependency = parentDependency;",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, moduleFile, dependencyFile, parentDependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(activityFile, moduleFile, dependencyFile, parentDependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void singletonAndArgumentsAsDependencyInActivity() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun singletonAndArgumentsAsDependencyInActivity() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
             "   @Inject",
             "   public ParentDependency dependency;",
-            "}");
+            "}")
 
-        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
+        val moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
             "package test;",
             "",
-            Helpers.importType(Dependency.class),
-            Helpers.importType(Singleton.class),
+            Helpers.importType(Dependency::class.java),
+            Helpers.importType(Singleton::class.java),
             "",
             "public class ModuleClass {",
             "",
@@ -799,29 +810,29 @@ public class ModuleTests {
             "   public static DependencyModel getDependency() { return new DependencyModel(); }",
             "   @Dependency @Singleton",
             "   public static Dependency2 getDependency2() { return new Dependency2(); }",
-            "}");
+            "}")
 
-        JavaFileObject dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
             "public class DependencyModel {",
             "   public DependencyModel() {}",
-            "}");
+            "}")
 
-        JavaFileObject dependencyFile2 = JavaFileObjects.forSourceLines("test.Dependency2",
+        val dependencyFile2 = JavaFileObjects.forSourceLines("test.Dependency2",
             "package test;",
             "",
             "public class Dependency2 {",
-            "}");
+            "}")
 
-        JavaFileObject parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
+        val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
             "package test;",
             "",
             "public class ParentDependency {",
             "   public ParentDependency() {}",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep",
@@ -835,53 +846,53 @@ public class ModuleTests {
             "   }",
             "",
             "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
-            "       Dependency2 dependency2 = Dependency2Singleton.get();",
             "       DependencyModel dependencyModel = ModuleClass.getDependency();",
-            "       ParentDependency parentDependency = ModuleClass.getParentDependency(dependencyModel, dependency2);",
+            "       ParentDependency parentDependency = ModuleClass.getParentDependency(dependencyModel, com.ioc.Ioc.singleton(test.Dependency2.class));",
             "       target.dependency = parentDependency;",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, moduleFile, dependencyFile, dependencyFile2, parentDependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(activityFile, moduleFile, dependencyFile, dependencyFile2, parentDependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void preferMethodOverEmptyConstructor() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun preferMethodOverEmptyConstructor() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
             "   @Inject",
             "   public ParentDependency dependency;",
-            "}");
+            "}")
 
-        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
+        val moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
             "package test;",
             "",
-            Helpers.importType(Dependency.class),
-            Helpers.importType(Singleton.class),
+            Helpers.importType(Dependency::class.java),
+            Helpers.importType(Singleton::class.java),
             "",
             "public class ModuleClass {",
             "",
             "   @Dependency",
             "   public static ParentDependency getParentDependency() { return new ParentDependency(); }",
-            "}");
+            "}")
 
-        JavaFileObject parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
+        val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
             "package test;",
             "",
             "public class ParentDependency {",
             "   public ParentDependency() {}",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep",
@@ -898,33 +909,34 @@ public class ModuleTests {
             "       ParentDependency parentDependency = ModuleClass.getParentDependency();",
             "       target.dependency = parentDependency;",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, moduleFile, parentDependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(Arrays.asList<JavaFileObject>(activityFile, moduleFile, parentDependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void preferMethodOverEmptyConstructorInSingleton() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun preferMethodOverEmptyConstructorInSingleton() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
             "   @Inject",
             "   public ParentDependency dependency;",
-            "}");
+            "}")
 
-        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
+        val moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
             "package test;",
             "",
-            Helpers.importType(Dependency.class),
-            Helpers.importType(Singleton.class),
+            Helpers.importType(Dependency::class.java),
+            Helpers.importType(Singleton::class.java),
             "",
             "public class ModuleClass {",
             "",
@@ -933,145 +945,145 @@ public class ModuleTests {
             "   public static ParentDependency getParentDependency(DependencyModel dependency) { return new ParentDependency(); }",
             "   @Dependency",
             "   public static DependencyModel dependency() { return null; }",
-            "}");
+            "}")
 
-        JavaFileObject dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
             "public class DependencyModel {",
             "   public DependencyModel() {}",
-            "}");
+            "}")
 
-        JavaFileObject parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
+        val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
             "package test;",
             "",
             "public class ParentDependency {",
             "   public ParentDependency() {}",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ParentDependencySingleton",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ParentDependencySingleton",
             "package test;",
             "",
-            "import android.support.annotation.Keep",
-            "import android.support.annotation.NonNull",
+            "import $keep",
+            "import $iocLazy",
             "",
             "@Keep",
-            "public final class ParentDependencySingleton",
-            "   private static ParentDependency singleton;",
+            "public final class ParentDependencySingleton extends IocLazy<ParentDependency> {",
+            "   private static ParentDependencySingleton instance;",
             "",
-            "   private static final ParentDependencySingleton instance = new ParentDependencySingleton();",
+            "   public static final ParentDependencySingleton getInstance() {",
+            "       if (instance == null) instance = new ParentDependencySingleton();",
+            "       return instance;",
+            "   }",
             "",
-            "   @Keep",
-            "   @NonNull",
-            "   public static final ParentDependency get() {",
-            "       if (singleton != null) return singleton;",
+            "   protected final ParentDependency initialize() {",
             "       DependencyModel dependencyModel = ModuleClass.dependency();",
-            "       singleton = ModuleClass.getParentDependency(dependencyModel);",
-            "       return singleton;",
+            "       return ModuleClass.getParentDependency(dependencyModel);",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, moduleFile, dependencyFile, parentDependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(activityFile, moduleFile, dependencyFile, parentDependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void singletonFromClass() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun singletonFromClass() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
             "   @Inject",
             "   public ParentDependency dependency;",
-            "}");
+            "}")
 
-        JavaFileObject dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
             "public class DependencyModel {",
             "   public DependencyModel() {}",
-            "}");
+            "}")
 
-        JavaFileObject parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
+        val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
-            Helpers.importType(Singleton.class),
+            Helpers.importType(Inject::class.java),
+            Helpers.importType(Singleton::class.java),
             "",
             "@Singleton",
             "public class ParentDependency {",
             "   @Inject",
             "   public ParentDependency(DependencyModel dependency) {}",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ParentDependencySingleton",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ParentDependencySingleton",
             "package test;",
             "",
-            "import android.support.annotation.Keep",
-            "import android.support.annotation.NonNull",
+            "import $keep",
+            "import $iocLazy",
             "",
             "@Keep",
-            "public final class ParentDependencySingleton",
-            "   private static ParentDependency singleton;",
+            "public final class ParentDependencySingleton extends IocLazy<ParentDependency> {",
+            "   private static ParentDependencySingleton instance;",
             "",
-            "   private static final ParentDependencySingleton instance = new ParentDependencySingleton();",
-            "",
-            "   @Keep",
-            "   @NonNull",
-            "   public static final ParentDependency get() {",
-            "       if (singleton != null) return singleton;",
-            "       DependencyModel dependencyModel = new DependencyModel();",
-            "       singleton = new ParentDependency(dependencyModel);",
-            "       return singleton;",
+            "   public static final ParentDependencySingleton getInstance() {",
+            "       if (instance == null) instance = new ParentDependencySingleton();",
+            "       return instance;",
             "   }",
-            "}");
+            "",
+            "   protected final ParentDependency initialize() {",
+            "       DependencyModel dependencyModel = new DependencyModel();",
+            "       return new ParentDependency(dependencyModel);",
+            "   }",
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, dependencyFile, parentDependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(activityFile, dependencyFile, parentDependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void singletonFromClass2() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun singletonFromClass2() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
             "   @Inject",
             "   public ParentDependency dependency;",
-            "}");
+            "}")
 
-        JavaFileObject dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
             "public class DependencyModel {",
             "   public DependencyModel() {}",
-            "}");
+            "}")
 
-        JavaFileObject parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
+        val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
-            Helpers.importType(Singleton.class),
+            Helpers.importType(Inject::class.java),
+            Helpers.importType(Singleton::class.java),
             "",
             "@Singleton",
             "public class ParentDependency {",
             "   @Inject",
             "   public ParentDependency(DependencyModel dependency) {}",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep",
@@ -1085,24 +1097,25 @@ public class ModuleTests {
             "   }",
             "",
             "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
-            "       ParentDependency parentDependency = ParentDependencySingleton.get();",
+            "       ParentDependency parentDependency = com.ioc.Ioc.singleton(test.ParentDependency.class);",
             "       target.dependency = parentDependency;",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, dependencyFile, parentDependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(activityFile, dependencyFile, parentDependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void singletonFromClass2MethodInjectionSingleton() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun singletonFromClass2MethodInjectionSingleton() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
@@ -1110,61 +1123,61 @@ public class ModuleTests {
             "   private ParentDependency dependency;",
             "   public void setDependency(ParentDependency dep) {};",
             "   public ParentDependency getDependency() { return null; }",
-            "}");
+            "}")
 
-        JavaFileObject dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
             "public class DependencyModel {",
             "   public DependencyModel() {}",
-            "}");
+            "}")
 
-        JavaFileObject parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
+        val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
-            Helpers.importType(Singleton.class),
+            Helpers.importType(Inject::class.java),
+            Helpers.importType(Singleton::class.java),
             "",
             "@Singleton",
             "public class ParentDependency {",
             "   @Inject",
             "   public ParentDependency(DependencyModel dependency) {}",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ParentDependencySingleton",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ParentDependencySingleton",
             "package test;",
             "",
-            "import android.support.annotation.Keep",
-            "import android.support.annotation.NonNull",
+            "import $keep",
+            "import $iocLazy",
             "",
             "@Keep",
-            "public final class ParentDependencySingleton {",
-            "   private static ParentDependency singleton;",
-            "   private static final ParentDependencySingleton instance = new ParentDependencySingleton();",
-            "",
-            "   @Keep",
-            "   @NonNull",
-            "   public static final ParentDependency get() {",
-            "       if (singleton != null) return singleton;",
-            "       DependencyModel dependencyModel = new DependencyModel();",
-            "       singleton = new ParentDependency(dependencyModel);",
-            "       return singleton;",
+            "public final class ParentDependencySingleton extends IocLazy<ParentDependency> {",
+            "   private static ParentDependencySingleton instance;",
+            "   public static final ParentDependencySingleton getInstance() {",
+            "       if (instance == null) instance = new ParentDependencySingleton();",
+            "       return instance;",
             "   }",
-            "}");
+            "",
+            "   protected final ParentDependency initialize() {",
+            "       DependencyModel dependencyModel = new DependencyModel();",
+            "       return new ParentDependency(dependencyModel);",
+            "   }",
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, dependencyFile, parentDependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(activityFile, dependencyFile, parentDependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void singletonFromClass2MethodInjection() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun singletonFromClass2MethodInjection() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
@@ -1172,32 +1185,32 @@ public class ModuleTests {
             "   private ParentDependency dependency;",
             "   public void setDependency(ParentDependency dep) {};",
             "   public ParentDependency getDependency() { return null; }",
-            "}");
+            "}")
 
-        JavaFileObject dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
             "public class DependencyModel {",
             "   public DependencyModel() {}",
-            "}");
+            "}")
 
-        JavaFileObject parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
+        val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
-            Helpers.importType(Singleton.class),
+            Helpers.importType(Inject::class.java),
+            Helpers.importType(Singleton::class.java),
             "",
             "@Singleton",
             "public class ParentDependency {",
             "   @Inject",
             "   public ParentDependency(DependencyModel dependency) {}",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import android.support.annotation.Keep",
-            "import android.support.annotation.NonNull",
+            "import $keep;",
+            "import $nonNull;",
             "",
             "@Keep",
             "public final class ActivityInjector {",
@@ -1207,96 +1220,96 @@ public class ModuleTests {
             "   }",
             "",
             "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
-            "       ParentDependency parentDependency = ParentDependencySingleton.get();",
+            "       ParentDependency parentDependency = com.ioc.Ioc.singleton(test.ParentDependency.class);",
             "       target.setDependency(parentDependency);",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, dependencyFile, parentDependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(activityFile, dependencyFile, parentDependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void singletonFromClass3() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun singletonFromClass3() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
             "   @Inject",
             "   public ParentDependency dependency;",
-            "}");
+            "}")
 
-        JavaFileObject dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
             "public class DependencyModel {",
             "   public DependencyModel() {}",
-            "}");
+            "}")
 
-        JavaFileObject singletonFile = JavaFileObjects.forSourceLines("test.Singleton2",
+        val singletonFile = JavaFileObjects.forSourceLines("test.Singleton2",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
-            Helpers.importType(Singleton.class),
+            Helpers.importType(Inject::class.java),
+            Helpers.importType(Singleton::class.java),
             "",
             "@Singleton",
             "public class Singleton2 {",
-            "}");
+            "}")
 
-        JavaFileObject parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
+        val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
-            Helpers.importType(Singleton.class),
+            Helpers.importType(Inject::class.java),
+            Helpers.importType(Singleton::class.java),
             "",
             "@Singleton",
             "public class ParentDependency {",
             "   @Inject",
             "   public ParentDependency(DependencyModel dependency, Singleton2 singleton2) {}",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ParentDependencySingleton",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ParentDependencySingleton",
             "package test;",
             "",
-            "import android.support.annotation.Keep",
-            "import android.support.annotation.NonNull",
+            "import $keep;",
+            "import $iocLazy;",
             "",
             "@Keep",
-            "public final class ParentDependencySingleton",
-            "   private static ParentDependency singleton;",
+            "public final class ParentDependencySingleton extends IocLazy<ParentDependency> {",
+            "   private static ParentDependencySingleton instance;",
             "",
-            "   private static final ParentDependencySingleton instance = new ParentDependencySingleton();",
-            "",
-            "   @Keep",
-            "   @NonNull",
-            "   public static final ParentDependency get() {",
-            "       if (singleton != null) return singleton;",
-            "       Singleton2 singleton2 = Singleton2Singleton.get();",
-            "       DependencyModel dependencyModel = new DependencyModel();",
-            "       singleton = new ParentDependency(dependencyModel, singleton2);",
-            "       return singleton;",
+            "   public static final ParentDependencySingleton getInstance() {",
+            "       if (instance == null) instance = new ParentDependencySingleton();",
+            "       return instance;",
             "   }",
-            "}");
+            "",
+            "   protected final ParentDependency initialize() {",
+            "       DependencyModel dependencyModel = new DependencyModel();",
+            "       return new ParentDependency(dependencyModel, com.ioc.Ioc.singleton(test.Singleton2.class));",
+            "   }",
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, dependencyFile, singletonFile, parentDependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(activityFile, dependencyFile, singletonFile, parentDependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void onlyOneSingleton() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun onlyOneSingleton() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
@@ -1304,111 +1317,110 @@ public class ModuleTests {
             "   public ParentDependency dependency;",
             "   @Inject",
             "   public ParentDependency oneMoreDependency;",
-            "}");
+            "}")
 
-        JavaFileObject dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
             "public class DependencyModel {",
             "   public DependencyModel() {}",
-            "}");
+            "}")
 
-        JavaFileObject singletonFile = JavaFileObjects.forSourceLines("test.Singleton2",
+        val singletonFile = JavaFileObjects.forSourceLines("test.Singleton2",
             "package test;",
             "",
-            Helpers.importType(Singleton.class),
+            Helpers.importType(Singleton::class.java),
             "",
             "@Singleton",
             "public class Singleton2 {",
-            "}");
+            "}")
 
-        JavaFileObject parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
+        val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
-            Helpers.importType(Singleton.class),
+            Helpers.importType(Inject::class.java),
+            Helpers.importType(Singleton::class.java),
             "",
             "@Singleton",
             "public class ParentDependency {",
             "   @Inject",
             "   public ParentDependency(DependencyModel dependency, Singleton2 singleton2) {}",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ParentDependencySingleton",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ParentDependencySingleton",
             "package test;",
             "",
-            "import android.support.annotation.Keep",
-            "import android.support.annotation.NonNull",
+            "import $keep",
+            "import $iocLazy",
             "",
             "@Keep",
-            "public final class ParentDependencySingleton",
-            "   private static ParentDependency singleton;",
+            "public final class ParentDependencySingleton extends IocLazy<ParentDependency> {",
+            "   private static ParentDependencySingleton instance;",
             "",
-            "   private static final ParentDependencySingleton instance = new ParentDependencySingleton();",
-            "",
-            "   @Keep",
-            "   @NonNull",
-            "   public static final ParentDependency get() {",
-            "       if (singleton != null) return singleton;",
-            "       Singleton2 singleton2 = Singleton2Singleton.get();",
-            "       DependencyModel dependencyModel = new DependencyModel();",
-            "       singleton = new ParentDependency(dependencyModel, singleton2);",
-            "       return singleton;",
+            "   public static final ParentDependencySingleton getInstance() {",
+            "       if (instance == null) instance = new ParentDependencySingleton();",
+            "       return instance;",
             "   }",
-            "}");
+            "",
+            "   protected final ParentDependency initialize() {",
+            "       DependencyModel dependencyModel = new DependencyModel();",
+            "       return new ParentDependency(dependencyModel, com.ioc.Ioc.singleton(test.Singleton2.class));",
+            "   }",
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, dependencyFile, singletonFile, parentDependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(activityFile, dependencyFile, singletonFile, parentDependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void singletonFromClass4() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun singletonFromClass4() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
             "   @Inject",
             "   public ParentDependency dependency;",
-            "}");
+            "}")
 
-        JavaFileObject dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
             "public class DependencyModel {",
             "   public DependencyModel() {}",
-            "}");
+            "}")
 
-        JavaFileObject singletonFile = JavaFileObjects.forSourceLines("test.Singleton2",
+        val singletonFile = JavaFileObjects.forSourceLines("test.Singleton2",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
-            Helpers.importType(Singleton.class),
+            Helpers.importType(Inject::class.java),
+            Helpers.importType(Singleton::class.java),
             "",
             "@Singleton",
             "public class Singleton2 {",
-            "}");
+            "}")
 
-        JavaFileObject parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
+        val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class ParentDependency {",
             "   @Inject",
             "   public ParentDependency(DependencyModel dependency, Singleton2 singleton2) {}",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import android.support.annotation.Keep",
-            "import android.support.annotation.NonNull",
+            "import $keep",
+            "import $nonNull;",
             "",
             "@Keep",
             "public final class ActivityInjector {",
@@ -1418,26 +1430,26 @@ public class ModuleTests {
             "   }",
             "",
             "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
-            "       Singleton2 singleton2 = Singleton2Singleton.get();",
             "       DependencyModel dependencyModel = new DependencyModel();",
-            "       ParentDependency parentDependency = new ParentDependency(dependencyModel, singleton2);",
+            "       ParentDependency parentDependency = new ParentDependency(dependencyModel, com.ioc.Ioc.singleton(test.Singleton2.class));",
             "       target.dependency = parentDependency;",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, dependencyFile, singletonFile, parentDependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(activityFile, dependencyFile, singletonFile, parentDependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void singletonFromClass4MethodInjection() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun singletonFromClass4MethodInjection() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
@@ -1445,36 +1457,36 @@ public class ModuleTests {
             "   private ParentDependency dependency;",
             "   public void setDependency(ParentDependency dep) {};",
             "   public ParentDependency getDependency() { return null; }",
-            "}");
+            "}")
 
-        JavaFileObject dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
             "public class DependencyModel {",
             "   public DependencyModel() {}",
-            "}");
+            "}")
 
-        JavaFileObject singletonFile = JavaFileObjects.forSourceLines("test.Singleton2",
+        val singletonFile = JavaFileObjects.forSourceLines("test.Singleton2",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
-            Helpers.importType(Singleton.class),
+            Helpers.importType(Inject::class.java),
+            Helpers.importType(Singleton::class.java),
             "",
             "@Singleton",
             "public class Singleton2 {",
-            "}");
+            "}")
 
-        JavaFileObject parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
+        val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class ParentDependency {",
             "   @Inject",
             "   public ParentDependency(DependencyModel dependency, Singleton2 singleton2) {}",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep",
@@ -1488,131 +1500,131 @@ public class ModuleTests {
             "   }",
             "",
             "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
-            "       Singleton2 singleton2 = Singleton2Singleton.get();",
             "       DependencyModel dependencyModel = new DependencyModel();",
-            "       ParentDependency parentDependency = new ParentDependency(dependencyModel, singleton2);",
+            "       ParentDependency parentDependency = new ParentDependency(dependencyModel, com.ioc.Ioc.singleton(test.Singleton2.class));",
             "       target.setDependency(parentDependency);",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, dependencyFile, singletonFile, parentDependencyFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf<JavaFileObject>(activityFile, dependencyFile, singletonFile, parentDependencyFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void correctParamInjection() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun correctParamInjection() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
             "   @Inject",
             "   public GetCountryService service;",
-            "}");
+            "}")
 
-        JavaFileObject retrofitFile = JavaFileObjects.forSourceLines("test.Retrofit",
+        val retrofitFile = JavaFileObjects.forSourceLines("test.Retrofit",
             "package test;",
             "",
             "public class Retrofit {",
-            "}");
+            "}")
 
-        JavaFileObject countryServiceFile = JavaFileObjects.forSourceLines("test.CountryService",
+        val countryServiceFile = JavaFileObjects.forSourceLines("test.CountryService",
             "package test;",
             "",
             "public interface CountryService {",
-            "}");
+            "}")
 
-        JavaFileObject getCountryServiceFile = JavaFileObjects.forSourceLines("test.GetCountryService",
+        val getCountryServiceFile = JavaFileObjects.forSourceLines("test.GetCountryService",
             "package test;",
             "",
-            Helpers.importType(Singleton.class),
+            Helpers.importType(Singleton::class.java),
             "",
             "@Singleton",
             "public class GetCountryService {",
             "   GetCountryService(CountryService countryService) {}",
-            "}");
+            "}")
 
-        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
+        val moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
             "package test;",
             "",
-            Helpers.importType(Dependency.class),
+            Helpers.importType(Dependency::class.java),
             "",
             "public class ModuleFile {",
             "   @Dependency",
             "   public static CountryService getService(Retrofit retrofit) {return null;}",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.GetCountryServiceSingleton",
+        val injectedFile = JavaFileObjects.forSourceLines("test.GetCountryServiceSingleton",
             "package test;",
             "",
-            "import android.support.annotation.Keep",
-            "import android.support.annotation.NonNull",
+            "import $keep",
+            "import $iocLazy",
             "",
             "@Keep",
-            "public final class GetCountryServiceSingleton {",
-            "   private static GetCountryService singleton;",
+            "public final class GetCountryServiceSingleton extends IocLazy<GetCountryService> {",
+            "   private static GetCountryServiceSingleton instance;",
             "",
-            "   private static final GetCountryServiceSingleton instance = new GetCountryServiceSingleton();",
+            "   public static final GetCountryServiceSingleton getInstance() {",
+            "       if (instance == null) instance = new GetCountryServiceSingleton();",
+            "       return instance;",
+            "   }",
             "",
-            "   @Keep",
-            "   @NonNull",
-            "   public static final GetCountryService get() {",
-            "       if (singleton != null) return singleton;",
+            "   protected final GetCountryService initialize() {",
             "       Retrofit retrofit = new Retrofit();",
             "       CountryService countryService = ModuleFile.getService(retrofit);",
-            "       singleton = new GetCountryService(countryService);",
-            "       return singleton;",
+            "       return new GetCountryService(countryService);",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, retrofitFile, countryServiceFile, getCountryServiceFile, moduleFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf<JavaFileObject>(activityFile, retrofitFile, countryServiceFile, getCountryServiceFile, moduleFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void interfaceModules() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun interfaceModules() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
             "   @Inject",
             "   public CountryService service;",
-            "}");
+            "}")
 
-        JavaFileObject countryServiceFile = JavaFileObjects.forSourceLines("test.CountryService",
+        val countryServiceFile = JavaFileObjects.forSourceLines("test.CountryService",
             "package test;",
             "",
             "public interface CountryService {",
-            "}");
+            "}")
 
-        JavaFileObject countryServiceImplementation = JavaFileObjects.forSourceLines("test.CountryServiceImplementation",
+        val countryServiceImplementation = JavaFileObjects.forSourceLines("test.CountryServiceImplementation",
             "package test;",
 
             "public class CountryServiceImplementation implements CountryService {",
-            "}");
+            "}")
 
-        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
+        val moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
             "package test;",
             "",
-            Helpers.importType(Dependency.class),
+            Helpers.importType(Dependency::class.java),
             "",
             "interface ModuleFile {",
             "   @Dependency",
             "   public CountryService getService(CountryServiceImplementation implementation);",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep",
@@ -1630,21 +1642,22 @@ public class ModuleTests {
             "       CountryService countryService = new CountryServiceImplementation();",
             "       target.service = countryService;",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, countryServiceImplementation, countryServiceFile, moduleFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(Arrays.asList<JavaFileObject>(activityFile, countryServiceImplementation, countryServiceFile, moduleFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void abstractModules() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun abstractModules() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
@@ -1652,31 +1665,31 @@ public class ModuleTests {
             "   public CountryService service;",
             "   @Inject",
             "   public DependencyService dependencyService;",
-            "}");
+            "}")
 
-        JavaFileObject countryServiceFile = JavaFileObjects.forSourceLines("test.CountryService",
+        val countryServiceFile = JavaFileObjects.forSourceLines("test.CountryService",
             "package test;",
             "",
             "public interface CountryService {",
-            "}");
+            "}")
 
-        JavaFileObject dependencyService = JavaFileObjects.forSourceLines("test.DependencyService",
+        val dependencyService = JavaFileObjects.forSourceLines("test.DependencyService",
             "package test;",
             "",
             "public class DependencyService {",
-            "}");
+            "}")
 
-        JavaFileObject countryServiceImplementation = JavaFileObjects.forSourceLines("test.CountryServiceImplementation",
+        val countryServiceImplementation = JavaFileObjects.forSourceLines("test.CountryServiceImplementation",
             "package test;",
 
             "public class CountryServiceImplementation implements CountryService {",
-            "}");
+            "}")
 
-        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
+        val moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
             "package test;",
             "",
-            Helpers.importType(Dependency.class),
-            Helpers.importType(Singleton.class),
+            Helpers.importType(Dependency::class.java),
+            Helpers.importType(Singleton::class.java),
             "",
             "public abstract class ModuleFile {",
             "   @Dependency",
@@ -1684,9 +1697,9 @@ public class ModuleTests {
             "   public abstract CountryService getService(CountryServiceImplementation implementation);",
             "   @Dependency",
             "   public abstract DependencyService getDependencyService();",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep",
@@ -1702,7 +1715,7 @@ public class ModuleTests {
             "   }",
             "",
             "   private final void injectCountryServiceInService(@NonNull final Activity target) {",
-            "       CountryServiceImplementation countryServiceImplementation = CountryServiceImplementationSingleton.get();",
+            "       CountryServiceImplementation countryServiceImplementation = com.ioc.Ioc.singleton(test.CountryServiceImplementation.class);",
             "       target.service = countryServiceImplementation;",
             "   }",
             "",
@@ -1710,21 +1723,22 @@ public class ModuleTests {
             "       DependencyService dependencyService = new DependencyService();",
             "       target.dependencyService = dependencyService;",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, dependencyService, countryServiceImplementation, countryServiceFile, moduleFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(activityFile, dependencyService, countryServiceImplementation, countryServiceFile, moduleFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void failNotReturnImplementation() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun failNotReturnImplementation() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
@@ -1732,39 +1746,40 @@ public class ModuleTests {
             "   public CountryService service;",
             "   @Inject",
             "   public DependencyService dependencyService;",
-            "}");
+            "}")
 
-        JavaFileObject countryServiceFile = JavaFileObjects.forSourceLines("test.CountryService",
+        val countryServiceFile = JavaFileObjects.forSourceLines("test.CountryService",
             "package test;",
             "",
             "public interface CountryService {",
-            "}");
+            "}")
 
-        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
+        val moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
             "package test;",
             "",
-            Helpers.importType(Dependency.class),
+            Helpers.importType(Dependency::class.java),
             "",
             "public abstract class ModuleFile {",
             "   @Dependency",
             "   public abstract CountryService getService();",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, countryServiceFile, moduleFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(Arrays.asList<JavaFileObject>(activityFile, countryServiceFile, moduleFile))
+            .processedWith(IProcessor())
             .failsToCompile()
             .withErrorContaining("ModuleFile.getService() returns test.CountryService which is interface also must contain implementation as parameter")
-            .in(moduleFile)
-            .onLine(7);
+            .`in`(moduleFile)
+            .onLine(7)
     }
 
     @Test
-    public void failPassInterfaceAsParameter() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun failPassInterfaceAsParameter() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
@@ -1772,76 +1787,78 @@ public class ModuleTests {
             "   public CountryService service;",
             "   @Inject",
             "   public DependencyService dependencyService;",
-            "}");
+            "}")
 
-        JavaFileObject countryServiceFile = JavaFileObjects.forSourceLines("test.CountryService",
+        val countryServiceFile = JavaFileObjects.forSourceLines("test.CountryService",
             "package test;",
             "",
             "public interface CountryService {",
-            "}");
+            "}")
 
-        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
+        val moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
             "package test;",
             "",
-            Helpers.importType(Dependency.class),
+            Helpers.importType(Dependency::class.java),
             "",
             "public abstract class ModuleFile {",
             "   @Dependency",
             "   public abstract CountryService getService(CountryService service);",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, countryServiceFile, moduleFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(Arrays.asList<JavaFileObject>(activityFile, countryServiceFile, moduleFile))
+            .processedWith(IProcessor())
             .failsToCompile()
             .withErrorContaining("ModuleFile.getService(test.CountryService) returns test.CountryService which is interface also contains interface as parameter must be implementation")
-            .in(moduleFile)
-            .onLine(7);
+            .`in`(moduleFile)
+            .onLine(7)
     }
 
     @Test
-    public void methodMustBeStatic() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun methodMustBeStatic() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
-            Helpers.importType(Named.class),
+            Helpers.importType(Inject::class.java),
+            Helpers.importType(Named::class.java),
             "",
             "public class Activity {",
             "",
             "   @Inject",
             "   @Named(\"named\")",
             "   public String serviceName;",
-            "}");
+            "}")
 
-        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
+        val moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
             "package test;",
             "",
-            Helpers.importType(Dependency.class),
-            Helpers.importType(Named.class),
+            Helpers.importType(Dependency::class.java),
+            Helpers.importType(Named::class.java),
             "",
             "public abstract class ModuleFile {",
             "   @Dependency",
             "   @Named(\"named\")",
             "   public String getServiceName() { return \"some name\"; }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, moduleFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(Arrays.asList<JavaFileObject>(activityFile, moduleFile))
+            .processedWith(IProcessor())
             .failsToCompile()
             .withErrorContaining("ModuleFile.getServiceName() is annotated with @Dependency must be static and public")
-            .in(moduleFile)
-            .onLine(9);
+            .`in`(moduleFile)
+            .onLine(9)
     }
 
     @Test
-    public void injectStringFromModuleMethod() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun injectStringFromModuleMethod() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
-            Helpers.importType(Named.class),
+            Helpers.importType(Inject::class.java),
+            Helpers.importType(Named::class.java),
             "",
             "public class Activity {",
             "",
@@ -1850,13 +1867,13 @@ public class ModuleTests {
             "   public String serviceName;",
             "   @Inject",
             "   public Service service;",
-            "}");
+            "}")
 
-        JavaFileObject service = JavaFileObjects.forSourceLines("test.Service",
+        val service = JavaFileObjects.forSourceLines("test.Service",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
-            Helpers.importType(Named.class),
+            Helpers.importType(Inject::class.java),
+            Helpers.importType(Named::class.java),
             "",
             "public class Service {",
             "   Service(@Named(\"named\") String serviceName) {}",
@@ -1864,21 +1881,21 @@ public class ModuleTests {
             "   @Inject",
             "   @Named(\"named\")",
             "   public String serviceName;",
-            "}");
+            "}")
 
-        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
+        val moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
             "package test;",
             "",
-            Helpers.importType(Dependency.class),
-            Helpers.importType(Named.class),
+            Helpers.importType(Dependency::class.java),
+            Helpers.importType(Named::class.java),
             "",
             "public class ModuleFile {",
             "   @Dependency",
             "   @Named(\"named\")",
             "   public static String getServiceName() { return \"some name\"; }",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep;",
@@ -1904,22 +1921,23 @@ public class ModuleTests {
             "       Service service = new Service(string2);",
             "       target.service = service;",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, service, moduleFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(Arrays.asList<JavaFileObject>(activityFile, service, moduleFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void injectIntegerFromModuleMethod() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun injectIntegerFromModuleMethod() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
-            Helpers.importType(Named.class),
+            Helpers.importType(Inject::class.java),
+            Helpers.importType(Named::class.java),
             "",
             "public class Activity {",
             "",
@@ -1928,13 +1946,13 @@ public class ModuleTests {
             "   public Integer serviceNumber;",
             "   @Inject",
             "   public Service service;",
-            "}");
+            "}")
 
-        JavaFileObject service = JavaFileObjects.forSourceLines("test.Service",
+        val service = JavaFileObjects.forSourceLines("test.Service",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
-            Helpers.importType(Named.class),
+            Helpers.importType(Inject::class.java),
+            Helpers.importType(Named::class.java),
             "",
             "public class Service {",
             "   Service(@Named(\"named\") Integer serviceNumber) {}",
@@ -1942,21 +1960,21 @@ public class ModuleTests {
             "   @Inject",
             "   @Named(\"named\")",
             "   public Integer serviceNumber;",
-            "}");
+            "}")
 
-        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
+        val moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
             "package test;",
             "",
-            Helpers.importType(Dependency.class),
-            Helpers.importType(Named.class),
+            Helpers.importType(Dependency::class.java),
+            Helpers.importType(Named::class.java),
             "",
             "public class ModuleFile {",
             "   @Dependency",
             "   @Named(\"named\")",
             "   public static Integer getServiceName() { return 10; }",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep;",
@@ -1982,21 +2000,22 @@ public class ModuleTests {
             "       Service service = new Service(integer2);",
             "       target.service = service;",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, service, moduleFile))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(Arrays.asList<JavaFileObject>(activityFile, service, moduleFile))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void nestedModule() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun nestedModule() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
@@ -2005,19 +2024,19 @@ public class ModuleTests {
             "",
             "   @Inject",
             "   public String someString;",
-            "}");
+            "}")
 
-        JavaFileObject countryService = JavaFileObjects.forSourceLines("test.CountryService",
+        val countryService = JavaFileObjects.forSourceLines("test.CountryService",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
-            "public class CountryService {}");
+            "public class CountryService {}")
 
-        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
+        val moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
             "package test;",
             "",
-            Helpers.importType(Dependency.class),
+            Helpers.importType(Dependency::class.java),
             "",
             "public abstract class ModuleFile {",
             "   public abstract static class NestedModule {",
@@ -2026,9 +2045,9 @@ public class ModuleTests {
             "       @Dependency",
             "       public static String getString() { return null; };",
             "   }",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep;",
@@ -2053,40 +2072,41 @@ public class ModuleTests {
             "       String string = ModuleFile.NestedModule.getString();",
             "       target.someString = string;",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, moduleFile, countryService))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(Arrays.asList<JavaFileObject>(activityFile, moduleFile, countryService))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void kotlinModuleInField() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun kotlinModuleInField() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
             "   @Inject",
             "   public CountryService service;",
-            "}");
+            "}")
 
-        JavaFileObject countryService = JavaFileObjects.forSourceLines("test.CountryService",
+        val countryService = JavaFileObjects.forSourceLines("test.CountryService",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
-            "public class CountryService {}");
+            "public class CountryService {}")
 
-        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.Module",
+        val moduleFile = JavaFileObjects.forSourceLines("test.Module",
             "package test;",
             "",
-            Helpers.importType(Dependency.class),
-            Helpers.importType(Metadata.class),
+            Helpers.importType(Dependency::class.java),
+            Helpers.importType(Metadata::class.java),
             "",
             "@Metadata(mv = {1, 1, 15}, bv = {1, 0, 3}, k = 1, d1 = {\"\\u0000\\u0012\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0002\\b\\u0002\\n\\u0002\\u0018\\u0002\\n\\u0000\\bÆ\\u0002\\u0018\\u00002\\u00020\\u0001B\\u0007\\b\\u0002¢\\u0006\\u0002\\u0010\\u0002J\\b\\u0010\\u0003\\u001a\\u00020\\u0004H\\u0007¨\\u0006\\u0005\"}, d2 = {\"Ltest/Module;\", \"\", \"()V\", \"getCountryService\", \"Ltest/CountryService;\", \"sample_debug\"})",
             "public final class Module {",
@@ -2098,9 +2118,9 @@ public class ModuleTests {
             "     Module var0 = new Module();",
             "     INSTANCE = var0;",
             "   }",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep;",
@@ -2118,47 +2138,48 @@ public class ModuleTests {
             "       CountryService countryService = Module.INSTANCE.getCountryService();",
             "       target.service = countryService;",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, moduleFile, countryService))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(Arrays.asList<JavaFileObject>(activityFile, moduleFile, countryService))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void kotlinModuleInFieldWithParameter() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun kotlinModuleInFieldWithParameter() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
             "   @Inject",
             "   public CountryService service;",
-            "}");
+            "}")
 
-        JavaFileObject countryService = JavaFileObjects.forSourceLines("test.CountryService",
+        val countryService = JavaFileObjects.forSourceLines("test.CountryService",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
-            "public class CountryService {}");
+            "public class CountryService {}")
 
-        JavaFileObject countryRepository = JavaFileObjects.forSourceLines("test.CountryRepository",
+        val countryRepository = JavaFileObjects.forSourceLines("test.CountryRepository",
             "package test;",
             "",
             "public class CountryRepository {",
             "   CountryRepository() {}",
-            "}");
+            "}")
 
-        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.Module",
+        val moduleFile = JavaFileObjects.forSourceLines("test.Module",
             "package test;",
             "",
-            Helpers.importType(Dependency.class),
-            Helpers.importType(Metadata.class),
+            Helpers.importType(Dependency::class.java),
+            Helpers.importType(Metadata::class.java),
             "",
             "@Metadata(mv = {1, 1, 15}, bv = {1, 0, 3}, k = 1, d1 = {\"\\u0000\\u0012\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0002\\b\\u0002\\n\\u0002\\u0018\\u0002\\n\\u0000\\bÆ\\u0002\\u0018\\u00002\\u00020\\u0001B\\u0007\\b\\u0002¢\\u0006\\u0002\\u0010\\u0002J\\b\\u0010\\u0003\\u001a\\u00020\\u0004H\\u0007¨\\u0006\\u0005\"}, d2 = {\"Ltest/Module;\", \"\", \"()V\", \"getCountryService\", \"Ltest/CountryService;\", \"sample_debug\"})",
             "public final class Module {",
@@ -2170,9 +2191,9 @@ public class ModuleTests {
             "     Module var0 = new Module();",
             "     INSTANCE = var0;",
             "   }",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep;",
@@ -2191,44 +2212,45 @@ public class ModuleTests {
             "       CountryService countryService = Module.INSTANCE.getCountryService(countryRepository);",
             "       target.service = countryService;",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, moduleFile, countryRepository, countryService))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(Arrays.asList<JavaFileObject>(activityFile, moduleFile, countryRepository, countryService))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void kotlinModuleInConstructor() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun kotlinModuleInConstructor() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
             "   @Inject",
             "   public CountryProvider service;",
-            "}");
+            "}")
 
-        JavaFileObject countryService = JavaFileObjects.forSourceLines("test.CountryService",
+        val countryService = JavaFileObjects.forSourceLines("test.CountryService",
             "package test;",
-            "public class CountryService {}");
+            "public class CountryService {}")
 
-        JavaFileObject countryProvider = JavaFileObjects.forSourceLines("test.CountryProvider",
+        val countryProvider = JavaFileObjects.forSourceLines("test.CountryProvider",
             "package test;",
             "",
             "public class CountryProvider {",
             "   CountryProvider(CountryService service) {}",
-            "}");
+            "}")
 
-        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.Module",
+        val moduleFile = JavaFileObjects.forSourceLines("test.Module",
             "package test;",
             "",
-            Helpers.importType(Dependency.class),
-            Helpers.importType(Metadata.class),
+            Helpers.importType(Dependency::class.java),
+            Helpers.importType(Metadata::class.java),
             "",
             "@Metadata(mv = {1, 1, 15}, bv = {1, 0, 3}, k = 1, d1 = {\"\\u0000\\u0012\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0002\\b\\u0002\\n\\u0002\\u0018\\u0002\\n\\u0000\\bÆ\\u0002\\u0018\\u00002\\u00020\\u0001B\\u0007\\b\\u0002¢\\u0006\\u0002\\u0010\\u0002J\\b\\u0010\\u0003\\u001a\\u00020\\u0004H\\u0007¨\\u0006\\u0005\"}, d2 = {\"Ltest/Module;\", \"\", \"()V\", \"getCountryService\", \"Ltest/CountryService;\", \"sample_debug\"})",
             "public final class Module {",
@@ -2240,9 +2262,9 @@ public class ModuleTests {
             "     Module var0 = new Module();",
             "     INSTANCE = var0;",
             "   }",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep;",
@@ -2261,51 +2283,52 @@ public class ModuleTests {
             "       CountryProvider countryProvider = new CountryProvider(countryService);",
             "       target.service = countryProvider;",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, moduleFile, countryProvider, countryService))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(Arrays.asList<JavaFileObject>(activityFile, moduleFile, countryProvider, countryService))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void kotlinModuleInConstructorWithParameters() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun kotlinModuleInConstructorWithParameters() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
             "   @Inject",
             "   public CountryProvider service;",
-            "}");
+            "}")
 
-        JavaFileObject countryService = JavaFileObjects.forSourceLines("test.CountryService",
+        val countryService = JavaFileObjects.forSourceLines("test.CountryService",
             "package test;",
-            "public class CountryService {}");
+            "public class CountryService {}")
 
-        JavaFileObject countryRepository = JavaFileObjects.forSourceLines("test.CountryRepository",
+        val countryRepository = JavaFileObjects.forSourceLines("test.CountryRepository",
             "package test;",
             "",
             "public class CountryRepository {",
             "   CountryRepository() {}",
-            "}");
+            "}")
 
-        JavaFileObject countryProvider = JavaFileObjects.forSourceLines("test.CountryProvider",
+        val countryProvider = JavaFileObjects.forSourceLines("test.CountryProvider",
             "package test;",
             "",
             "public class CountryProvider {",
             "   CountryProvider(CountryService service) {}",
-            "}");
+            "}")
 
-        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.Module",
+        val moduleFile = JavaFileObjects.forSourceLines("test.Module",
             "package test;",
             "",
-            Helpers.importType(Dependency.class),
-            Helpers.importType(Metadata.class),
+            Helpers.importType(Dependency::class.java),
+            Helpers.importType(Metadata::class.java),
             "",
             "@Metadata(mv = {1, 1, 15}, bv = {1, 0, 3}, k = 1, d1 = {\"\\u0000\\u0012\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0002\\b\\u0002\\n\\u0002\\u0018\\u0002\\n\\u0000\\bÆ\\u0002\\u0018\\u00002\\u00020\\u0001B\\u0007\\b\\u0002¢\\u0006\\u0002\\u0010\\u0002J\\b\\u0010\\u0003\\u001a\\u00020\\u0004H\\u0007¨\\u0006\\u0005\"}, d2 = {\"Ltest/Module;\", \"\", \"()V\", \"getCountryService\", \"Ltest/CountryService;\", \"sample_debug\"})",
             "public final class Module {",
@@ -2317,9 +2340,9 @@ public class ModuleTests {
             "     Module var0 = new Module();",
             "     INSTANCE = var0;",
             "   }",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep;",
@@ -2339,60 +2362,61 @@ public class ModuleTests {
             "       CountryProvider countryProvider = new CountryProvider(countryService);",
             "       target.service = countryProvider;",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, moduleFile, countryProvider, countryRepository, countryService))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(Arrays.asList<JavaFileObject>(activityFile, moduleFile, countryProvider, countryRepository, countryService))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 
     @Test
-    public void kotlinModuleSingletonParameter() throws Exception {
-        JavaFileObject activityFile = JavaFileObjects.forSourceLines("test.Activity",
+    @Throws(Exception::class)
+    fun kotlinModuleSingletonParameter() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Helpers.importType(Inject.class),
+            Helpers.importType(Inject::class.java),
             "",
             "public class Activity {",
             "",
             "   @Inject",
             "   public Factory fy;",
-            "}");
+            "}")
 
-        JavaFileObject singletonParameter = JavaFileObjects.forSourceLines("test.SingletonParameter",
+        val singletonParameter = JavaFileObjects.forSourceLines("test.SingletonParameter",
             "package test;",
-            Helpers.importType(Singleton.class),
+            Helpers.importType(Singleton::class.java),
             "@Singleton",
-            "public class SingletonParameter {}");
+            "public class SingletonParameter {}")
 
-        JavaFileObject countryProvider = JavaFileObjects.forSourceLines("test.CountryProvider",
+        val countryProvider = JavaFileObjects.forSourceLines("test.CountryProvider",
             "package test;",
             "",
             "public class CountryProvider {",
             "   CountryProvider(SingletonParameter sp) {}",
-            "}");
+            "}")
 
-        JavaFileObject searchEngineService = JavaFileObjects.forSourceLines("test.SearchEngineService",
+        val searchEngineService = JavaFileObjects.forSourceLines("test.SearchEngineService",
             "package test;",
             "",
             "public class SearchEngineService {",
-            "}");
+            "}")
 
-        JavaFileObject factory = JavaFileObjects.forSourceLines("test.Factory",
+        val factory = JavaFileObjects.forSourceLines("test.Factory",
             "package test;",
 
 
             "public class Factory {",
             "   Factory(SearchEngineService s) {}",
-            "}");
+            "}")
 
-        JavaFileObject moduleFile = JavaFileObjects.forSourceLines("test.Module",
+        val moduleFile = JavaFileObjects.forSourceLines("test.Module",
             "package test;",
             "",
-            Helpers.importType(Dependency.class),
-            Helpers.importType(Metadata.class),
+            Helpers.importType(Dependency::class.java),
+            Helpers.importType(Metadata::class.java),
             "",
             "@Metadata(mv = {1, 1, 15}, bv = {1, 0, 3}, k = 1, d1 = {\"\\u0000\\u0012\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0002\\b\\u0002\\n\\u0002\\u0018\\u0002\\n\\u0000\\bÆ\\u0002\\u0018\\u00002\\u00020\\u0001B\\u0007\\b\\u0002¢\\u0006\\u0002\\u0010\\u0002J\\b\\u0010\\u0003\\u001a\\u00020\\u0004H\\u0007¨\\u0006\\u0005\"}, d2 = {\"Ltest/Module;\", \"\", \"()V\", \"getCountryService\", \"Ltest/CountryService;\", \"sample_debug\"})",
             "public final class Module {",
@@ -2404,13 +2428,13 @@ public class ModuleTests {
             "     Module var0 = new Module();",
             "     INSTANCE = var0;",
             "   }",
-            "}");
+            "}")
 
-        JavaFileObject suggestionModule = JavaFileObjects.forSourceLines("test.SuggestionModule",
+        val suggestionModule = JavaFileObjects.forSourceLines("test.SuggestionModule",
             "package test;",
             "",
-            Helpers.importType(Dependency.class),
-            Helpers.importType(Metadata.class),
+            Helpers.importType(Dependency::class.java),
+            Helpers.importType(Metadata::class.java),
             "",
             "@Metadata(mv = {1, 1, 15}, bv = {1, 0, 3}, k = 1, d1 = {\"\\u0000\\u0012\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0002\\b\\u0002\\n\\u0002\\u0018\\u0002\\n\\u0000\\bÆ\\u0002\\u0018\\u00002\\u00020\\u0001B\\u0007\\b\\u0002¢\\u0006\\u0002\\u0010\\u0002J\\b\\u0010\\u0003\\u001a\\u00020\\u0004H\\u0007¨\\u0006\\u0005\"}, d2 = {\"Ltest/Module;\", \"\", \"()V\", \"getCountryService\", \"Ltest/CountryService;\", \"sample_debug\"})",
             "public final class SuggestionModule {",
@@ -2422,9 +2446,9 @@ public class ModuleTests {
             "     SuggestionModule var0 = new SuggestionModule();",
             "     INSTANCE = var0;",
             "   }",
-            "}");
+            "}")
 
-        JavaFileObject injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import android.support.annotation.Keep;",
@@ -2439,18 +2463,17 @@ public class ModuleTests {
             "   }",
             "",
             "   private final void injectFactoryInFy(@NonNull final Activity target) {",
-            "       SingletonParameter singletonParameter = SingletonParameterSingleton.get();",
-            "       CountryProvider countryProvider = Module.INSTANCE.getCountryService(singletonParameter);",
+            "       CountryProvider countryProvider = Module.INSTANCE.getCountryService(com.ioc.Ioc.singleton(test.SingletonParameter.class));",
             "       SearchEngineService searchEngineService = SuggestionModule.INSTANCE.getSearchEngineService(countryProvider);",
             "       Factory factory = new Factory(searchEngineService);",
             "       target.fy = factory;",
             "   }",
-            "}");
+            "}")
 
-        assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, moduleFile, factory, suggestionModule, searchEngineService, singletonParameter, countryProvider))
-            .processedWith(new IProcessor())
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(activityFile, moduleFile, factory, suggestionModule, searchEngineService, singletonParameter, countryProvider))
+            .processedWith(IProcessor())
             .compilesWithoutError()
-            .and().generatesSources(injectedFile);
+            .and().generatesSources(injectedFile)
     }
 }

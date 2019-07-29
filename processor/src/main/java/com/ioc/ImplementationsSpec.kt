@@ -1,6 +1,9 @@
 package com.ioc
 
-import com.ioc.common.*
+import com.ioc.common.asTypeElement
+import com.ioc.common.getPackage
+import com.ioc.common.keepAnnotation
+import com.ioc.common.nonNullAnnotation
 import com.squareup.javapoet.*
 import javax.lang.model.element.Modifier
 import javax.lang.model.util.Types
@@ -62,10 +65,6 @@ class ImplementationsSpec constructor(
         }
 
         methods.add(builder.build())
-
-        //methods.addAll(cachedMethods)
-
-
         return methods
     }
 
@@ -88,13 +87,10 @@ class ImplementationsSpec constructor(
                 .addCode(body.build())
         }
 
-        // Root scope
-        //  scope
         fun dependencyInjectionCode(
             dependency: DependencyModel,
             typeUtils: Types,
-            target: TargetType,
-            usedSingletons: Map<String, DependencyModel>): CodeBlock.Builder {
+            target: TargetType): CodeBlock.Builder {
 
             val packageName = dependency.originalType.asTypeElement().getPackage()
             val isAllowedPackage = excludedPackages.any { packageName.toString().startsWith(it) }
@@ -103,81 +99,11 @@ class ImplementationsSpec constructor(
             }
 
             val builder = CodeBlock.builder()
-            for (usedSingleton in usedSingletons) {
-                //builder.add(singleton(usedSingleton.value.simpleName, usedSingleton.value))
-            }
 
-            val code = DependencyTree.generateWithLocalScope(listOf(dependency), typeUtils, usedSingletons, target)
+            val code = DependencyTree.generateWithLocalScope(listOf(dependency), typeUtils, target)
             builder.add(code)
             //applyIsLoadIfNeed(listOf(dependency), target, usedSingletons)
             return builder
-
-//            if (dependency.isViewModel) {
-//                val code = CodeBlock.builder()
-//                code.add(builder.build())
-//                DependencyTree.get(dependency.dependencies, typeUtils, usedSingletons, target).also { code.add(it) }
-//                applyIsLoadIfNeed(dependency.dependencies, target, usedSingletons)
-//                val names = dependency.dependencyNames()
-//                code.addStatement("return (T) new \$T($names)", dependency.originalClassName())
-//                val originalGeneratedName = dependency.generatedName
-//                val factoryName = "factory_${dependency.generatedName}"
-//                val viewModelBuilder = viewModelFactoryCode(originalGeneratedName, code)
-//
-//                viewModelBuilder.addStatement("\$T \$N = \$T.of(target, \$N).get(\$T.class)",
-//                    dependency.originalClassName(),
-//                    dependency.generatedName,
-//                    viewModelProvidersType,
-//                    factoryName,
-//                    dependency.originalType)
-//                return viewModelBuilder
-//            }
-//
-//            dependency.implementations.firstOrNull { it.isMethod }?.let {
-//                if (it.isSingleton) {
-//                    return singleton(dependency).toBuilder()
-//                }
-//
-//
-//                DependencyTree.get(dependency.dependencies, typeUtils, usedSingletons, target).also { builder.add(it) }
-//                applyIsLoadIfNeed(dependency.dependencies, target, usedSingletons)
-//                val names = dependency.dependencyNames()
-//                var statementString = "\$T \$N = \$T.\$N(\$L)"
-//                if (it.isKotlinModule) statementString = "\$T \$N = \$T.INSTANCE.\$N(\$L)"
-//                return builder.addStatement(statementString,
-//                    dependency.originalClassName(),
-//                    dependency.generatedName,
-//                    it.module,
-//                    it.name,
-//                    names)
-//            }
-//
-//            dependency.implementations.firstOrNull { !it.isMethod }?.let {
-//                if (it.isSingleton) {
-//                    return singleton(dependency).toBuilder()
-//                }
-//
-//                DependencyTree.get(it.dependencyModels, typeUtils, usedSingletons, target).also { builder.add(it) }
-//                applyIsLoadIfNeed(dependency.dependencies, target, usedSingletons)
-//                val names = it.dependencyNames()
-//                builder.addStatement("\$T \$N = new \$T(\$L)", dependency.originalClassName(), dependency.generatedName, it.returnType(), names)
-//                return builder
-//            }
-//
-//            if (dependency.isSingleton)
-//                return singleton(dependency).toBuilder()
-//
-//            // Inject with arguments constructor
-//            if (dependency.argumentsConstructor != null) {
-//                return argumentsConstructor(dependency, typeUtils, target, usedSingletons)
-//                    .add(builder)
-//            }
-//
-//            // Inject with no arguments constructor
-//            if (dependency.emptyConstructor != null) {
-//                return CodeBlock.builder().emptyConstructor(dependency).add(builder)
-//            }
-//
-//            return builder
         }
 
         fun injectInTarget(builder: MethodSpec.Builder, dependency: DependencyModel): MethodSpec {
