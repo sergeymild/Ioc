@@ -1,7 +1,6 @@
 package com.ioc.common
 
 import com.ioc.*
-import com.squareup.javapoet.ClassName
 import java.lang.ref.WeakReference
 import java.util.*
 import javax.annotation.processing.ProcessingEnvironment
@@ -14,7 +13,6 @@ import javax.lang.model.type.TypeKind
 import javax.lang.model.type.TypeMirror
 import javax.lang.model.util.ElementFilter
 import javax.lang.model.util.ElementScanner8
-import javax.lang.model.util.Types
 
 /**
  * Created by sergeygolishnikov on 31/10/2017.
@@ -46,6 +44,12 @@ fun Element.isPublic(): Boolean {
 
 fun Element.getGenericFirstType(): Element {
     if (!isSupportedType()) throw ProcessorException("Unsupported type $simpleName").setElement(this)
+    return asType().getGenericFirstType()
+}
+
+fun Element.getGenericFirstOrSelfType(): Element {
+    if (!isSupportedType()) throw ProcessorException("Unsupported type $simpleName").setElement(this)
+    if (asType().typeArguments().isEmpty()) return this
     return asType().getGenericFirstType()
 }
 
@@ -247,23 +251,27 @@ fun Name.capitalize(): String {
 
 fun Element.isHasArgumentsConstructor(): Boolean =
     ElementFilter.constructorsIn(asTypeElement().enclosedElements)
-        .any { !it.parameters.isEmpty() || it.isHasAnnotation(Inject::class.java) }
+        .any { it.parameters.isNotEmpty() || it.isHasAnnotation(Inject::class.java) }
 
 fun Element.argumentsConstructor(): ExecutableElement? =
     ElementFilter.constructorsIn(asTypeElement().enclosedElements)
-        .firstOrNull { !it.parameters.isEmpty() || it.isHasAnnotation(Inject::class.java) }
+        .firstOrNull { it.parameters.isNotEmpty() || it.isHasAnnotation(Inject::class.java) }
 
 fun Element.injectionFields(): List<Element> =
     ElementFilter.fieldsIn(asTypeElement().enclosedElements)
         .filter { it.isHasAnnotation(Inject::class.java) }
 
 
-fun Element.isWeakDependency(types: Types): Boolean {
-    return types.erasure(asType()).toString() == WeakReference::class.java.canonicalName
+fun Element.isWeakDependency(): Boolean {
+    return asType().toString().startsWith(WeakReference::class.java.canonicalName)
 }
 
-fun Element.isProvideDependency(types: Types): Boolean {
-    return types.erasure(asType()).toString() == Provider::class.java.canonicalName
+fun Element.isLazyDependency(): Boolean {
+    return asType().toString().startsWith(Lazy::class.java.canonicalName)
+}
+
+fun Element.isProvideDependency(): Boolean {
+    return asType().toString().startsWith(Provider::class.java.canonicalName)
 }
 
 fun Element.isViewModel(): Boolean {
@@ -290,10 +298,6 @@ fun Element.isCanHaveViewModel(): Boolean {
         superType = superType.asTypeElement().superclass
     }
     return false
-}
-
-fun Element.isLazy(types: Types): Boolean {
-    return types.erasure(asType()).toString() == com.ioc.Lazy::class.java.canonicalName
 }
 
 fun Element.isMethod(): Boolean {

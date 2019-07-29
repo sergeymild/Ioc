@@ -61,7 +61,7 @@ class CyclicValidation(val types: Types,
     private fun validateConstructorCyclic(element: Element, originalElement: Element) {
 
         var typeElement: Element = element
-        if (typeElement.isWeakDependency(types) /*|| typeElement.isProvideDependency(types)*/) {
+        if (typeElement.isWeakDependency() /*|| typeElement.isProvideDependency(types)*/) {
             typeElement = typeElement.getGenericFirstType().asTypeElement()
         }
 

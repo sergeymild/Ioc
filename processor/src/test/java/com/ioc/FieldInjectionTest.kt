@@ -447,7 +447,7 @@ class FieldInjectionTest {
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, dependencyInterface, dependencyType))
+            .that(listOf(activityFile, dependencyInterface, dependencyType))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)

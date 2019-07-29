@@ -61,12 +61,12 @@ class DependencyResolver(
         }
 
 
-        val isProvider = dependencyElement.isProvideDependency(types)
-        if (isProvider) dependencyElement = element.getGenericFirstType()
-        val isWeakDependency = dependencyElement.isWeakDependency(types)
-        if (isWeakDependency) dependencyElement = dependencyElement.getGenericFirstType()
-        val isLazy = dependencyElement.isLazy(types)
-        if (isLazy) dependencyElement = dependencyElement.getGenericFirstType()
+        val isProvider = dependencyElement.isProvideDependency()
+        val isWeakDependency = dependencyElement.isWeakDependency()
+        val isLazy = dependencyElement.isLazyDependency()
+        if (isProvider || isWeakDependency || isLazy) {
+            dependencyElement = dependencyElement.getGenericFirstType()
+        }
 
         val dependencyTypeElement = dependencyElement.asTypeElement()
 
@@ -154,14 +154,12 @@ class DependencyResolver(
             // Ioc not supported primitive types for now
             if (argument.asType().kind.isPrimitive) return
             var element: Element = argument
-            val isWeakDependency = argument.isWeakDependency(types)
-            if (isWeakDependency) element = argument.getGenericFirstType()
-
-            val isProvider = argument.isProvideDependency(types)
-            if (isProvider) element = argument.getGenericFirstType()
-
-            val isLazy = argument.isLazy(types)
-            if (isLazy) element = argument.getGenericFirstType()
+            val isProvider = element.isProvideDependency()
+            val isWeakDependency = element.isWeakDependency()
+            val isLazy = element.isLazyDependency()
+            if (isProvider || isWeakDependency || isLazy) {
+                element = element.getGenericFirstType()
+            }
 
             val named = qualifierFinder.getQualifier(argument)
 
