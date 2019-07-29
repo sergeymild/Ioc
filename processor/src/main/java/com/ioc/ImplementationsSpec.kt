@@ -77,7 +77,12 @@ class ImplementationsSpec constructor(
 
             val body = codeBlock.toBuilder()
             if (model.isSingleton) {
-                body.add("\$T \$N = \$N;\n", model.className, model.generatedName, singletonProvider(model))
+                val singletonName = model.dependency.asTypeElement().qualifiedName.toString()
+                body.add("\$T \$N = \$T.singleton(\$T.class);\n",
+                    model.className,
+                    model.generatedName,
+                    ClassName.get(Ioc::class.java),
+                    ClassName.bestGuess(singletonName))
             }
 
             val methodName = "inject${model.name.capitalize()}In${model.fieldName.capitalize()}"

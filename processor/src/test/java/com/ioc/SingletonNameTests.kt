@@ -61,6 +61,7 @@ class SingletonNameTests : BaseTest {
             "",
             "import $keep;",
             "import $nonNull;",
+            "import $ioc;",
             "",
             "@Keep",
             "public final class ActivityInjector {",
@@ -70,7 +71,7 @@ class SingletonNameTests : BaseTest {
             "   }",
             "",
             "   private final void injectCrashlitycsServiceInService(@NonNull final Activity target) {",
-            "        CrashlyticsLogger crashlyticsLogger = com.ioc.Ioc.singleton(test.CrashlyticsLogger.class);",
+            "        CrashlyticsLogger crashlyticsLogger = Ioc.singleton(CrashlyticsLogger.class);",
             "        target.service = crashlyticsLogger;",
             "   }",
             "}")
@@ -269,6 +270,7 @@ class SingletonNameTests : BaseTest {
             "",
             "import $keep",
             "import $nonNull",
+            "import $ioc",
             "",
             "@Keep",
             "public final class ActivityInjector {",
@@ -278,13 +280,13 @@ class SingletonNameTests : BaseTest {
             "   }",
             "",
             "   private final void injectCrashlyticsLoggerInService(@NonNull final Activity target) {",
-            "       CrashlyticsLogger crashlyticsLogger = com.ioc.Ioc.singleton(test.CrashlyticsLogger.class);",
+            "       CrashlyticsLogger crashlyticsLogger = Ioc.singleton(CrashlyticsLogger.class);",
             "       target.service = crashlyticsLogger;",
             "   }",
             "}")
 
         Truth.assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, release))
+            .that(listOf(activityFile, release))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)

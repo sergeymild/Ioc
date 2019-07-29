@@ -1530,8 +1530,9 @@ class FieldInjectionTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import android.support.annotation.Keep",
-            "import android.support.annotation.NonNull",
+            "import $keep",
+            "import $nonNull",
+            "import $ioc",
             "",
             "@Keep",
             "public final class ActivityInjector {",
@@ -1542,13 +1543,13 @@ class FieldInjectionTest {
             "   }",
             "",
             "   private final void injectClickedEventLoggerInClickedEventLogger(@NonNull final Activity target) {",
-            "       Amplitude amplitude = com.ioc.Ioc.singleton(test.Amplitude.class);",
+            "       Amplitude amplitude = Ioc.singleton(Amplitude.class);",
             "       target.clickedEventLogger = amplitude;",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, baseActivityFile, superParentFile, parentFile, moduleFile))
+            .that(listOf(activityFile, baseActivityFile, superParentFile, parentFile, moduleFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -2046,8 +2047,9 @@ class FieldInjectionTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import android.support.annotation.Keep",
-            "import android.support.annotation.NonNull",
+            "import $keep",
+            "import $nonNull",
+            "import $ioc",
             "",
             "@Keep",
             "public final class ActivityInjector {",
@@ -2058,13 +2060,13 @@ class FieldInjectionTest {
             "   }",
             "",
             "   private final void injectSpeedDialDisplayedEventLoggerInLogger(@NonNull final Activity target) {",
-            "       AmplitudeDefaultLogger amplitudeDefaultLogger = com.ioc.Ioc.singleton(test.AmplitudeDefaultLogger.class);",
+            "       AmplitudeDefaultLogger amplitudeDefaultLogger = Ioc.singleton(AmplitudeDefaultLogger.class);",
             "       target.setLogger(amplitudeDefaultLogger);",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, speedDialDisplayedEventLogger, preferences, amplitudeDefaultLogger, restModule, controllerFile))
+            .that(listOf(activityFile, speedDialDisplayedEventLogger, preferences, amplitudeDefaultLogger, restModule, controllerFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -3507,7 +3509,7 @@ class FieldInjectionTest {
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, brightnessChangeListener, dependencyFile, parentActivityFile, parentDependencyFile))
+            .that(listOf(activityFile, brightnessChangeListener, dependencyFile, parentActivityFile, parentDependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
