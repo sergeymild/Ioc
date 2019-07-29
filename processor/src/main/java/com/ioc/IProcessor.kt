@@ -27,7 +27,6 @@ interface ErrorThrowable {
 @SupportedAnnotationTypes("javax.inject.*")
 open class IProcessor : AbstractProcessor(), ErrorThrowable {
     var filer: Filer by Delegates.notNull()
-    var createdSingletones = mutableSetOf<String>()
     lateinit var dependencyResolver: DependencyResolver
 
     companion object {
@@ -143,9 +142,6 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
 
     @Throws(Throwable::class)
     fun newParse(roundEnv: RoundEnvironment): Boolean {
-        createdSingletones.clear()
-
-
         dependencyFinder = DependencyTypesFinder(qualifierFinder)
         dependencyResolver = DependencyResolver(processingEnv.typeUtils, qualifierFinder, dependencyFinder)
         dependencyFinder.dependencyResolver = dependencyResolver
