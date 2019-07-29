@@ -135,6 +135,7 @@ class SingletonNameTests : BaseTest {
             "package test;",
             "",
             "import $keep",
+            "import $ioc",
             "import $iocLazy",
             "",
             "@Keep",
@@ -147,7 +148,7 @@ class SingletonNameTests : BaseTest {
             "   }",
             "",
             "   protected final DependencyModel initialize() {",
-            "       return new DependencyModel(com.ioc.Ioc.singleton(test.CrashlyticsLogger.class));",
+            "       return new DependencyModel(Ioc.singleton(CrashlyticsLogger.class));",
             "   }",
             "}")
 
@@ -215,6 +216,7 @@ class SingletonNameTests : BaseTest {
             "",
             "import $keep;",
             "import $nonNull;",
+            "import $ioc;",
             "",
             "@Keep",
             "public final class ActivityInjector {",
@@ -225,7 +227,7 @@ class SingletonNameTests : BaseTest {
             "",
             "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
             "       DependencyModel dependencyModel = ModuleClass.getDependency();",
-            "       ParentDependency parentDependency = ModuleClass.getParentDependency(dependencyModel, com.ioc.Ioc.singleton(test.Dependency2.class));",
+            "       ParentDependency parentDependency = ModuleClass.getParentDependency(dependencyModel, Ioc.singleton(Dependency2.class));",
             "       target.setDependency(parentDependency);",
             "   }",
             "}")

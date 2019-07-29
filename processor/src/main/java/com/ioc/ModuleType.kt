@@ -1,6 +1,7 @@
 package com.ioc
 
 import com.ioc.common.asTypeElement
+import com.squareup.javapoet.CodeBlock
 import com.squareup.javapoet.TypeName
 import javax.lang.model.element.Element
 import javax.lang.model.element.TypeElement
@@ -11,22 +12,26 @@ import javax.lang.model.type.TypeMirror
  */
 
 fun dependencyName(model: DependencyModel) = when {
-    model.isSingleton -> singletonProvider(model)
-    model.asTarget -> "target"
-    model.isLocal -> "target.${model.fieldName}"
-    else -> model.generatedName
+    model.isSingleton -> singletonProviderCode(model)
+    model.asTarget -> CodeBlock.of("target")
+    model.isLocal -> CodeBlock.of("target.\$N", model.fieldName)
+    else -> CodeBlock.of("\$N", model.generatedName)
 }
 
-fun DependencyProvider.dependencyNames(): String {
-    return dependencyModels.joinToString { dependencyName(it) }
+fun DependencyProvider.dependencyNames(): CodeBlock {
+    val blocks = dependencyModels.map { dependencyName(it) }
+    return CodeBlock.join(blocks, ",")
+    //return dependencyModels.joinToString { dependencyName(it) }
 }
 
-fun SingletonWrapper.dependencyNames(): String {
-    return dependencies.joinToString { dependencyName(it) }
+fun SingletonWrapper.dependencyNames(): CodeBlock {
+    val blocks = dependencies.map { dependencyName(it) }
+    return CodeBlock.join(blocks, ",")
 }
 
-fun DependencyModel.dependencyNames(): String {
-    return dependencies.joinToString { dependencyName(it) }
+fun DependencyModel.dependencyNames(): CodeBlock {
+    val blocks = dependencies.map { dependencyName(it) }
+    return CodeBlock.join(blocks, ",")
 }
 
 class DependencyProvider(

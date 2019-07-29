@@ -1156,8 +1156,9 @@ class FieldInjectionTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import android.support.annotation.Keep",
-            "import android.support.annotation.NonNull",
+            "import $keep",
+            "import $nonNull",
+            "import $ioc",
             "",
             "@Keep",
             "public final class ActivityInjector {",
@@ -1168,13 +1169,13 @@ class FieldInjectionTest {
             "",
             "   private final void injectDependencyModelInDependency(@NonNull final Activity target) {",
             "       Context context = ContextModule.context();",
-            "       DependencyModel dependencyModel = new DependencyModel(context, com.ioc.Ioc.singleton(test.Resource.class));",
+            "       DependencyModel dependencyModel = new DependencyModel(context, Ioc.singleton(Resource.class));",
             "       target.dependency = dependencyModel;",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(listOf<JavaFileObject>(activityFile, contextModuleFile, moduleFile, contextFile, resourceFile))
+            .that(listOf(activityFile, contextModuleFile, moduleFile, contextFile, resourceFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -1377,8 +1378,9 @@ class FieldInjectionTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import android.support.annotation.Keep",
-            "import android.support.annotation.NonNull",
+            "import $keep",
+            "import $nonNull",
+            "import $ioc",
             "",
             "@Keep",
             "public final class ActivityInjector {",
@@ -1388,13 +1390,13 @@ class FieldInjectionTest {
             "   }",
             "",
             "   private final void injectDependencyModelInDependency(@NonNull final Activity target) {",
-            "       DependencyModel dependencyModel = new AppModel(com.ioc.Ioc.singleton(test.Context.class));",
+            "       DependencyModel dependencyModel = new AppModel(Ioc.singleton(Context.class));",
             "       target.dependency = dependencyModel;",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, superParentFile, contextFile, resourceFile, parentFile, moduleFile))
+            .that(listOf(activityFile, superParentFile, contextFile, resourceFile, parentFile, moduleFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -1456,6 +1458,7 @@ class FieldInjectionTest {
             "",
             "import $keep;",
             "import $nonNull;",
+            "import $ioc;",
             "",
             "@Keep",
             "public final class ActivityInjector {",
@@ -1465,13 +1468,13 @@ class FieldInjectionTest {
             "   }",
             "",
             "   private final void injectBaseModelInDependency(@NonNull final Activity target) {",
-            "       BaseModel baseModel = new BaseModel(com.ioc.Ioc.singleton(test.Amplitude.class), com.ioc.Ioc.singleton(test.Amplitude.class));",
+            "       BaseModel baseModel = new BaseModel(Ioc.singleton(Amplitude.class), Ioc.singleton(Amplitude.class));",
             "       target.dependency = baseModel;",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(listOf<JavaFileObject>(activityFile, superParentFile, baseFile, parentFile, moduleFile))
+            .that(listOf(activityFile, superParentFile, baseFile, parentFile, moduleFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -1613,6 +1616,7 @@ class FieldInjectionTest {
             "package test;",
             "",
             "import $keep",
+            "import $ioc",
             "import $iocLazy",
             "",
             "@Keep",
@@ -1625,7 +1629,7 @@ class FieldInjectionTest {
             "   }",
             "",
             "   protected final Logger initialize() {",
-            "       return new Logger(com.ioc.Ioc.singleton(test.Amplitude.class), com.ioc.Ioc.singleton(test.Amplitude.class));",
+            "       return new Logger(Ioc.singleton(Amplitude.class), Ioc.singleton(Amplitude.class));",
             "   }",
             "}")
 
@@ -1715,6 +1719,7 @@ class FieldInjectionTest {
             "package test;",
             "",
             "import $keep",
+            "import $ioc",
             "import $iocLazy",
             "",
             "@Keep",
@@ -1727,12 +1732,12 @@ class FieldInjectionTest {
             "   }",
             "",
             "   protected final DownloadsNavigationLogger initialize() {",
-            "       return new DownloadsNavigationLogger(com.ioc.Ioc.singleton(test.AmplitudeService.class), com.ioc.Ioc.singleton(test.AmplitudeService.class));",
+            "       return new DownloadsNavigationLogger(Ioc.singleton(AmplitudeService.class), Ioc.singleton(AmplitudeService.class));",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, preferencesFile, amplitudeLoggerFile, superParentFile, baseFile, parentFile, moduleFile))
+            .that(listOf(activityFile, preferencesFile, amplitudeLoggerFile, superParentFile, baseFile, parentFile, moduleFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -1804,6 +1809,7 @@ class FieldInjectionTest {
             "",
             "import $keep;",
             "import $nonNull;",
+            "import $ioc;",
             "",
             "@Keep",
             "public final class ActivityInjector {",
@@ -1814,7 +1820,7 @@ class FieldInjectionTest {
             "   }",
             "",
             "   private final void injectBuildCheckInAppendBuildCheck(@NonNull final Activity target) {",
-            "       BuildCheck buildCheck = new BuildCheck(com.ioc.Ioc.singleton(test.Preferences.class));",
+            "       BuildCheck buildCheck = new BuildCheck(Ioc.singleton(Preferences.class));",
             "       target.appendBuildCheck(buildCheck);",
             "   }",
             "}")
@@ -2316,8 +2322,9 @@ class FieldInjectionTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import android.support.annotation.Keep",
-            "import android.support.annotation.NonNull",
+            "import $keep",
+            "import $nonNull",
+            "import $ioc",
             "",
             "@Keep",
             "public final class ActivityInjector {",
@@ -2328,14 +2335,14 @@ class FieldInjectionTest {
             "   }",
             "",
             "   private final void injectPreferencesInPreferences(@NonNull final Activity target) {",
-            "       Context context = ContextModule.context(com.ioc.Ioc.singleton(test.AmplitudeDefaultLogger.class));",
-            "       Preferences preferences = new Preferences(context, com.ioc.Ioc.singleton(test.AmplitudeDefaultLogger.class));",
+            "       Context context = ContextModule.context(Ioc.singleton(AmplitudeDefaultLogger.class));",
+            "       Preferences preferences = new Preferences(context, Ioc.singleton(AmplitudeDefaultLogger.class));",
             "       target.preferences = preferences;",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, speedDialDisplayedEventLogger, defaultLogger, preferences, amplitudeDefaultLogger, restModule, controllerFile))
+            .that(listOf(activityFile, speedDialDisplayedEventLogger, defaultLogger, preferences, amplitudeDefaultLogger, restModule, controllerFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -2837,8 +2844,9 @@ class FieldInjectionTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import android.support.annotation.Keep",
-            "import android.support.annotation.NonNull",
+            "import $keep",
+            "import $nonNull",
+            "import $ioc",
             "",
             "@Keep",
             "public final class ActivityInjector {",
@@ -2849,13 +2857,13 @@ class FieldInjectionTest {
             "   }",
             "",
             "   private final void injectPresenterInPresenter(@NonNull final Activity target) {",
-            "       Presenter presenter = ContextModule.presenter(com.ioc.Ioc.singleton(test.Context.class));",
+            "       Presenter presenter = ContextModule.presenter(Ioc.singleton(Context.class));",
             "       target.presenter = presenter;",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, resources, presenter, contextModule, context))
+            .that(listOf(activityFile, resources, presenter, contextModule, context))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -2959,8 +2967,9 @@ class FieldInjectionTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import android.support.annotation.Keep",
-            "import android.support.annotation.NonNull",
+            "import $keep",
+            "import $nonNull",
+            "import $ioc",
             "",
             "@Keep",
             "public final class ActivityInjector {",
@@ -2971,14 +2980,14 @@ class FieldInjectionTest {
             "   }",
             "",
             "   private final void injectPresenterInPresenter(@NonNull final Activity target) {",
-            "       Resource resource = new Resource(com.ioc.Ioc.singleton(test.Context.class));",
-            "       Presenter presenter = new Presenter(com.ioc.Ioc.singleton(test.Context.class), resource);",
+            "       Resource resource = new Resource(Ioc.singleton(Context.class));",
+            "       Presenter presenter = new Presenter(Ioc.singleton(Context.class), resource);",
             "       target.presenter = presenter;",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, presenter, resource, context))
+            .that(listOf(activityFile, presenter, resource, context))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -3772,8 +3781,9 @@ class FieldInjectionTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.DownloadsNavigationLoggerSingleton",
             "package test;",
             "",
-            "import android.support.annotation.Keep",
-            "import com.ioc.IocLazy",
+            "import $keep",
+            "import $ioc",
+            "import $iocLazy",
             "",
             "@Keep",
             "public final class DownloadsNavigationLoggerSingleton extends IocLazy<DownloadsNavigationLogger> {",
@@ -3785,12 +3795,12 @@ class FieldInjectionTest {
             "   }",
             "",
             "   protected final DownloadsNavigationLogger initialize() {",
-            "       return new DownloadsNavigationLogger(com.ioc.Ioc.singleton(test.AmplitudeService.class));",
+            "       return new DownloadsNavigationLogger(Ioc.singleton(AmplitudeService.class));",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, amplitudeLoggerFile, superParentFile, baseFile, moduleFile))
+            .that(listOf(activityFile, amplitudeLoggerFile, superParentFile, baseFile, moduleFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)

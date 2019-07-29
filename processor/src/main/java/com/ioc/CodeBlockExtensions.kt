@@ -39,10 +39,10 @@ fun argumentsConstructor(
 
     val names = model.dependencyNames()
 
-    return builder.addStatement("\$T \$N = new \$T($names)",
+    return builder.addStatement("\$T \$N = new \$T(\$L)",
         model.originalType.asType(),
         model.generatedName,
-        model.className).build()
+        model.className, names).build()
 }
 
 fun singletonProvider(model: DependencyModel): String {
@@ -51,6 +51,13 @@ fun singletonProvider(model: DependencyModel): String {
         .add("\$T.singleton(\$T.class)", ClassName.get(Ioc::class.java), ClassName.bestGuess(singletonName))
         .build().toString()
     //return "com.ioc.Ioc.singleton($singletonName.class)"
+}
+
+fun singletonProviderCode(model: DependencyModel): CodeBlock {
+    val singletonName = model.dependency.asTypeElement().qualifiedName.toString()
+    return CodeBlock.builder()
+        .add("\$T.singleton(\$T.class)", ClassName.get(Ioc::class.java), ClassName.bestGuess(singletonName))
+        .build()
 }
 
 fun singleton(model: DependencyModel): CodeBlock {

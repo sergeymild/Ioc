@@ -9,7 +9,7 @@ object ViewModelGeneration {
         if (!model.isViewModel) return body
         val code = CodeBlock.builder().also { it.add(body.build()) }
         val names = model.dependencyNames()
-        code.addStatement("return (T) new \$T($names)", model.originalClassName())
+        code.addStatement("return (T) new \$T(\$L)", model.originalClassName(), names)
         val originalGeneratedName = model.generatedName
         val factoryName = "factory_${model.generatedName}"
 

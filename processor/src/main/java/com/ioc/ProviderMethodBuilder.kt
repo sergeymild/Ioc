@@ -43,14 +43,14 @@ object ProviderMethodBuilder {
         applyIsLoadIfNeed(dependencyModel.dependencies, target)
         val names = method.dependencyNames()
 
-        var statementString = "\$T \$N = \$T.\$N($names)"
-        if (method.isKotlinModule) statementString = "\$T \$N = \$T.INSTANCE.\$N($names)"
+        var statementString = "\$T \$N = \$T.\$N(\$L)"
+        if (method.isKotlinModule) statementString = "\$T \$N = \$T.INSTANCE.\$N(\$L)"
 
         builder.addStatement(statementString,
             dependencyModel.className,
             dependencyModel.generatedName,
             method.module,
-            method.name)
+            method.name, names)
 
         return builder.build()
     }

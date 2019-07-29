@@ -27,10 +27,10 @@ object ProviderImplementationBuilder {
 
         applyIsLoadIfNeed(dependencyModel.dependencies, target)
         val names = provider.dependencyNames()
-        builder.addStatement("\$T \$N = new \$T($names)",
+        builder.addStatement("\$T \$N = new \$T(\$L)",
             dependencyModel.originalClassName(),
             dependencyModel.generatedName,
-            provider.module)
+            provider.module, names)
         return builder.build()
     }
 }
