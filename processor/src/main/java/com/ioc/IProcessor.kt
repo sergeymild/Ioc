@@ -62,6 +62,11 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
             type.postInitialization = postInitializationMethod(element)
             dependencyFinder.collectSuperTypes(type.element, type.supertypes)
 
+            type.asTargetDependencies.add(element.asType().toString())
+            for (supertype in type.supertypes) {
+                type.asTargetDependencies.add(supertype.toString())
+            }
+
             // find all localScoped dependencies for use it later
             val injectAnnotationType = processingEnvironment.elementUtils.getTypeElement(LocalScope::class.java.canonicalName)
             val scanner = AnnotationSetScanner(processingEnvironment, mutableSetOf())
@@ -272,15 +277,5 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
                 }
             }
         }
-    }
-
-    private fun isNeedPassTarget(dependency: DependencyModel): Boolean {
-        val queue = LinkedList(dependency.dependencies)
-        while (queue.isNotEmpty()) {
-            val dep = queue.pop()
-            if (dep.asTarget) return true
-            queue.addAll(dep.dependencies)
-        }
-        return false
     }
 }

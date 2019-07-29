@@ -453,7 +453,7 @@ class MethodInjection : BaseTest {
             "}")
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(activityFile, parentFile, baseFile, dependencyFile, parentDependencyFile))
+            .that(listOf(activityFile, parentFile, baseFile, dependencyFile, parentDependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)

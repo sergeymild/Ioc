@@ -21,9 +21,14 @@ fun CodeBlock.Builder.emptyConstructor(model: DependencyModel): CodeBlock {
 fun applyIsLoadIfNeed(dependencies: List<DependencyModel>, target: TargetType?) {
     for (dependency in dependencies) {
         val fieldName = target?.localScopeDependencies?.get(dependency.originalTypeString)
-            ?: continue
-        dependency.isLocal = true
-        dependency.fieldName = fieldName
+        if (fieldName != null) {
+            dependency.isLocal = true
+            dependency.fieldName = fieldName
+        }
+
+        if (target.isSubtype(dependency.originalType)) {
+            dependency.generatedName = "target"
+        }
     }
 }
 

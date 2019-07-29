@@ -3,7 +3,6 @@ package com.ioc
 import com.ioc.IProcessor.Companion.qualifierFinder
 import com.ioc.common.*
 import com.squareup.javapoet.ClassName
-import javax.annotation.processing.RoundEnvironment
 import javax.inject.Singleton
 import javax.lang.model.element.Element
 import javax.lang.model.element.ElementKind
@@ -145,7 +144,7 @@ class DependencyTypesFinder(
             type.isSingleton = type.isSingleton || provider.isHasAnnotation(Singleton::class.java)
             if (type.isSingleton) {
                 type.packageName = returnType.getPackage().toString()
-                if (type.dependencyModels.any { it.asTarget }) {
+                if (type.dependencyModels.any { target.isSubtype(it.originalType) }) {
                     throw ProcessorException("target can't be user as dependency in Singleton").setElement(provider)
                 }
             }
@@ -169,9 +168,6 @@ class DependencyTypesFinder(
         if (provider.isSingleton) {
             provider.packageName = modulePackageName
         }
-
-        provider.returnTypes.add(implementation.asType())
-        collectSuperTypes(implementation, provider.returnTypes)
 
         if (dependencies.isNotEmpty()) {
             for (dependency in dependencies) {
@@ -216,7 +212,7 @@ class DependencyTypesFinder(
     }
 
 
-    fun collectSuperTypes(typeElement: TypeElement?, returnTypes: MutableList<TypeMirror>) {
+    fun collectSuperTypes(typeElement: TypeElement?, returnTypes: MutableSet<TypeMirror>) {
         typeElement ?: return
 
         // first check and collect super interfaces recursively

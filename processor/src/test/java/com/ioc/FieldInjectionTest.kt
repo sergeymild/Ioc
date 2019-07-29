@@ -2871,14 +2871,14 @@ class FieldInjectionTest {
 
     @Test
     @Throws(Exception::class)
-    fun doNotpassTargetInSingleton() {
+    fun doNotPassTargetInSingleton() {
 
 
         val contextModule = JavaFileObjects.forSourceLines("test.ContextModule",
             "package test;",
             "",
-            importType(Dependency::class.java),
-            importType(Singleton::class.java),
+            "import $dependency;",
+            "import $singleton;",
             "",
             "public class ContextModule {",
             "",
@@ -2916,7 +2916,7 @@ class FieldInjectionTest {
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, presenter, contextModule, context))
+            .that(listOf(activityFile, presenter, contextModule, context))
             .processedWith(IProcessor())
             .failsToCompile()
             .withErrorContaining("target can't be user as dependency in Singleton")

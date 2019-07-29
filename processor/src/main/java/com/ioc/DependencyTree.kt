@@ -18,7 +18,7 @@ object DependencyTree {
 
         val builder = CodeBlock.builder()
         for (dependency in dependencyModels) {
-            if (dependency.asTarget) continue
+            if (target.isSubtype(dependency.originalType)) continue
             val packageName = dependency.originalType.asTypeElement().getPackage()
             val isAllowedPackage = excludedPackages.any { packageName.toString().startsWith(it) }
             if (dependency.provideMethod() == null && isAllowedPackage) {
@@ -41,8 +41,8 @@ object DependencyTree {
 
         val builder = CodeBlock.builder()
         for (dependency in dependencyModels) {
-            if (target?.localScopeDependencies?.containsKey(dependency.originalTypeString) == true) continue
-            if (dependency.asTarget) continue
+            if (target.isLocalScope(dependency.originalType)) continue
+            if (target.isSubtype(dependency.originalType)) continue
             val packageName = dependency.originalType.asTypeElement().getPackage()
             val isAllowedPackage = excludedPackages.any { packageName.toString().startsWith(it) }
             if (dependency.provideMethod() == null && isAllowedPackage) {

@@ -24,6 +24,10 @@ class DependencyResolver(
         target: TargetType,
         named: String? = null): DependencyModel {
 
+        //val isTarget = TargetChecker.isSubtype(target, element)
+        if (target.isSubtype(element))
+            return targetDependencyModel(element)
+
         var setterMethod: ExecutableElement? = null
         var dependencyElement = element
         val fieldName = dependencyElement.simpleName.toString()
@@ -53,7 +57,7 @@ class DependencyResolver(
             dependencyElement = setterMethod.parameters[0]
         }
 
-        // Check field
+        // Check is android viewModel field
         val isViewModel = dependencyElement.isViewModel()
 
         if (isViewModel && !target.element.isCanHaveViewModel()) {
@@ -71,8 +75,7 @@ class DependencyResolver(
         val dependencyTypeElement = dependencyElement.asTypeElement()
 
 
-        val isSingleton = dependencyElement.isHasAnnotation(Singleton::class.java)
-            || dependencyTypeElement.isHasAnnotation(Singleton::class.java)
+        val isSingleton = dependencyTypeElement.isHasAnnotation(Singleton::class.java)
 
 
         val named = named
@@ -80,12 +83,7 @@ class DependencyResolver(
             ?: qualifierFinder.getQualifier(dependencyElement)
             ?: qualifierFinder.getQualifier(dependencyTypeElement)
 
-        var isTarget = TargetChecker.isSubtype(target, dependencyElement)
-        if (!isTarget && setterMethod != null) {
-            isTarget = TargetChecker.isSubtype(target, dependencyElement)
-        }
-
-        val dependencyImplementations = if (isTarget) emptyList() else dependencyTypesFinder.findFor(dependencyElement, named, target, dependencyTypeElement)
+        val dependencyImplementations = dependencyTypesFinder.findFor(dependencyElement, named, target, dependencyTypeElement)
 
         // if we did't find any providers of this type, try to find constructors of concrete type
         val argumentConstructor = if (dependencyImplementations.isEmpty()) findArgumentConstructor(dependencyTypeElement) else null
@@ -120,7 +118,6 @@ class DependencyResolver(
 
         depdendency.isViewModel = isViewModel
 
-        depdendency.asTarget = isTarget
         resolveDependencyName(depdendency, isSingleton)
         depdendency.setterMethod = setterMethod
         depdendency.argumentsConstructor = argumentConstructor
@@ -130,7 +127,6 @@ class DependencyResolver(
     }
 
     private fun resolveDependencyName(dependency: DependencyModel, isSingleton: Boolean) {
-        if (dependency.asTarget) dependency.name = "target"
         dependency.isSingleton = isSingleton || dependency.implementations.any { it.isSingleton }
         if (dependency.isSingleton) {
             dependency.generatedName = dependency.simpleName
@@ -150,6 +146,11 @@ class DependencyResolver(
 
         // TODO generic type
         for (argument in constructorArguments) {
+            // TODO !isParentSingleton
+            if (target.isSubtype(argument) && !isParentSingleton) {
+                dependencies.add(targetDependencyModel(argument))
+                continue
+            }
 
             // Ioc not supported primitive types for now
             if (argument.asType().kind.isPrimitive) return
@@ -163,16 +164,6 @@ class DependencyResolver(
 
             val named = qualifierFinder.getQualifier(argument)
 
-            val isTarget = TargetChecker.isSubtype(target, element)
-
-            if (isTarget && !isParentSingleton) {
-                val dependency = DependencyModel(target.element, target.element, element.simpleName.toString(), types.erasure(target.element.asType()), false, false, false)
-                dependency.name = "target"
-                dependency.asTarget = true
-                dependencies.add(dependency)
-                continue
-            }
-
             var newTarget = target
             if (isParentSingleton) {
                 newTarget = IProcessor.createTarget(typeElement, dependencyTypesFinder)
@@ -182,10 +173,6 @@ class DependencyResolver(
                 it.isWeakDependency = isWeakDependency
                 it.isProvider = isProvider
                 it.isLazy = isLazy
-                if (it.asTarget && isParentSingleton) {
-                    it.asTarget = false
-                    it.name = element.simpleName.toString()
-                }
 
                 if (it.named.isNullOrEmpty()) {
                     it.named = qualifierFinder.getQualifier(argument)

@@ -4,6 +4,7 @@ import com.ioc.common.asTypeElement
 import com.ioc.common.isEqualTo
 import com.ioc.common.isInterface
 import com.squareup.javapoet.ClassName
+import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.TypeElement
 import javax.lang.model.type.TypeMirror
@@ -13,6 +14,16 @@ import javax.lang.model.type.TypeMirror
  */
 
 
+fun TargetType?.isSubtype(element: Element): Boolean {
+    this ?: return false
+    //return supertypes.contains(element.asType())
+    return asTargetDependencies.contains(element.asType().toString())
+}
+
+fun TargetType?.isLocalScope(element: Element): Boolean {
+    this ?: return false
+    return localScopeDependencies.containsKey(element.asType().toString())
+}
 
 class TargetType(val element: TypeElement) {
     var name = element.simpleName.toString()
@@ -20,8 +31,9 @@ class TargetType(val element: TypeElement) {
     var dependencies = emptyList<DependencyModel>()
     var parentTarget: TargetType? = null
     var postInitialization: ExecutableElement? = null
-    var supertypes = mutableListOf<TypeMirror>()
+    var supertypes = mutableSetOf<TypeMirror>()
     var localScopeDependencies = mutableMapOf<String, String>()
+    var asTargetDependencies = mutableSetOf<String>()
 
     val superclass: TypeMirror?
         get() = supertypes.firstOrNull { !it.asTypeElement().isInterface() }

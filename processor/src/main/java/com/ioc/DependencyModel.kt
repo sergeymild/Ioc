@@ -15,6 +15,12 @@ import javax.lang.model.type.TypeMirror
  * Created by sergeygolishnikov on 10/07/2017.
  */
 
+fun targetDependencyModel(element: Element): DependencyModel {
+    val dependency = DependencyModel(element, element, element.simpleName.toString(), element.asType(), false, false, false)
+    dependency.generatedName = "target"
+    return dependency
+}
+
 class DependencyModel constructor(
     var dependency: Element,
     var originalType: Element,
@@ -33,7 +39,6 @@ class DependencyModel constructor(
         get() = typeElement.asType().toString()
     var argumentsConstructor: ExecutableElement? = null
     var emptyConstructor: ExecutableElement? = null
-    var asTarget: Boolean = false
     var isSingleton: Boolean = false
     var isLocal: Boolean = false
     var isViewModel: Boolean = false
