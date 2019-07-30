@@ -4,15 +4,29 @@ import com.ioc.common.asTypeElement
 import com.ioc.common.isEqualTo
 import com.ioc.common.isInterface
 import com.squareup.javapoet.ClassName
-import javax.lang.model.element.Element
-import javax.lang.model.element.ExecutableElement
-import javax.lang.model.element.TypeElement
+import javax.lang.model.element.*
 import javax.lang.model.type.TypeMirror
 
 /**
  * Created by sergeygolishnikov on 10/07/2017.
  */
 
+class TargetDataObserver(
+    val viewModel: Element,
+    val targetViewModelField: Element,
+    val viewModelLiveDataField: Element,
+    val observingType: Element,
+    val observerMethod: ExecutableElement,
+    val observeType: DataObserver.ObserveType) {
+
+    fun liveDataName(): String {
+        if (viewModelLiveDataField.kind == ElementKind.METHOD) {
+            return (viewModelLiveDataField as ExecutableElement).returnType.asTypeElement().simpleName.toString()
+        }
+
+        return viewModelLiveDataField.asTypeElement().simpleName.toString()
+    }
+}
 
 fun TargetType?.isSubtype(element: Element): Boolean {
     this ?: return false
@@ -34,6 +48,7 @@ class TargetType(val element: TypeElement) {
     var supertypes = mutableSetOf<TypeMirror>()
     var localScopeDependencies = mutableMapOf<String, String>()
     var asTargetDependencies = mutableSetOf<String>()
+    var dataObservers = listOf<TargetDataObserver>()
 
     val superclass: TypeMirror?
         get() = supertypes.firstOrNull { !it.asTypeElement().isInterface() }

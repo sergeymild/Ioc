@@ -21,15 +21,6 @@ import javax.lang.model.element.TypeElement
  * Created by sergeygolishnikov on 20/11/2017.
  */
 
-val lifecyclePackage = "androidx.lifecycle"
-val iocLazyType = ClassName.get(IocLazy::class.java)
-val iocProviderType = ClassName.get(IocProvider::class.java)
-val weakType = ClassName.get(WeakReference::class.java)
-val viewModelFactoryType = ClassName.bestGuess("$lifecyclePackage.ViewModelProvider.Factory")
-val keepAnnotation = ClassName.bestGuess("android.support.annotation.Keep")
-val nonNullAnnotation = ClassName.bestGuess("android.support.annotation.NonNull")
-val viewModelProvidersType = ClassName.bestGuess("$lifecyclePackage.ViewModelProviders")
-val viewModelType = ClassName.bestGuess("$lifecyclePackage.ViewModel")
 val emptyCodBlock = CodeBlock.builder().build()
 
 fun Element.asTypeName(): TypeName {

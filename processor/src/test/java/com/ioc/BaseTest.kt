@@ -2,6 +2,7 @@ package com.ioc
 
 import android.content.res.AssetManager
 import javax.inject.Inject
+import javax.inject.Named
 import javax.inject.Singleton
 
 /**
@@ -14,6 +15,8 @@ val ioc = Ioc::class.java.canonicalName.toString()
 val iosProvider = IocProvider::class.java.canonicalName.toString()
 val iocLazy = IocLazy::class.java.canonicalName.toString()
 val iocLocalScope = LocalScope::class.java.canonicalName.toString()
+val iocDataObserver = DataObserver::class.java.canonicalName.toString()
+val named = Named::class.java.canonicalName.toString()
 val inject = Inject::class.java.canonicalName.toString()
 val assetManager = AssetManager::class.java.canonicalName.toString()
 val dependency = Dependency::class.java.canonicalName.toString()

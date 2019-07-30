@@ -1,9 +1,6 @@
 package com.ioc
 
-import com.ioc.common.asTypeElement
-import com.ioc.common.getPackage
-import com.ioc.common.keepAnnotation
-import com.ioc.common.nonNullAnnotation
+import com.ioc.common.*
 import com.squareup.javapoet.*
 import javax.lang.model.element.Modifier
 import javax.lang.model.util.Types
@@ -109,6 +106,42 @@ class ImplementationsSpec constructor(
             builder.add(code)
             //applyIsLoadIfNeed(listOf(dependency), target, usedSingletons)
             return builder
+        }
+
+        fun addDataObservers(target: TargetType): List<MethodSpec> {
+            val methods = mutableListOf<MethodSpec>()
+            for (dataObserver in target.dataObservers) {
+
+                val liveDataTypeName = dataObserver.observingType.simpleName.toString()
+                val viewModelName = dataObserver.viewModel.simpleName.toString()
+
+                val observerType = ParameterizedTypeName.get(androidLiveDataObserver, dataObserver.observingType.asTypeName())
+                val observerClassSpec = TypeSpec.anonymousClassBuilder("")
+                    .superclass(observerType)
+                    .addMethod(MethodSpec.methodBuilder("onChanged")
+                        .addModifiers(Modifier.PUBLIC)
+                        .addParameter(dataObserver.observingType.asTypeName(), "observingData")
+                        .addStatement("target.\$N(\$N)", dataObserver.observerMethod.simpleName, "observingData")
+                        .build())
+                    .build()
+
+
+                var observeTypeString = "target.\$N.\$N.observe(target, \$L)"
+                if (dataObserver.observeType == DataObserver.ObserveType.FOREVER) {
+                    observeTypeString = "target.\$N.\$N.observeForever(\$L)"
+                }
+                methods.add(MethodSpec
+                    .methodBuilder("observe${dataObserver.liveDataName()}${liveDataTypeName}From$viewModelName")
+                    .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
+                    .addParameter(targetParameter(target.className))
+                    .addStatement(observeTypeString,
+                        dataObserver.targetViewModelField.toString(),
+                        dataObserver.viewModelLiveDataField.toString(),
+                        observerClassSpec)
+                    .build())
+            }
+
+            return methods
         }
 
         fun injectInTarget(builder: MethodSpec.Builder, dependency: DependencyModel): MethodSpec {

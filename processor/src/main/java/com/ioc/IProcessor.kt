@@ -1,5 +1,6 @@
 package com.ioc
 
+import com.ioc.ImplementationsSpec.Companion.addDataObservers
 import com.ioc.ImplementationsSpec.Companion.dependencyInjectionCode
 import com.ioc.ImplementationsSpec.Companion.dependencyInjectionMethod
 import com.ioc.ImplementationsSpec.Companion.injectInTarget
@@ -39,27 +40,12 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         val qualifierFinder = QualifierFinder()
         lateinit var types: Types
 
-        fun postInitializationMethod(element: TypeElement): ExecutableElement? {
-            val postInitializationMethod = element.methods { it.isHasAnnotation(PostInitialization::class.java) }.firstOrNull()
-            if (postInitializationMethod != null && postInitializationMethod.isPrivate()) {
-                throw ProcessorException("@PostInitialization placed on `${postInitializationMethod.simpleName}` in ${postInitializationMethod.enclosingElement} with private access").setElement(postInitializationMethod)
-            }
-
-            if (postInitializationMethod != null && postInitializationMethod.parameters.isNotEmpty()) {
-                throw ProcessorException("@PostInitialization placed on `${postInitializationMethod.simpleName}` in ${postInitializationMethod.enclosingElement} must not have parameters").setElement(postInitializationMethod)
-            }
-
-            if (postInitializationMethod != null && postInitializationMethod.returnType.kind != TypeKind.VOID) {
-                throw ProcessorException("@PostInitialization placed on `${postInitializationMethod.simpleName}` in ${postInitializationMethod.enclosingElement} must not have return type").setElement(postInitializationMethod)
-            }
-            return postInitializationMethod
-        }
-
 
         fun createTarget(element: TypeElement, dependencyFinder: DependencyTypesFinder): TargetType {
             val type = TargetType(element)
 
             type.postInitialization = postInitializationMethod(element)
+            type.dataObservers = findDataObservers(element)
             dependencyFinder.collectSuperTypes(type.element, type.supertypes)
 
             type.asTargetDependencies.add(element.asType().toString())
@@ -212,12 +198,12 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
                 // generate base injection code
                 val code = dependencyInjectionCode(dependency, processingEnv.typeUtils, target.key)
                 val methodBuilder = dependencyInjectionMethod(target.key.className, dependency, code.build())
-                injectInTarget(methodBuilder, dependency)
-                    .also { methods.add(it) }
+                methods.add(injectInTarget(methodBuilder, dependency))
             }
 
-            ImplementationsSpec(target.key, methods).inject()
-                .also { writeClassFile(target.key.className.packageName(), it) }
+            methods.addAll(addDataObservers(target.key))
+            val typeSpec = ImplementationsSpec(target.key, methods).inject()
+            writeClassFile(target.key.className.packageName(), typeSpec)
         }
 
         return true

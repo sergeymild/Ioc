@@ -29,10 +29,6 @@ fun Element.asTypeElement(): TypeElement {
     }
 }
 
-fun Element.methods(predicate: (ExecutableElement) -> Boolean): List<ExecutableElement> {
-    return ElementFilter.methodsIn(enclosedElements).filter(predicate)
-}
-
 
 fun Element.isPrivate(): Boolean {
     return modifiers.contains(Modifier.PRIVATE)
@@ -287,6 +283,19 @@ fun Element.isViewModel(): Boolean {
     return false
 }
 
+fun Element.isLiveData(): Boolean {
+    if (asType().kind.isPrimitive) return false
+
+    var superType = asTypeElement().superclass
+
+    while (superType != null) {
+        if (superType.kind == TypeKind.NONE) break
+        if (liveDataPackages.contains(superType.asElement().toString())) return true
+        superType = superType.asTypeElement().superclass
+    }
+    return false
+}
+
 fun Element.isCanHaveViewModel(): Boolean {
     if (asType().kind.isPrimitive) return false
 
@@ -327,6 +336,47 @@ fun findDependencyGetter(element: Element): Element {
     return element.enclosingElement.methods {
         it.isPublic() && it.parameters.isEmpty() && it.returnType.toString() == element.asType().toString()
     }.firstOrNull() ?: throw ProcessorException("@Inject annotation placed on field `${element.simpleName}` in `${element.enclosingElement.simpleName}` with private access and which does't have public getter method.").setElement(element)
+}
+
+fun TypeMirror.isJavaObject(): Boolean {
+    return toString() == "java.lang.Object"
+}
+
+fun supertypes(element: Element): Set<String> {
+    val supertypes = mutableSetOf<String>()
+    val type = element.asTypeElement()
+    val queue = LinkedList<TypeMirror>()
+    queue.add(type.asType())
+    queue.add(type.superclass)
+    queue.addAll(type.interfaces)
+
+    while (queue.isNotEmpty()) {
+        val supertype = queue.pop()
+        if (supertype.kind == TypeKind.NONE) continue
+        supertypes.add(supertype.asElement().toString())
+        val supertypeElement = supertype.asTypeElement()
+        if (supertypeElement.superclass != null && !supertypeElement.superclass.isJavaObject()) queue.add(supertypeElement.superclass)
+        queue.addAll(supertypeElement.interfaces)
+    }
+
+    return supertypes
+}
+
+@Throws(ProcessorException::class)
+fun findDependencyGetterFromTypeOrSuperType(element: Element): Element {
+    if (element.isPublic()) return element
+    val supertypes = supertypes(element)
+    val genericType = element.getGenericFirstOrSelfType()
+    for (method in element.enclosingElement.methods()) {
+        val returnType = method.returnType.asElement().toString()
+        if (supertypes.contains(returnType)) {
+            val typeArguments = method.returnType.typeArguments()
+            if (typeArguments.isNotEmpty() && typeArguments.size == 1 && typeArguments[0].toString() == genericType.asType().toString()) {
+                return method
+            }
+        }
+    }
+    throw ProcessorException("@Inject annotation placed on field `${element.simpleName}` in `${element.enclosingElement.simpleName}` with private access and which does't have public getter method.").setElement(element)
 }
 
 fun Element.toGetterName(): String = if (this is ExecutableElement) "$simpleName()" else simpleName.toString()
