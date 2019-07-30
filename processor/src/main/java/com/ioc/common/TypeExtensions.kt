@@ -38,14 +38,14 @@ fun Element.isPublic(): Boolean {
     return modifiers.contains(Modifier.PUBLIC)
 }
 
-fun Element.getGenericFirstType(): Element {
+fun Element.getGenericFirstType(): TypeMirror {
     if (!isSupportedType()) throw ProcessorException("Unsupported type $simpleName").setElement(this)
     return asType().getGenericFirstType()
 }
 
-fun Element.getGenericFirstOrSelfType(): Element {
+fun Element.getGenericFirstOrSelfType(): TypeMirror {
     if (!isSupportedType()) throw ProcessorException("Unsupported type $simpleName").setElement(this)
-    if (asType().typeArguments().isEmpty()) return this
+    if (asType().typeArguments().isEmpty()) return this.asType()
     return asType().getGenericFirstType()
 }
 
@@ -206,11 +206,11 @@ fun Element?.isEqualTo(other: TypeMirror): Boolean {
     return this.asType().toString() == other.toString()
 }
 
-fun DeclaredType.getGenericFirstType(): Element {
-    return typeArguments[0].asElement()
+fun DeclaredType.getGenericFirstType(): TypeMirror {
+    return typeArguments[0]
 }
 
-fun TypeMirror.getGenericFirstType(): Element {
+fun TypeMirror.getGenericFirstType(): TypeMirror {
     return asDeclared().getGenericFirstType()
 }
 
@@ -371,7 +371,7 @@ fun findDependencyGetterFromTypeOrSuperType(element: Element): Element {
         val returnType = method.returnType.asElement().toString()
         if (supertypes.contains(returnType)) {
             val typeArguments = method.returnType.typeArguments()
-            if (typeArguments.isNotEmpty() && typeArguments.size == 1 && typeArguments[0].toString() == genericType.asType().toString()) {
+            if (typeArguments.isNotEmpty() && typeArguments.size == 1 && typeArguments[0].toString() == genericType.toString()) {
                 return method
             }
         }

@@ -15,7 +15,7 @@ class TargetDataObserver(
     val viewModel: Element,
     val targetViewModelField: Element,
     val viewModelLiveDataField: Element,
-    val observingType: Element,
+    val observingType: TypeMirror,
     val observerMethod: ExecutableElement,
     val observeType: DataObserver.ObserveType) {
 

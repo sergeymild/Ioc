@@ -112,7 +112,7 @@ class ImplementationsSpec constructor(
             val methods = mutableListOf<MethodSpec>()
             for (dataObserver in target.dataObservers) {
 
-                val liveDataTypeName = dataObserver.observingType.simpleName.toString()
+                val liveDataTypeName = dataObserver.observingType.asElement().simpleName.toString()
                 val viewModelName = dataObserver.viewModel.simpleName.toString()
 
                 val observerType = ParameterizedTypeName.get(androidLiveDataObserver, dataObserver.observingType.asTypeName())

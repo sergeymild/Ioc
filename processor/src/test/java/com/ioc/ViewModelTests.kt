@@ -7,6 +7,7 @@ import com.google.testing.compile.JavaSourcesSubjectFactory
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import java.util.ArrayList
 import javax.inject.Inject
 import javax.tools.JavaFileObject
 
@@ -224,8 +225,8 @@ class ViewModelTests {
             "   }",
             "",
             "   private final void injectDependencyModelInDependency(@NonNull final Activity target) {",
-            "       DependencyModel dependencyModel2 = new DependencyModel();",
-            "       target.dependency = dependencyModel2;",
+            "       DependencyModel dependencyModel = new DependencyModel();",
+            "       target.dependency = dependencyModel;",
             "   }",
             "",
             "   private final void injectActivityViewModelInActivityViewModel(@NonNull final Activity target) {",
@@ -328,6 +329,85 @@ class ViewModelTests {
             "       target.activityViewModel.getIntegerLiveData().observe(target, new Observer<Integer>() {",
             "           public void onChanged(Integer observingData) {",
             "               target.observeIntegerLiveData(observingData);",
+            "           }",
+            "       });",
+            "   }",
+            "}")
+
+        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(JavaSourcesSubjectFactory.javaSources())
+            .that(listOf<JavaFileObject>(activityFile, androidViewModel, androidViewModelProvider, androidViewModelProviders, androidAppCompatActivity, androidFragmentActivity, activityViewModel, androidMutableLiveData, androidLiveData, androidLiveDataObserver, androidLifecycleOwner))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun liveDataObserverFromViewModelWithGenerciType() {
+
+        val activityViewModel = JavaFileObjects.forSourceLines("test.ActivityViewModel",
+            "package test;",
+            "import $lifecyclePackage.ViewModel;",
+            "import $lifecyclePackage.MutableLiveData;",
+            "import java.util.List;",
+            "",
+            "public class ActivityViewModel extends ViewModel {",
+            "   public MutableLiveData<List<String>> stringLiveData = new MutableLiveData<List<String>>();",
+            "}")
+
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            "package test;",
+            "",
+            "import $inject;",
+            "import $iocLocalScope;",
+            "import $iocDataObserver;",
+            "import androidx.appcompat.app.AppCompatActivity;",
+            "import java.util.List;",
+
+            "public class Activity extends AppCompatActivity {",
+            "",
+            "   @Inject",
+            "   public ActivityViewModel activityViewModel;",
+            "   @DataObserver",
+            "   public void observeStringLiveData(List<String> data) {}",
+            "}")
+
+
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+            "package test;",
+            "import $keep;",
+            "import $nonNull;",
+            "import $lifecyclePackage.Observer;",
+            "import $lifecyclePackage.ViewModel;",
+            "import $viewModelProvider;",
+            "import $viewModelProviders;",
+            "import java.lang.Class;",
+            "import java.lang.String;",
+            "import java.util.List;",
+            "",
+            "@Keep",
+            "public final class ActivityInjector {",
+            "   @Keep",
+            "   public final void inject(@NonNull final Activity target) {",
+            "       injectActivityViewModelInActivityViewModel(target);",
+            "       observeMutableLiveDataListFromActivityViewModel(target);",
+            "   }",
+            "",
+            "   private final void injectActivityViewModelInActivityViewModel(@NonNull final Activity target) {",
+            "       ViewModelProvider.Factory factory_activityViewModel = new ViewModelProvider.Factory() {",
+            "           @NonNull",
+            "           public <T extends ViewModel> T create(@NonNull final Class<T> modelClass) {",
+            "               return (T) new ActivityViewModel();",
+            "           }",
+            "       };",
+            "       ActivityViewModel activityViewModel = ViewModelProviders.of(target, factory_activityViewModel).get(ActivityViewModel.class);",
+            "       target.activityViewModel = activityViewModel;",
+            "   }",
+            "",
+            "   private final void observeMutableLiveDataListFromActivityViewModel(@NonNull final Activity target) {",
+            "       target.activityViewModel.stringLiveData.observe(target, new Observer<List<String>>() {",
+            "           public void onChanged(List<String> observingData) {",
+            "               target.observeStringLiveData(observingData);",
             "           }",
             "       });",
             "   }",

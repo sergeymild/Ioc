@@ -69,7 +69,7 @@ class DependencyResolver(
         val isWeakDependency = dependencyElement.isWeakDependency()
         val isLazy = dependencyElement.isLazyDependency()
         if (isProvider || isWeakDependency || isLazy) {
-            dependencyElement = dependencyElement.getGenericFirstType()
+            dependencyElement = dependencyElement.getGenericFirstType().asElement()
         }
 
         val dependencyTypeElement = dependencyElement.asTypeElement()
@@ -164,7 +164,7 @@ class DependencyResolver(
             val isWeakDependency = element.isWeakDependency()
             val isLazy = element.isLazyDependency()
             if (isProvider || isWeakDependency || isLazy) {
-                element = element.getGenericFirstType()
+                element = element.getGenericFirstType().asElement()
             }
 
             val named = qualifierFinder.getQualifier(argument)

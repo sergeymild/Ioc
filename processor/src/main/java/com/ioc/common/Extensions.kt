@@ -15,6 +15,7 @@ import javax.lang.model.type.TypeKind
 import javax.tools.Diagnostic
 import kotlinx.metadata.Flag
 import javax.lang.model.element.TypeElement
+import javax.lang.model.type.TypeMirror
 
 
 /**
@@ -24,7 +25,11 @@ import javax.lang.model.element.TypeElement
 val emptyCodBlock = CodeBlock.builder().build()
 
 fun Element.asTypeName(): TypeName {
-    return ClassName.get(asType())
+    return asType().asTypeName()
+}
+
+fun TypeMirror.asTypeName(): TypeName {
+    return ClassName.get(this)
 }
 
 fun CodeBlock.add(codeBlock: CodeBlock): CodeBlock {
