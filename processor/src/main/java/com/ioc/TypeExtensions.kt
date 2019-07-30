@@ -2,7 +2,6 @@ package com.ioc
 
 import com.ioc.IProcessor.Companion.qualifierFinder
 import com.ioc.common.*
-
 import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.TypeElement
@@ -49,6 +48,19 @@ fun Element.methods(): List<ExecutableElement> {
     return ElementFilter.methodsIn(enclosedElements)
 }
 
+fun compareTypes(left: TypeMirror, right: TypeMirror): Boolean {
+    if (left.toString() == right.toString()) return true
+    val leftElement = left.asElement()
+    val rightElement = right.asElement()
+    if (leftElement.asType().toString() != rightElement.asType().toString()) return false
+    if (left.typeArguments().size != right.typeArguments().size) return false
+    if (left.typeArguments().isEmpty() && right.typeArguments().isEmpty()) return true
+    val leftGeneric = left.typeArguments().first().toString().replace("? extends ", "")
+    val rightGeneric = right.typeArguments().first().toString().replace("? extends ", "")
+    if (leftGeneric == rightGeneric) return true
+    return false
+}
+
 fun findDataObservers(element: TypeElement): List<TargetDataObserver> {
     val targetDataObservers = mutableListOf<TargetDataObserver>()
     val observerMethods = element.methods { it.isHasAnnotation(DataObserver::class.java) }.toMutableList()
@@ -65,7 +77,8 @@ fun findDataObservers(element: TypeElement): List<TargetDataObserver> {
             val liveDataGeneric = viewModelLiveDataField.getGenericFirstType()
             for (observerMethod in observerMethods) {
                 val observerMethodNamed = qualifierFinder.getQualifier(observerMethod) ?: "unset"
-                if (observerMethod.firstParameter().toString() == liveDataGeneric.toString() && liveDataNamed == observerMethodNamed) {
+                val isSameTypes = compareTypes(liveDataGeneric, observerMethod.firstParameter())
+                if (isSameTypes && liveDataNamed == observerMethodNamed) {
                     targetDataObservers.add(TargetDataObserver(
                         viewModel = viewModelType,
                         targetViewModelField = findDependencyGetter(viewModel),
