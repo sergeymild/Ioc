@@ -194,7 +194,7 @@ class DependencyTypesFinder(
                 throw ProcessorException("Cyclic graph detected building ${parameter.asType()} cyclic: ${parameter.asType()}").setElement(parent)
             }
 
-            if (target.localScopeDependencies.containsKey(parameter.asType().toString())) {
+            if (target.isLocalScope(parameter)) {
                 provider.dependencyModels.add(DependencyModel(
                     parameter, parameter, parameter.simpleName.toString(), parameter.asType(), false, false, false
                 ))

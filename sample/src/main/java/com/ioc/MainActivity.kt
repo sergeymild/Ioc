@@ -1,31 +1,24 @@
 package com.ioc
 
 
-import android.os.Bundle
+import android.content.Context
+import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModel
-import com.ios.injector.R
 import javax.inject.Inject
-import javax.inject.Singleton
-
-class MyViewModel: ViewModel() {
-    val liveData = MutableLiveData<String>()
-}
 
 
-class Fra: Fragment() {
+class WebViewCoordinatorView
+@Inject
+constructor(context: Context)
+
+class MyView(context: Context) : FrameLayout(context) {
+
     @Inject
-    var myViewModel: MyViewModel? = null
+    lateinit var webViewCoordinatorView: WebViewCoordinatorView
 
-    @DataObserver
-    fun dataObserver(string: String) {
-
-    }
+    @LocalScope
+    val localContext: Context = context
 }
-
 
 //@InjectParentDependencies
 class MainActivity : AppCompatActivity() {

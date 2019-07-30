@@ -2,6 +2,7 @@ package com.ioc
 
 import android.app.Activity
 import android.content.Context
+import android.widget.FrameLayout
 import com.google.common.truth.Truth
 import com.google.testing.compile.JavaFileObjects
 import com.google.testing.compile.JavaSourcesSubject
@@ -209,6 +210,58 @@ class ScopesTest : BaseTest {
 
         Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
             .that(listOf(autoCompleteListener, autoCompleteListenerImpl, autocompleteController, logger, alohabrowser))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun localScopeInConstructor2() {
+        val webViewCoordinatorView = JavaFileObjects.forSourceLines("test.WebViewCoordinatorView",
+            "package test;",
+            Context::class.java.import(),
+            "public class WebViewCoordinatorView {",
+            "   public WebViewCoordinatorView(Context context) {}",
+            "}")
+
+        val mainView = JavaFileObjects.forSourceLines("test.MainView",
+            "package test;",
+
+            FrameLayout::class.java.import(),
+            Inject::class.java.import(),
+            LocalScope::class.java.import(),
+            Context::class.java.import(),
+
+            "public class MainView extends FrameLayout {",
+            "   public MainView(Context context) { super(context); }",
+            "   @Inject",
+            "   public WebViewCoordinatorView webViewCoordinatorView;",
+            "   @LocalScope",
+            "   public Context localContext;",
+            "}")
+
+        val injectedFile = JavaFileObjects.forSourceLines("test.MainViewInjector",
+            "package test;",
+            "",
+            "import $keep",
+            "import $nonNull",
+            "",
+            "@Keep",
+            "public final class MainViewInjector {",
+            "   @Keep",
+            "   public final void inject(@NonNull final MainView target) {",
+            "       injectWebViewCoordinatorViewInWebViewCoordinatorView(target);",
+            "   }",
+            "",
+            "   private final void injectWebViewCoordinatorViewInWebViewCoordinatorView(@NonNull final MainView target) {",
+            "       WebViewCoordinatorView webViewCoordinatorView = new WebViewCoordinatorView(target.localContext);",
+            "       target.webViewCoordinatorView = webViewCoordinatorView;",
+            "   }",
+            "}")
+
+        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(mainView, webViewCoordinatorView))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)

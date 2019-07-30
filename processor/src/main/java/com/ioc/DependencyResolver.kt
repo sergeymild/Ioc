@@ -152,6 +152,11 @@ class DependencyResolver(
                 continue
             }
 
+            if (target.isLocalScope(argument)) {
+                dependencies.add(targetDependencyModel(argument))
+                continue
+            }
+
             // Ioc not supported primitive types for now
             if (argument.asType().kind.isPrimitive) return
             var element: Element = argument
