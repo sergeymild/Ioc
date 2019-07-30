@@ -28,3 +28,19 @@ fun validateTargetForLiveDataObserver(typeElement: TypeElement) {
         throw ProcessorException("@DataObserver methods may be placed only in Activity or Fragment but was found in $typeElement.").setElement(typeElement)
     }
 }
+
+@Throws(ProcessorException::class)
+fun validateLocalScopeMethod(method: ExecutableElement) {
+    if (method.modifiers.contains(Modifier.PRIVATE) || method.modifiers.contains(Modifier.STATIC)) {
+        throw ProcessorException("method ${method.enclosingElement}.$method annotated with @LocalScope must be public and not static.").setElement(method.enclosingElement)
+    }
+
+    if (method.parameters.isNotEmpty()) {
+        throw ProcessorException("method ${method.enclosingElement}.$method annotated with @LocalScope must contains not contains parameters.").setElement(method.enclosingElement)
+    }
+
+    if (method.returnType.kind == TypeKind.VOID) {
+        throw ProcessorException("method ${method.enclosingElement}.$method annotated with @LocalScope must returns type.").setElement(method.enclosingElement)
+    }
+}
+

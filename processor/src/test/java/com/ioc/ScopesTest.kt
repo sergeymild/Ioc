@@ -217,6 +217,176 @@ class ScopesTest : BaseTest {
 
     @Test
     @Throws(Exception::class)
+    fun localScopeOnMethod() {
+        val alohabrowser = JavaFileObjects.forSourceLines("test.AlohaBrowserUi",
+            "package test;",
+            "public class AlohaBrowserUi {",
+            "}")
+
+        val autoCompleteListener = JavaFileObjects.forSourceLines("test.AutoCompleteListener",
+            "package test;",
+            "public interface AutoCompleteListener {",
+            "}")
+
+        val autoCompleteListenerImpl = JavaFileObjects.forSourceLines("test.AutoCompleteListenerImpl",
+            "package test;",
+            Dependency::class.java.import(),
+            "@Dependency",
+            "public class AutoCompleteListenerImpl implements AutoCompleteListener {",
+            "   public AutoCompleteListenerImpl(AlohaBrowserUi browserUi) {}",
+            "}")
+
+        val autocompleteController = JavaFileObjects.forSourceLines("test.AutocompleteController",
+            "package test;",
+            "public class AutocompleteController {",
+            "   public AutocompleteController(AutoCompleteListener listener) {}",
+            "}")
+
+
+        val logger = JavaFileObjects.forSourceLines("test.AddressBarListenerImpl",
+            "package test;",
+            LocalScope::class.java.import(),
+            Inject::class.java.import(),
+            "public class AddressBarListenerImpl {",
+            "   @Inject",
+            "   public AutocompleteController controller;",
+            "   @LocalScope",
+            "   public AlohaBrowserUi getAlohaBrowserUi() { return null; }",
+            "}")
+
+
+        val injectedFile = JavaFileObjects.forSourceLines("test.AddressBarListenerImplInjector",
+            "package test;",
+            "",
+            "import $keep",
+            "import $nonNull",
+            "",
+            "@Keep",
+            "public final class AddressBarListenerImplInjector {",
+            "",
+            "   @Keep",
+            "   public final void inject(@NonNull final AddressBarListenerImpl target) {",
+            "       injectAutocompleteControllerInController(target);",
+            "   }",
+            "",
+            "   private final void injectAutocompleteControllerInController(@NonNull final AddressBarListenerImpl target) {",
+            "       AutoCompleteListener autoCompleteListener = new AutoCompleteListenerImpl(target.getAlohaBrowserUi());",
+            "       AutocompleteController autocompleteController = new AutocompleteController(autoCompleteListener);",
+            "       target.controller = autocompleteController;",
+            "   }",
+            "}")
+
+        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(autoCompleteListener, autoCompleteListenerImpl, autocompleteController, logger, alohabrowser))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun failLocalScopeMethodIsPrivate() {
+        val alohabrowser = JavaFileObjects.forSourceLines("test.AlohaBrowserUi",
+            "package test;",
+            "public class AlohaBrowserUi {",
+            "}")
+
+        val autocompleteController = JavaFileObjects.forSourceLines("test.AutocompleteController",
+            "package test;",
+            "public class AutocompleteController {",
+            "}")
+
+
+        val logger = JavaFileObjects.forSourceLines("test.AddressBarListenerImpl",
+            "package test;",
+            LocalScope::class.java.import(),
+            Inject::class.java.import(),
+            "public class AddressBarListenerImpl {",
+            "   @Inject",
+            "   public AutocompleteController controller;",
+            "   @LocalScope",
+            "   private AlohaBrowserUi getAlohaBrowserUi() { return null; }",
+            "}")
+
+        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(autocompleteController, logger, alohabrowser))
+            .processedWith(IProcessor())
+            .failsToCompile()
+            .withErrorContaining("method test.AddressBarListenerImpl.getAlohaBrowserUi() annotated with @LocalScope must be public and not static.")
+            .`in`(logger)
+            .onLine(4)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun failLocalScopeMethodIsVoidReturn() {
+        val alohabrowser = JavaFileObjects.forSourceLines("test.AlohaBrowserUi",
+            "package test;",
+            "public class AlohaBrowserUi {",
+            "}")
+
+        val autocompleteController = JavaFileObjects.forSourceLines("test.AutocompleteController",
+            "package test;",
+            "public class AutocompleteController {",
+            "}")
+
+
+        val logger = JavaFileObjects.forSourceLines("test.AddressBarListenerImpl",
+            "package test;",
+            LocalScope::class.java.import(),
+            Inject::class.java.import(),
+            "public class AddressBarListenerImpl {",
+            "   @Inject",
+            "   public AutocompleteController controller;",
+            "   @LocalScope",
+            "   public void getAlohaBrowserUi() {  }",
+            "}")
+
+        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(autocompleteController, logger, alohabrowser))
+            .processedWith(IProcessor())
+            .failsToCompile()
+            .withErrorContaining("method test.AddressBarListenerImpl.getAlohaBrowserUi() annotated with @LocalScope must returns type.")
+            .`in`(logger)
+            .onLine(4)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun failLocalScopeMethodIsHasParameters() {
+        val alohabrowser = JavaFileObjects.forSourceLines("test.AlohaBrowserUi",
+            "package test;",
+            "public class AlohaBrowserUi {",
+            "}")
+
+        val autocompleteController = JavaFileObjects.forSourceLines("test.AutocompleteController",
+            "package test;",
+            "public class AutocompleteController {",
+            "}")
+
+
+        val logger = JavaFileObjects.forSourceLines("test.AddressBarListenerImpl",
+            "package test;",
+            LocalScope::class.java.import(),
+            Inject::class.java.import(),
+            "public class AddressBarListenerImpl {",
+            "   @Inject",
+            "   public AutocompleteController controller;",
+            "   @LocalScope",
+            "   public AlohaBrowserUi getAlohaBrowserUi(String s) { return null; }",
+            "}")
+
+        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(autocompleteController, logger, alohabrowser))
+            .processedWith(IProcessor())
+            .failsToCompile()
+            .withErrorContaining("method test.AddressBarListenerImpl.getAlohaBrowserUi(java.lang.String) annotated with @LocalScope must contains not contains parameters.")
+            .`in`(logger)
+            .onLine(4)
+    }
+
+    @Test
+    @Throws(Exception::class)
     fun localScopeInConstructor2() {
         val webViewCoordinatorView = JavaFileObjects.forSourceLines("test.WebViewCoordinatorView",
             "package test;",

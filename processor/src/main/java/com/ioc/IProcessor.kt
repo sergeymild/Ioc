@@ -15,7 +15,6 @@ import javax.lang.model.element.Element
 import javax.lang.model.element.ElementKind
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.TypeElement
-import javax.lang.model.type.TypeKind
 import javax.lang.model.util.Types
 import javax.tools.Diagnostic
 import kotlin.properties.Delegates
@@ -57,8 +56,13 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
             val injectAnnotationType = processingEnvironment.elementUtils.getTypeElement(LocalScope::class.java.canonicalName)
             val scanner = AnnotationSetScanner(processingEnvironment, mutableSetOf())
             for (localScoped in scanner.scan(element, injectAnnotationType)) {
+                var scopeType = localScoped.asType().toString()
+                if (localScoped.isMethod()) {
+                    validateLocalScopeMethod(localScoped as ExecutableElement)
+                    scopeType = localScoped.returnType.toString()
+                }
                 val getterName = findDependencyGetter(localScoped).toGetterName()
-                type.localScopeDependencies[localScoped.asType().toString()] = getterName
+                type.localScopeDependencies[scopeType] = getterName
             }
 
             // get first superclass
@@ -228,25 +232,6 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         for (entry in counter) {
             if (entry.value == 1) message("@Singleton is redundant for dependency: ${entry.key}")
         }
-    }
-
-    // TODO isParentDependencySingleton
-    private fun collectUsedSingletonsInMethodCreation(dependencies: List<DependencyModel>, isParentDependencySingleton: Boolean): MutableMap<String, DependencyModel> {
-        // try to find all singleton used in creation of current inject
-        var isLocalParentDependencySingleton = isParentDependencySingleton
-        val usedSingletons = mutableMapOf<String, DependencyModel>()
-        val queue = LinkedList(dependencies)
-        while (queue.isNotEmpty()) {
-            val dep = queue.pop()
-            val key = dep.typeElement.asType().toString()
-            if (dep.isSingleton && !usedSingletons.containsKey(key) && !isLocalParentDependencySingleton) {
-                usedSingletons[key] = dep
-                continue
-            }
-            isLocalParentDependencySingleton = dep.isSingleton
-            if (!dep.isSingleton) queue.addAll(dep.dependencies)
-        }
-        return usedSingletons
     }
 
     private fun collectAllDependencies(models: List<DependencyModel>, list: MutableList<DependencyModel>) {
