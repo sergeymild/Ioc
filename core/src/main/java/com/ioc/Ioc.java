@@ -12,36 +12,9 @@ public class Ioc {
     private static final String SUFFIX = "Injector";
     private static final int objectHashCode = Object.class.getCanonicalName().hashCode();
 
-    private static final HashMap<Class<?>, Lazy<?>> cachedSingletons = new HashMap<>(100);
-
-    private static class IocException extends RuntimeException {
-        private IocException(String message) {
-            super(message);
-        }
-        private IocException(Throwable throwable) {
-            super(throwable);
-        }
-    }
 
     public static <T> T singleton(Class<T> clazz) {
-        try {
-            Lazy<?> instance = cachedSingletons.get(clazz);
-            if (instance == null) {
-                Class<?> singletonClass = Class.forName(clazz.getCanonicalName() + "Singleton");
-                Method methodInstance = singletonClass.getDeclaredMethod("getInstance");
-                instance = (Lazy<?>) methodInstance.invoke(singletonClass);
-                cachedSingletons.put(clazz, instance);
-            }
-            return (T) instance.get();
-        } catch (ClassNotFoundException e) {
-            throw new IocException(e);
-        } catch (NoSuchMethodException e) {
-            throw new IocException(e);
-        } catch (IllegalAccessException e) {
-            throw new IocException(e);
-        } catch (InvocationTargetException e) {
-            throw new IocException(e);
-        }
+        return SingletonManager.singleton(clazz);
     }
 
     public static <T> void inject(T target) {
