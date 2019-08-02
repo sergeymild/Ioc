@@ -147,9 +147,8 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
 
         // generate singleton classesWithDependencyAnnotation
         val singletons = mutableListOf<SingletonWrapper>()
-        val uniqueSingletons = mutableSetOf<String>()
         for (v in targetsWithDependencies.values) {
-            SingletonFilter.findAll(v, singletons, uniqueSingletons)
+            SingletonFilter.findAll(v, singletons)
         }
 
         for (target in targetsWithDependencies) {
@@ -179,7 +178,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         }
 
         for (singleton in singletons) {
-            val spec = NewSingletonSpec(singleton, processingEnv.typeUtils)
+            val spec = NewSingletonSpec(singleton)
             writeClassFile(singleton.packageName, spec.inject())
         }
 

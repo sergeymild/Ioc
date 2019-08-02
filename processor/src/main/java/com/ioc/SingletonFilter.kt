@@ -1,6 +1,6 @@
 package com.ioc
 
-import javax.lang.model.type.DeclaredType
+import java.util.*
 
 
 /**
@@ -8,19 +8,29 @@ import javax.lang.model.type.DeclaredType
  */
 object SingletonFilter {
 
-    fun findAll(dependencyModel: List<DependencyModel>, singletons: MutableList<SingletonWrapper>, uniqueSingletons: MutableSet<String>) {
+    fun findAll(
+        dependencyModel: List<DependencyModel>,
+        singletons: MutableList<SingletonWrapper>) {
 
-        for (model in dependencyModel) {
-            if (model.isSingleton && uniqueSingletons.add((model.dependency.asType() as DeclaredType).asElement().simpleName.toString().toLowerCase())) {
+        val uniqueSingletons = mutableSetOf<String>()
+
+        val queue = LinkedList(dependencyModel)
+
+        while (queue.isNotEmpty()) {
+            val model = queue.pop()
+
+            if (model.isSingleton && uniqueSingletons.add(model.typeElementString)) {
                 singletons.add(model)
             }
+
+            queue.addAll(model.dependencies)
+
             for (implementation in model.implementations) {
-                findAll(implementation.dependencyModels, singletons, uniqueSingletons)
-                if (implementation.isSingleton && uniqueSingletons.add((model.dependency.asType() as DeclaredType).asElement().simpleName.toString().toLowerCase())) {
+                if (implementation.isSingleton && uniqueSingletons.add(model.typeElementString)) {
                     singletons.add(model)
                 }
+                queue.addAll(implementation.dependencyModels)
             }
-            findAll(model.dependencies, singletons, uniqueSingletons)
         }
     }
 }

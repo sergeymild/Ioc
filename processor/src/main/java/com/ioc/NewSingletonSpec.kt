@@ -3,11 +3,9 @@ package com.ioc
 import com.ioc.common.asLazyType
 import com.ioc.common.capitalize
 import com.ioc.common.keepAnnotation
-import com.ioc.common.nonNullAnnotation
 import com.squareup.javapoet.*
 import javax.lang.model.element.Modifier
 import javax.lang.model.element.TypeElement
-import javax.lang.model.util.Types
 
 /**
  * Created by sergeygolishnikov on 28/11/2017.
@@ -22,9 +20,7 @@ interface SingletonWrapper {
     fun originalClassName(): TypeName
 }
 
-class NewSingletonSpec(
-    private val dependencyModel: SingletonWrapper,
-    private val typeUtils: Types) {
+class NewSingletonSpec(private val dependencyModel: SingletonWrapper) {
 
     @Throws(Throwable::class)
     fun inject(): TypeSpec {
