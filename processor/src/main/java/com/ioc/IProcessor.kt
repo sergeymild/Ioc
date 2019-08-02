@@ -2,7 +2,7 @@ package com.ioc
 
 import com.ioc.ImplementationsSpec.Companion.addDataObservers
 import com.ioc.ImplementationsSpec.Companion.dependencyInjectionCode
-import com.ioc.ImplementationsSpec.Companion.dependencyInjectionMethod
+import com.ioc.ImplementationsSpec.Companion.provideInjectionMethod
 import com.ioc.common.*
 import com.squareup.javapoet.JavaFile
 import com.squareup.javapoet.TypeSpec
@@ -216,7 +216,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
                 val code = dependencyInjectionCode(dependency, processingEnv.typeUtils, target.key)
                 // generate base injection code
                 val isTargetUsedAsDependency = isTargetUsedWhileCreateDependency(target.key, dependency)
-                val methodBuilder = dependencyInjectionMethod(target.key.className, isTargetUsedAsDependency, dependency, code.build())
+                val methodBuilder = provideInjectionMethod(target.key.className, isTargetUsedAsDependency, dependency, code.build())
                 methods.add(InjectMethod(methodBuilder.build(), isTargetUsedAsDependency, dependency))
             }
 

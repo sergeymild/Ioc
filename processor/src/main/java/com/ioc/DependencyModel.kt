@@ -22,8 +22,14 @@ fun targetDependencyModel(element: Element): DependencyModel {
 }
 
 fun DependencyModel.isAllowEmptyConstructorInjection(): Boolean {
-    return emptyConstructor != null
-        && !emptyConstructor!!.modifiers.contains(Modifier.PRIVATE)
+    if (implementations.isNotEmpty() && !implementations.first().isMethod) {
+        if (implementations.first().dependencyModels.isEmpty()) {
+            if (!isProvider && !isLazy && !isWeakDependency && !isViewModel) {
+                return true
+            }
+        }
+    }
+    return (emptyConstructor != null && !emptyConstructor!!.modifiers.contains(Modifier.PRIVATE))
         && dependencies.isEmpty()
         && !isProvider
         && !isLazy

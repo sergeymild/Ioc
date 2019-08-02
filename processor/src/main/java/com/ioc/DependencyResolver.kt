@@ -87,8 +87,13 @@ class DependencyResolver(
         val dependencyImplementations = dependencyTypesFinder.findFor(dependencyElement, named, target, dependencyTypeElement)
 
         // if we did't find any providers of this type, try to find constructors of concrete type
-        val argumentConstructor = if (dependencyImplementations.isEmpty()) findArgumentConstructor(dependencyTypeElement) else null
-        val noArgsConstructor = if (dependencyImplementations.isEmpty()) findEmptyConstructor(dependencyTypeElement) else null
+        var argumentConstructor = if (dependencyImplementations.isEmpty()) findArgumentConstructor(dependencyTypeElement) else null
+        var noArgsConstructor = if (dependencyImplementations.isEmpty()) findEmptyConstructor(dependencyTypeElement) else null
+
+        if (argumentConstructor != null && argumentConstructor.parameters.isEmpty() && noArgsConstructor == null) {
+            noArgsConstructor = argumentConstructor
+            argumentConstructor = null
+        }
 
         val dependencies = IProcessor.singletons.getOrDefault("${dependencyTypeElement.asType()}", mutableListOf())
 

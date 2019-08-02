@@ -102,7 +102,7 @@ class ImplementationsSpec constructor(
 
     companion object {
 
-        fun dependencyInjectionMethod(
+        fun provideInjectionMethod(
             target: ClassName,
             isTargetUsedAsDependency: Boolean,
             model: DependencyModel,
@@ -118,7 +118,7 @@ class ImplementationsSpec constructor(
                     ClassName.bestGuess(singletonName))
             }
 
-            val methodName = "inject${model.name.capitalize()}In${model.fieldName.capitalize()}"
+            val methodName = "provide${model.originalType.simpleName.capitalize()}"
             val methodBuilder = MethodSpec.methodBuilder(methodName)
                 .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
                 .returns(model.returnType())
