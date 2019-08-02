@@ -102,15 +102,6 @@ class ImplementationsSpec constructor(
 
     companion object {
 
-        private fun returnType(model: DependencyModel): TypeName {
-            return when {
-                model.isLazy -> model.originalType.asLazyType()
-                model.isProvider -> model.originalType.asProviderType()
-                model.isWeakDependency -> model.originalType.asWeakType()
-                else -> model.originalClassName()
-            }
-        }
-
         fun dependencyInjectionMethod(
             target: ClassName,
             isTargetUsedAsDependency: Boolean,
@@ -130,7 +121,7 @@ class ImplementationsSpec constructor(
             val methodName = "inject${model.name.capitalize()}In${model.fieldName.capitalize()}"
             val methodBuilder = MethodSpec.methodBuilder(methodName)
                 .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
-                .returns(returnType(model))
+                .returns(model.returnType())
                 .addCode(body.build())
 
             if (isTargetUsedAsDependency) methodBuilder.addParameter(targetParameter(target))

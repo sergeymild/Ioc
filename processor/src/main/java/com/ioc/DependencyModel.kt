@@ -1,7 +1,6 @@
 package com.ioc
 
-import com.ioc.common.asTypeElement
-import com.ioc.common.getPackage
+import com.ioc.common.*
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.CodeBlock
 import com.squareup.javapoet.ParameterizedTypeName
@@ -40,6 +39,15 @@ fun DependencyModel.isAllowModuleMethodProvide(): Boolean {
         && !isLazy
         && !isWeakDependency
         && !isViewModel
+}
+
+fun DependencyModel.returnType(): TypeName {
+    return when {
+        isLazy -> originalType.asLazyType()
+        isProvider -> originalType.asProviderType()
+        isWeakDependency -> originalType.asWeakType()
+        else -> originalClassName()
+    }
 }
 
 class DependencyModel constructor(
