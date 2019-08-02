@@ -3,15 +3,18 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion '28.0.3'
+    compileSdkVersion 28
+
     defaultConfig {
         applicationId "com.ioc.injector"
         minSdkVersion 19
-        targetSdkVersion 25
+        targetSdkVersion 29
         versionCode 1
         versionName "1.0"
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        multiDexEnabled true
+
+
     }
     buildTypes {
         release {
@@ -34,6 +37,37 @@ android {
 //        main.java.srcDirs += [file("$buildDir/generated/source/kapt/main")]
 //        main.java.srcDirs += "src/main/kotlin"
 //    }
+
+    sourceSets {
+        main {
+            jniLibs.srcDir file('jniLibs/')
+        }
+        main.java.srcDirs += 'src/main/kotlin'
+        main.java.srcDirs += [file("$buildDir/generated/source/kapt/main")]
+        test.java.srcDirs += 'src/test/kotlin'
+        androidTest {
+            java.srcDirs += 'src/androidTest/kotlin'
+            assets.srcDirs = ['src/androidTest/assets/']
+        }
+    }
+
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+            returnDefaultValues = true
+        }
+    }
+
+    packagingOptions {
+        exclude('lib/armeabi-v7a/libpanorenderer.so')
+        exclude('jsr305_annotations/Jsr305_annotations.gwt.xml')
+        exclude 'META-INF/rxjava.properties'
+        exclude 'META-INF/main.kotlin_module'
+        exclude 'META-INF/atomicfu.kotlin_module'
+        exclude("META-INF/*.kotlin_module")
+        exclude("**.kotlin_builtins")
+        exclude("**.kotlin_metadata")
+    }
 }
 //
 kapt {
@@ -43,27 +77,36 @@ kapt {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
-        exclude group: 'com.android.support', module: 'support-annotations'
-    })
-    implementation 'com.android.support:appcompat-v7:25.3.1'
-    androidTestImplementation 'junit:junit:4.12'
 
+    implementation 'androidx.appcompat:appcompat:1.0.2'
 
     implementation project(':core')
     implementation project(':mylibrary')
     implementation project(':common')
 
     androidTestImplementation project(':core')
+    kaptAndroidTest project(':processor')
 
     kapt project(':processor')
     kaptTest project(':processor')
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
     testImplementation 'junit:junit:4.12'
-    implementation "android.arch.lifecycle:extensions:+"
+    implementation "android.arch.lifecycle:extensions:1.1.1"
     implementation 'javax.inject:javax.inject:1'
     implementation "io.reactivex.rxjava2:rxjava:2.1.5"
+
+
+    androidTestImplementation "androidx.test.uiautomator:uiautomator:2.2.0"
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.2.0")
+    androidTestImplementation("androidx.test:runner:1.2.0")
+    androidTestImplementation "androidx.test.espresso:espresso-contrib:3.2.0"
+    androidTestImplementation "androidx.test.ext:junit:1.1.1"
+    androidTestImplementation "androidx.test:rules:1.2.0"
+    // Will cause error: AGPBI: {"kind":"error","text":"Program type already present: org.apache.maven.profiles.ProfileManager","sources":[{}],"tool":"D8"}
+    // androidTestImplementation "org.robolectric:robolectric:${robolectricVersion}"
+    androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${kotlin_version}"
+    androidTestImplementation "org.jetbrains.kotlin:kotlin-test-junit:${kotlin_version}"
 
 //    compile('com.squareup.retrofit2:retrofit:2.3.0') {
 //        exclude(group: 'com.squareup.okhttp3')

@@ -1,6 +1,6 @@
 package com.ioc
 
-import com.ioc.common.scopeFactoryType
+import com.ioc.common.emptyCodBlock
 import com.squareup.javapoet.CodeBlock
 import javax.lang.model.util.Types
 
@@ -9,13 +9,11 @@ import javax.lang.model.util.Types
  */
 
 object ProviderMethodBuilder {
-    fun build(provider: DependencyProvider, dependencyModel: DependencyModel, typeUtils: Types, target: TargetType?): CodeBlock {
-        if (provider.isFromTarget) {
-            return CodeBlock.builder().addStatement("\$T \$N = target.\$N()",
-                    dependencyModel.originalClassName(),
-                    dependencyModel.generatedName,
-                    provider.name).build()
-        }
+    fun build(
+        provider: DependencyProvider,
+        dependencyModel: DependencyModel,
+        typeUtils: Types,
+        target: TargetType?): CodeBlock {
 
         if (provider.dependencyModels.isEmpty()) {
             return generateWithoutDependencies(dependencyModel, provider)
@@ -23,70 +21,53 @@ object ProviderMethodBuilder {
 
         val builder = CodeBlock.builder()
 
-        if (!provider.isSingleton && provider.scoped == ROOT_SCOPE) {
+        if (!provider.isSingleton) {
             DependencyTree.get(provider.dependencyModels, typeUtils, target)
-                    .also { builder.add(it) }
+                .also { builder.add(it) }
         }
 
-        builder.add(generateWithDependencies(dependencyModel, provider))
-
-        // Module method with params
-//        if (dependencyModel.isProvider) {
-//            return ImplementationsSpec.wrapInProviderIfNeed(builder, dependencyModel).build()
-//        }
+        builder.add(generateWithDependencies(dependencyModel, provider, target))
 
         return builder.build()
     }
 
     @Throws(Throwable::class)
-    private fun generateWithDependencies(dependencyModel: DependencyModel, method: DependencyProvider): CodeBlock {
+    private fun generateWithDependencies(
+        dependencyModel: DependencyModel,
+        method: DependencyProvider,
+        target: TargetType?): CodeBlock {
+        if (method.isSingleton) return emptyCodBlock
+
         val builder = CodeBlock.builder()
 
-        if (dependencyModel.scoped != ROOT_SCOPE) {
-            return builder.addStatement("\$T \$N = \$T.get(target, \$S, \$S)",
-                    dependencyModel.originalClassName(),
-                    dependencyModel.generatedName,
-                    scopeFactoryType,
-                    dependencyModel.scoped,
-                    dependencyModel.name).build()
-        }
+        applyIsLoadIfNeed(dependencyModel.dependencies, target)
+        val names = method.dependencyNames()
 
-        if (!method.isSingleton) {
-            val names = method.dependencyNames()
-            builder.addStatement("\$T \$N = \$T.\$N($names)",
-                    dependencyModel.className,
-                    dependencyModel.generatedName,
-                    method.module,
-                    method.name)
-        } else {
-            return singleton(dependencyModel)
-        }
+        var statementString = "\$T \$N = \$T.\$N(\$L)"
+        if (method.isKotlinModule) statementString = "\$T \$N = \$T.INSTANCE.\$N(\$L)"
+
+        builder.addStatement(statementString,
+            dependencyModel.className,
+            dependencyModel.generatedName,
+            method.module,
+            method.name, names)
 
         return builder.build()
     }
 
     @Throws(Throwable::class)
     private fun generateWithoutDependencies(dependencyModel: DependencyModel, method: DependencyProvider): CodeBlock {
-        if (method.isSingleton) {
-            return singleton(dependencyModel)
-        }
+        if (method.isSingleton) return emptyCodBlock
 
         var code = CodeBlock.builder()
 
-        if (dependencyModel.scoped != ROOT_SCOPE) {
-            return code.addStatement("\$T \$N = \$T.get(target, \$S, \$S)",
-                    dependencyModel.originalClassName(),
-                    dependencyModel.generatedName,
-                    scopeFactoryType,
-                    dependencyModel.scoped,
-                    dependencyModel.name).build()
-        }
-
-        code = code.addStatement("\$T \$N = \$T.\$N()",
-                dependencyModel.originalClassName(),
-                dependencyModel.generatedName,
-                method.module,
-                method.name)
+        var statementString = "\$T \$N = \$T.\$N()"
+        if (method.isKotlinModule) statementString = "\$T \$N = \$T.INSTANCE.\$N()"
+        code = code.addStatement(statementString,
+            dependencyModel.originalClassName(),
+            dependencyModel.generatedName,
+            method.module,
+            method.name)
 
         return code.build()
     }

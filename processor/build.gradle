@@ -2,6 +2,7 @@ apply plugin: 'java'
 apply plugin: 'kotlin'
 apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'com.github.dcendents.android-maven' // ADD THIS
+apply plugin: 'maven-publish' // ADD THIS
 
 group='com.ioc'
 archivesBaseName = "ioc-processor"
@@ -10,22 +11,26 @@ dependencies {
     implementation project(':core')
     compileOnly 'javax.inject:javax.inject:1'
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    implementation "com.squareup:javapoet:1.9.0"
+    implementation "com.squareup:javapoet:1.11.1"
+    implementation "org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.1.0"
 
     testImplementation("com.android.support.test.espresso:espresso-core:+")
     testImplementation 'javax.inject:javax.inject:1'
     testCompile files('libs/support-annotations-25.3.1.jar')
     testImplementation 'junit:junit:4.12'
     testImplementation 'com.google.testing.compile:compile-testing:0.15'
-    testImplementation 'com.google.auto:auto-common:0.9'
+    testImplementation 'com.google.auto:auto-common:0.10'
     testImplementation 'com.google.truth:truth:0.37'
     testImplementation group: 'com.google.android', name: 'android', version: '4.1.1.4'
-    testImplementation "io.reactivex.rxjava2:rxjava:2.1.12"
+    testImplementation "io.reactivex.rxjava2:rxjava:2.2.10"
+    testCompile "android.arch.lifecycle:viewmodel:1.1.1"
+    implementation "android.arch.lifecycle:viewmodel:1.1.1"
 }
 
 shadowJar {
     dependencies {
         include(dependency('com.squareup:javapoet:.*'))
+        include(dependency('org.jetbrains.kotlinx:.*'))
     }
     relocate 'com.squareup', 'com.ioc.squareup'
     archiveName "${archivesBaseName}.jar"
@@ -47,5 +52,16 @@ sourceSets {
     sourceSets {
         main.java.srcDirs += [file("$buildDir/generated/source/kapt/main")]
         main.java.srcDirs += "src/main/kotlin"
+    }
+}
+
+publishing {
+    publications {
+        libraryJar(MavenPublication) {
+            groupId = 'com.github.sergeymild.ioc'
+            artifactId = 'ioc-processor'
+            version = baseVersion
+            from components.java
+        }
     }
 }

@@ -1,19 +1,20 @@
 package com.ioc
 
+import com.ioc.ImplementationsSpec.Companion.addDataObservers
 import com.ioc.ImplementationsSpec.Companion.dependencyInjectionCode
 import com.ioc.ImplementationsSpec.Companion.dependencyInjectionMethod
 import com.ioc.ImplementationsSpec.Companion.injectInTarget
-import com.ioc.ImplementationsSpec.Companion.wrapInLazyIfNeed
-import com.ioc.ImplementationsSpec.Companion.wrapInProviderIfNeed
-import com.ioc.ImplementationsSpec.Companion.wrapInWakIfNeed
 import com.ioc.common.*
 import com.squareup.javapoet.JavaFile
 import com.squareup.javapoet.MethodSpec
 import com.squareup.javapoet.TypeSpec
+import java.util.*
 import javax.annotation.processing.*
-import javax.inject.Scope
 import javax.lang.model.SourceVersion
-import javax.lang.model.element.*
+import javax.lang.model.element.Element
+import javax.lang.model.element.ElementKind
+import javax.lang.model.element.ExecutableElement
+import javax.lang.model.element.TypeElement
 import javax.lang.model.type.TypeKind
 import javax.lang.model.util.Types
 import javax.tools.Diagnostic
@@ -27,55 +28,43 @@ interface ErrorThrowable {
 @SupportedAnnotationTypes("javax.inject.*")
 open class IProcessor : AbstractProcessor(), ErrorThrowable {
     var filer: Filer by Delegates.notNull()
-    var createdSingletones = mutableSetOf<String>()
     lateinit var dependencyResolver: DependencyResolver
 
     companion object {
-        var scopeTargets = mutableMapOf<String, MutableMap<TargetType, MutableSet<String>>>()
         val classesWithDependencyAnnotation = mutableListOf<Element>()
         val methodsWithDependencyAnnotation = mutableListOf<ExecutableElement>()
         var singletons = mutableMapOf<String, MutableList<DependencyModel>>()
         var messager: Messager by Delegates.notNull()
         var dependencyFinder: DependencyTypesFinder by Delegates.notNull()
+        var processingEnvironment: ProcessingEnvironment by Delegates.notNull()
         val qualifierFinder = QualifierFinder()
         lateinit var types: Types
-
-        fun postInitializationMethod(element: TypeElement): ExecutableElement? {
-            val postInitializationMethod = element.methods { it.isHasAnnotation(PostInitialization::class.java) }.firstOrNull()
-            if (postInitializationMethod != null && postInitializationMethod.isPrivate()) {
-                throw ProcessorException("@PostInitialization placed on `${postInitializationMethod.simpleName}` in ${postInitializationMethod.enclosingElement} with private access").setElement(postInitializationMethod)
-            }
-
-            if (postInitializationMethod != null && postInitializationMethod.parameters.isNotEmpty()) {
-                throw ProcessorException("@PostInitialization placed on `${postInitializationMethod.simpleName}` in ${postInitializationMethod.enclosingElement} must not have parameters").setElement(postInitializationMethod)
-            }
-
-            if (postInitializationMethod != null && postInitializationMethod.returnType.kind != TypeKind.VOID) {
-                throw ProcessorException("@PostInitialization placed on `${postInitializationMethod.simpleName}` in ${postInitializationMethod.enclosingElement} must not have return type").setElement(postInitializationMethod)
-            }
-            return postInitializationMethod
-        }
 
 
         fun createTarget(element: TypeElement, dependencyFinder: DependencyTypesFinder): TargetType {
             val type = TargetType(element)
 
-            type.isRootScope = element.isRootScope()
-            type.isNestedScope = element.isChildScope()
-            if (type.isRootScope) {
-                type.rootScope = ScopeFinder.getScope(element) ?: ROOT_SCOPE
+            type.postInitialization = postInitializationMethod(element)
+            type.dataObservers = findDataObservers(element)
+            dependencyFinder.collectSuperTypes(type.element, type.supertypes)
+
+            type.asTargetDependencies.add(element.asType().toString())
+            for (supertype in type.supertypes) {
+                type.asTargetDependencies.add(supertype.toString())
             }
 
-            type.postInitialization = postInitializationMethod(element)
-            dependencyFinder.collectSuperTypes(type.element, type.supertypes)
+            // find all localScoped dependencies for use it later
+            val injectAnnotationType = processingEnvironment.elementUtils.getTypeElement(LocalScope::class.java.canonicalName)
+            val scanner = AnnotationSetScanner(processingEnvironment, mutableSetOf())
+            for (localScoped in scanner.scan(element, injectAnnotationType)) {
+                val getterName = findDependencyGetter(localScoped).toGetterName()
+                type.localScopeDependencies[localScoped.asType().toString()] = getterName
+            }
 
             // get first superclass
             type.superclass?.let {
                 type.parentTarget = createTarget(it.asTypeElement(), dependencyFinder)
             }
-
-            val methods = (type.supertypes + listOf(type.element.asType())).methodsWithTargetDependency()
-            type.methods.addAll(methods)
 
             return type
         }
@@ -90,6 +79,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         super.init(processingEnv)
         filer = processingEnv.filer
         messager = processingEnv.messager
+        processingEnvironment = processingEnv
     }
 
 
@@ -98,18 +88,22 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         classesWithDependencyAnnotation.clear()
         methodsWithDependencyAnnotation.clear()
 
-        roundEnv.getElementsAnnotatedWith(Dependency::class.java)
-                .filter { it.isNotMethodAndInterface() }
-                .addTo(classesWithDependencyAnnotation)
+        val dependencies = roundEnv.getElementsAnnotatedWith(Dependency::class.java)
+        val libraries = roundEnv.getElementsAnnotatedWith(LibraryModules::class.java)
 
-        roundEnv.getElementsAnnotatedWith(Dependency::class.java)
-                .filter { it.kind == ElementKind.METHOD }
-                .map { it as ExecutableElement }
-                .addTo(methodsWithDependencyAnnotation)
+        for (dependency in dependencies) {
+            if (dependency.isNotMethodAndInterface()) {
+                classesWithDependencyAnnotation.add(dependency)
+                continue
+            }
+
+            if (dependency.kind == ElementKind.METHOD) {
+                methodsWithDependencyAnnotation.add(dependency as ExecutableElement)
+            }
+        }
 
         val alreadyReadModules = mutableSetOf<String>()
-        roundEnv.getElementsAnnotatedWith(LibraryModules::class.java)
-                .forEach { findLibraryModules(it.getAnnotation(LibraryModules::class.java), alreadyReadModules) }
+        libraries.forEach { findLibraryModules(it.getAnnotation(LibraryModules::class.java), alreadyReadModules) }
         alreadyReadModules.clear()
 
         measure("Process") {
@@ -139,47 +133,20 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         throw RuntimeException(message)
     }
 
-    class Type(val typeSpec: TypeSpec, val packageName: String)
-
     @Throws(Throwable::class)
     fun newParse(roundEnv: RoundEnvironment): Boolean {
-        createdSingletones.clear()
-
-
-        dependencyFinder = DependencyTypesFinder(roundEnv, qualifierFinder)
+        dependencyFinder = DependencyTypesFinder(qualifierFinder)
         dependencyResolver = DependencyResolver(processingEnv.typeUtils, qualifierFinder, dependencyFinder)
         dependencyFinder.dependencyResolver = dependencyResolver
 
-        val membersAnnotatedWithInject = roundEnv.fieldsWithInjectAnnotation()
+        roundEnv.rootElementsWithInjectedDependencies()
+        roundEnv.findDependenciesInParents(processingEnv)
 
-        val targetsWithDependencies = mutableMapOf<TargetType, MutableList<DependencyModel>>()
+        val targetsWithDependencies = mapToTargetWithDependencies(dependencyResolver)
+        val targetTypes = targetsWithDependencies.keys
 
-        // for uniqueness while searching
-        val targets = mutableMapOf<Element, TargetType>()
 
-        for (element in membersAnnotatedWithInject) {
-            // get member target class
-            val targetTypeElement = element.enclosingElement.asTypeElement()
-
-            // if we haven't add TargetType for particular target
-            if (!targets.containsKey(targetTypeElement)) {
-                // create TargetType
-                val type = createTarget(targetTypeElement, dependencyFinder)
-                // cache
-                targets[element.enclosingElement] = type
-            }
-            val target = targets[element.enclosingElement]!!
-
-            //CyclicValidation(processingEnv.typeUtils, roundEnv, target).validate(element)
-
-            val dependencies = targetsWithDependencies.getOrPut(target) {
-                return@getOrPut mutableListOf()
-            }
-            val resolved = dependencyResolver.resolveDependency(element, target = target, skipCheckFromTarget = true, parents = ParensSet())
-            //generateUniqueNames(resolved)
-            dependencies.add(resolved)
-        }
-
+        validateSingletonUsage(targetsWithDependencies)
 
         // generate singleton classesWithDependencyAnnotation
         val singletons = mutableListOf<SingletonWrapper>()
@@ -187,11 +154,6 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         for (v in targetsWithDependencies.values) {
             SingletonFilter.findAll(v, singletons, uniqueSingletons)
         }
-
-
-        val rootElements = roundEnv.rootElements
-        val typeUtils = processingEnv.typeUtils
-        val targetKeys = targetsWithDependencies.keys
 
         measure("targetWith") {
             for (target in targetsWithDependencies) {
@@ -202,12 +164,6 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
                 sorting.sortTargetDependencies(dependencies)
 
                 target.key.dependencies = target.value
-                target.key.flatDependencies = dependencies.sortedBy { it.order }.reversed()
-
-                rootElements
-                        .firstOrNull { typeUtils.directSupertypes(it.asType()).contains(target.key.element.asType()) }
-                        ?.transform { root -> targetKeys.firstOrNull { it.element.isEqualTo(root) } }
-                        ?.let { target.key.childTarget = it }
             }
 
             // set for every parent its own classesWithDependencyAnnotation
@@ -219,168 +175,79 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
                 }
             }
 
-            for (target in targetKeys) {
+            for (target in targetTypes) {
                 var parentTarget = target.parentTarget
                 while (parentTarget != null) {
-                    parentTarget.rootScope = target.rootScope
                     parentTarget = parentTarget.parentTarget
                 }
             }
         }
 
-        singletons.map { Type(NewSingletonSpec(it, processingEnv.typeUtils).inject(), it.packageName) }
-                .forEach {
-                    writeClassFile(it.packageName, it.typeSpec)
-                    resetUniqueSingletons()
-                }
-
-
-        for (scopeAnnotation in roundEnv.getElementsAnnotatedWith(Scope::class.java)) {
-            for (scopedElement in roundEnv.getElementsAnnotatedWith(scopeAnnotation.asTypeElement())) {
-                if (scopedElement.kind == ElementKind.PARAMETER) continue
-                if (scopedElement.isRootScope()) {
-                    val rootScopeName = scopeAnnotation.simpleName.toString()
-                    scopeTargets[rootScopeName] = mutableMapOf()
-                    targetKeys.firstOrNull { it.element.isEqualTo(scopedElement) }?.let {
-                        scopeTargets[rootScopeName]!![it] = mutableSetOf()
-                    }
-                    continue
-                }
-                if (ScopeFinder.isKotlinAnnotationsMethod(scopedElement)) continue
-                if (scopedElement.isInterface()) {
-                    throw ProcessorException("`@${scopeAnnotation.simpleName}` must be declared on one of the implementations `$scopedElement`").setElement(scopedElement)
-                }
-
-                // TODO!!!!
-                scopeTargets[scopeAnnotation.simpleName.toString()]?.keys?.first()?.let {
-                    scopeTargets[scopeAnnotation.simpleName.toString()]!![it]?.add(scopedElement.asType().toString())
-                }
-                val targets = targetKeys.filter { it.isTargetForDependency(scopeAnnotation, scopedElement) }
-                if (targets.isEmpty()) {
-                    message("Can't find Element annotated with `@ScopeRoot(@$scopeAnnotation.class)`")
-                }
-
-                for (target in targets) {
-                    // target must have this dependency
-                    val contains = target.flatDependencies.any { it.dependency.isEqualTo(scopedElement) && it.scoped == target.rootScope }
-                    //if (!contains) throw ProcessorException("Dependency with `@${scopeAnnotation.simpleName}` not found").setElement(scopedElement)
-                    if (!contains) {
-                        message("Dependency `${scopedElement.simpleName}` with `@${scopeAnnotation.simpleName}` not used in `${target.element.simpleName}`")
-                        continue
-                    }
-
-                    target.parentsDependencies()
-                    (target.parentDependencies + target.flatDependencies)
-                            .filter { it.dependency.isEqualTo(scopedElement) && it.scoped == target.rootScope }
-                            .forEach {
-                                it.isFromTarget = true
-                                it.scoped = target.rootScope
-                                it.scopedFieldName = "${target.rootScope.decapitalize()}${it.scopedFieldName.capitalize()}"
-                            }
-                }
-            }
-        }
-
-        val cacheMethods = mutableMapOf<TargetType, MutableList<MethodSpec>>()
-        for (pair in scopeTargets) {
-            for (entry in pair.value) {
-                for (type in entry.value) {
-                    val scopeHolder = targets.filter { it.value.rootScope == pair.key }.map { it.value }.firstOrNull()
-                    val dependency = targetsWithDependencies.flatMap { it.value }.firstOrNull { it.typeElement.asType().toString() == type }
-                            ?: continue
-                    val method = ImplementationsSpec.cachedMethod(scopeHolder!!, typeUtils, dependency)
-                    cacheMethods.getOrPut(scopeHolder) { mutableListOf() }.add(method)
-                }
-            }
+        for (singleton in singletons) {
+            val spec = NewSingletonSpec(singleton, processingEnv.typeUtils)
+            writeClassFile(singleton.packageName, spec.inject())
         }
 
         // Generate target classesWithDependencyAnnotation
         for (target in targetsWithDependencies) {
 
-            val uniqueFlatDependencies = target.key.uniqueFlat()
-                    .asSequence()
-                    .filter { it.isFromTarget }
-                    .filter { it.scoped != null && it.scoped != ROOT_SCOPE }
-                    .filter { !target.key.parentDependencies.contains(it) }
-                    .filter { !target.key.dependencies.contains(it) }
-                    .toMutableSet()
-
-            val prevRootScope = target.key.rootScope
-            if (prevRootScope == ROOT_SCOPE) {
-                var child = target.key.childTarget
-                while (child != null) {
-                    target.key.rootScope = child.rootScope
-                    if (target.key.rootScope != ROOT_SCOPE) break
-                    child = child.childTarget
-                }
-            }
-
-            val sorted = target.key.dependencies.sortedBy { it.order }.asReversed()
+            val sorted = target.key.dependencies.sortedByDescending { it.sortOrder }//.asReversed()
             val methods = mutableListOf<MethodSpec>()
 
-            cacheMethods[target.key]?.let {
-                it.forEachIfNotNull { method -> methods.add(method) }
-            }
-
             for (dependency in sorted) {
-                scopedFieldName(target.key, dependency)
-                trySetIsFromTarget(target.key, dependency)
-
-                var code = dependencyInjectionCode(dependency, processingEnv.typeUtils, target.key)
-
-                code = wrapInProviderIfNeed(code, dependency)
-                code = wrapInLazyIfNeed(code, dependency)
-                code.add(wrapInWakIfNeed(dependency))
-
+                // generate base injection code
+                val code = dependencyInjectionCode(dependency, processingEnv.typeUtils, target.key)
                 val methodBuilder = dependencyInjectionMethod(target.key.className, dependency, code.build())
-                injectInTarget(methodBuilder, dependency)
-                        .also { methods.add(it) }
-
-                //injectBaseSpeedDialItemsPresenterInBaseSpeedDialItemsPresenter
-
-                val cachedDependencies = uniqueFlatDependencies.filter { it.order <= dependency.order }
-                for (cachedDependency in cachedDependencies) {
-                    uniqueFlatDependencies.remove(cachedDependency)
-                    ImplementationsSpec.cachedMethod(target.key, typeUtils, cachedDependency)
-                            .also { methods.add(it) }
-                }
+                methods.add(injectInTarget(methodBuilder, dependency))
             }
 
-//            val cacheMethods = mutableListOf<MethodSpec>()
-//            for (remainCacheDependency in uniqueFlatDependencies) {
-//                ImplementationsSpec.cachedMethod(target.key, typeUtils, remainCacheDependency)
-//                        .also { cacheMethods.add(it) }
-//            }
-
-//            methods.addAll(0, cacheMethods)
-
-            ImplementationsSpec(target.key, processingEnv.typeUtils, methods, target.key.uniqueFlat())
-                    .inject()
-                    .also { writeClassFile(target.key.className.packageName(), it) }
-
-            target.key.rootScope = prevRootScope
+            methods.addAll(addDataObservers(target.key))
+            val typeSpec = ImplementationsSpec(target.key, methods).inject()
+            writeClassFile(target.key.className.packageName(), typeSpec)
         }
 
         return true
     }
 
-    // TODO проверить
-    private fun trySetIsFromTarget(target: TargetType, dependency: DependencyModel) {
-        if (target.isDeclaredAsMember(dependency)) {
-            dependency.isFromTarget = true
+    private fun validateSingletonUsage(
+        targetsWithDependencies: Map<TargetType, MutableList<DependencyModel>>) {
+        // check how ofter used singletons
+        val counter = mutableMapOf<String, Int>()
+        for (target in targetsWithDependencies) {
+            val queue = LinkedList(target.value)
+            while (queue.isNotEmpty()) {
+                val dep = queue.pop()
+                if (dep.isSingleton) {
+                    val count = counter.getOrPut(dep.typeElementString) { 0 }
+                    counter[dep.typeElementString] = count + 1
+                }
+                queue.addAll(dep.dependencies)
+            }
+        }
+
+        for (entry in counter) {
+            if (entry.value == 1) message("@Singleton is redundant for dependency: ${entry.key}")
         }
     }
 
-    private fun scopedFieldName(target: TargetType, dependency: DependencyModel) {
-        dependency.scopedFieldName = "${target.rootScope.decapitalize()}${dependency.dependency.asTypeElement().simpleName.toString().capitalize()}"
+    // TODO isParentDependencySingleton
+    private fun collectUsedSingletonsInMethodCreation(dependencies: List<DependencyModel>, isParentDependencySingleton: Boolean): MutableMap<String, DependencyModel> {
+        // try to find all singleton used in creation of current inject
+        var isLocalParentDependencySingleton = isParentDependencySingleton
+        val usedSingletons = mutableMapOf<String, DependencyModel>()
+        val queue = LinkedList(dependencies)
+        while (queue.isNotEmpty()) {
+            val dep = queue.pop()
+            val key = dep.typeElement.asType().toString()
+            if (dep.isSingleton && !usedSingletons.containsKey(key) && !isLocalParentDependencySingleton) {
+                usedSingletons[key] = dep
+                continue
+            }
+            isLocalParentDependencySingleton = dep.isSingleton
+            if (!dep.isSingleton) queue.addAll(dep.dependencies)
+        }
+        return usedSingletons
     }
-
-//    private fun generateUniqueNames(dependency: DependencyModel) {
-//        //dependency.generatedName = uniqueName(dependency.name)
-//        for (dep in dependency.depencencies) {
-//            generateUniqueNames(dep)
-//        }
-//    }
 
     private fun collectAllDependencies(models: List<DependencyModel>, list: MutableList<DependencyModel>) {
         for (model in models) {
@@ -388,10 +255,10 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
             for (implementation in model.implementations) {
                 collectAllDependencies(implementation.dependencyModels, list)
             }
-            for (depencency in model.depencencies) {
-                list.add(depencency)
-                collectAllDependencies(depencency.depencencies, list)
-                for (implementation in depencency.implementations) {
+            for (dependency in model.dependencies) {
+                list.add(dependency)
+                collectAllDependencies(dependency.dependencies, list)
+                for (implementation in dependency.implementations) {
                     collectAllDependencies(implementation.dependencyModels, list)
                 }
             }

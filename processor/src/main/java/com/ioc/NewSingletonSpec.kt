@@ -1,5 +1,6 @@
 package com.ioc
 
+import com.ioc.common.asLazyType
 import com.ioc.common.capitalize
 import com.ioc.common.keepAnnotation
 import com.ioc.common.nonNullAnnotation
@@ -15,57 +16,54 @@ interface SingletonWrapper {
     val typeElement: TypeElement
     val className: ClassName
     val packageName: String
-    var depencencies: List<DependencyModel>
+    var dependencies: List<DependencyModel>
     var implementations: List<DependencyProvider>
     var name: String
-    fun originalClassName() : TypeName
+    fun originalClassName(): TypeName
 }
 
-class NewSingletonSpec(private val dependencyModel: SingletonWrapper,
-                       private val typeUtils: Types) {
+class NewSingletonSpec(
+    private val dependencyModel: SingletonWrapper,
+    private val typeUtils: Types) {
 
     @Throws(Throwable::class)
     fun inject(): TypeSpec {
 
-        val name = "${dependencyModel.typeElement.simpleName.capitalize()}Singleton"
-        return TypeSpec.classBuilder(name)
-                .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-                .addAnnotation(keepAnnotation)
-                .addMethod(generateMethod())
-                .addField(dependencyModel.className, "singleton", Modifier.PRIVATE, Modifier.STATIC)
-                .addField(FieldSpec.builder(ClassName.bestGuess(name), "instance", Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
-                        .initializer("new \$N()", name)
-                        .build())
-                .build()
+        val singletonName = "${dependencyModel.typeElement.simpleName.capitalize()}Singleton"
+        return TypeSpec.classBuilder(singletonName)
+            .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+            .superclass(dependencyModel.typeElement.asLazyType())
+            .addAnnotation(keepAnnotation)
+            .addMethod(getterMethod(singletonName))
+            .addMethod(generateMethod())
+            .addField(FieldSpec.builder(ClassName.bestGuess(singletonName), "instance", Modifier.PRIVATE, Modifier.STATIC).build())
+            .build()
+    }
+
+    private fun getterMethod(singletonName: String): MethodSpec {
+        return MethodSpec.methodBuilder("getInstance")
+            .addModifiers(Modifier.PUBLIC, Modifier.FINAL, Modifier.STATIC)
+            .returns(ClassName.bestGuess(singletonName))
+            .addStatement("if (instance == null) instance = new \$N()", singletonName)
+            .addStatement("return instance")
+            .build()
     }
 
     private fun generateMethod(): MethodSpec {
-        resetUniqueSingletons()
-        val builder = MethodSpec.methodBuilder("get")
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
-                .addAnnotation(keepAnnotation)
-                .addAnnotation(nonNullAnnotation)
-                .returns(dependencyModel.className)
-                .addStatement("if (singleton != null) return singleton")
+        val builder = MethodSpec.methodBuilder("initialize")
+            .addModifiers(Modifier.PROTECTED, Modifier.FINAL)
+            .returns(dependencyModel.className)
 
-        DependencyTree.get(dependencyModel.depencencies, typeUtils).also { builder.addCode(it) }
+        val code = DependencyTree.get(dependencyModel.dependencies, typeUtils)
+        builder.addCode(code)
+
+        applyIsLoadIfNeed(dependencyModel.dependencies, null)
         val names = dependencyModel.dependencyNames()
 
         dependencyModel.implementations.firstOrNull { it.isMethod }?.let {
-            return builder.addStatement("singleton = \$T.\$N(\$L)", it.module, it.name, names)
-                    .addStatement("return singleton")
-                    .build()
+            return builder.addStatement("return \$T.\$N(\$L)", it.module, it.name, names).build()
         }
-
-        builder.addStatement("singleton = new \$T(\$L)", dependencyModel.typeElement, names)
-
-        val postInitialization = IProcessor.postInitializationMethod(dependencyModel.typeElement)
-        if (postInitialization != null) {
-            builder.addStatement("singleton.\$N()", postInitialization.simpleName)
-        }
-
-        builder.addStatement("return singleton")
-
+        builder.addStatement("return new \$T(\$L)", dependencyModel.typeElement, names)
         return builder.build()
     }
 

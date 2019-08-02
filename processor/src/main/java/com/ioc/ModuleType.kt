@@ -1,48 +1,47 @@
 package com.ioc
 
-import com.ioc.common.asElement
-import com.ioc.common.asTypeElement
+import com.squareup.javapoet.CodeBlock
 import com.squareup.javapoet.TypeName
 import javax.lang.model.element.Element
-import javax.lang.model.element.ExecutableElement
-import javax.lang.model.element.TypeElement
-import javax.lang.model.type.TypeMirror
 
 /**
  * Created by sergeygolishnikov on 10/07/2017.
  */
 
-fun DependencyProvider.dependencyNames(): String {
-    return dependencyModels.joinToString { if (it.asTarget) "target" else it.generatedName }
+fun dependencyName(model: DependencyModel) = when {
+    model.isSingleton -> singletonProviderCode(model)
+    model.isLocal -> CodeBlock.of("target.\$N", model.fieldName)
+    else -> CodeBlock.of("\$N", model.generatedName)
 }
 
-fun SingletonWrapper.dependencyNames(): String {
-    return depencencies.joinToString { if (it.asTarget) "target" else it.generatedName }
+fun DependencyProvider.dependencyNames(): CodeBlock {
+    val blocks = dependencyModels.map { dependencyName(it) }
+    return CodeBlock.join(blocks, ",")
+    //return dependencyModels.joinToString { dependencyName(it) }
 }
 
-fun DependencyModel.dependencyNames(): String {
-    return depencencies.joinToString { if (it.asTarget) "target" else it.generatedName }
+fun SingletonWrapper.dependencyNames(): CodeBlock {
+    val blocks = dependencies.map { dependencyName(it) }
+    return CodeBlock.join(blocks, ",")
 }
 
-class DependencyProvider constructor(var method: Element,
-                                     var isSingleton: Boolean,
-                                     var module: TypeName) {
-    var methodType: ExecutableElement? = null
-    var returnTypes = mutableListOf<TypeMirror>()
+fun DependencyModel.dependencyNames(): CodeBlock {
+    val blocks = dependencies.map { dependencyName(it) }
+    return CodeBlock.join(blocks, ",")
+}
+
+class DependencyProvider(
+    var method: Element,
+    var isSingleton: Boolean,
+    var module: TypeName) {
+    var isKotlinModule = false
     var dependencyModels: MutableList<DependencyModel> = mutableListOf()
     var name = method.simpleName.toString()
     var named: String? = null
-    var scoped: String = ROOT_SCOPE
     var isMethod: Boolean = true
-    var isLocal: Boolean = false
-    var isFromTarget: Boolean = false
     var packageName: String = ""
 
-    fun returnType(): TypeElement {
-        return returnTypes[0].asElement().asTypeElement()
-    }
-
     override fun toString(): String {
-        return "DependencyProvider(method=$method, isSingleton=$isSingleton, module=$module, returnTypes=$returnTypes, dependencyModels=$dependencyModels, name='$name', named='$named')"
+        return "DependencyProvider(method=$method, isSingleton=$isSingleton, module=$module, dependencyModels=$dependencyModels, name='$name', named='$named')"
     }
 }

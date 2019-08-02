@@ -1,7 +1,8 @@
 package com.ioc.common
 
 import com.ioc.IProcessor
-import com.ioc.LazyAnonymousClass
+import com.ioc.IocLazy
+import com.ioc.IocProvider
 import com.ioc.ViewModelFactoryAnonymousClass
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.CodeBlock
@@ -9,42 +10,24 @@ import com.squareup.javapoet.ParameterizedTypeName
 import com.squareup.javapoet.TypeName
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeUnit
-import javax.inject.Provider
 import javax.lang.model.element.Element
 import javax.lang.model.type.TypeKind
 import javax.tools.Diagnostic
+import kotlinx.metadata.Flag
+import javax.lang.model.element.TypeElement
+
 
 /**
  * Created by sergeygolishnikov on 20/11/2017.
  */
-inline fun <T: Any, R> T?.transform(block: (T) -> R) : R? {
-    return if (this != null) block(this) else null
-}
 
-inline fun <T> List<T>?.forEachIfNotNull(predicate: (T) -> Unit) {
-    if (this == null) return
-    forEach(predicate)
-}
-
-
-fun weakType(parameterizedType: Element): TypeName {
-    return ParameterizedTypeName.get(ClassName.get(WeakReference::class.java), ClassName.get(parameterizedType.asType()))
-}
-
-val providerType = ClassName.get(Provider::class.java)
-val lazyType = ClassName.get(com.ioc.Lazy::class.java)
-val viewModelFactoryType = ClassName.bestGuess("android.arch.lifecycle.ViewModelProvider.Factory")
-val keepAnnotation = ClassName.bestGuess("android.support.annotation.Keep")
-val nonNullAnnotation = ClassName.bestGuess("android.support.annotation.NonNull")
-val viewModelProvidersType = ClassName.bestGuess("android.arch.lifecycle.ViewModelProviders")
-val viewModelType = ClassName.bestGuess("android.arch.lifecycle.ViewModel")
 val emptyCodBlock = CodeBlock.builder().build()
 
 fun Element.asTypeName(): TypeName {
     return ClassName.get(asType())
 }
 
-fun CodeBlock.add(codeBlock: CodeBlock) : CodeBlock {
+fun CodeBlock.add(codeBlock: CodeBlock): CodeBlock {
     return toBuilder().add(codeBlock).build()
 }
 
@@ -52,36 +35,23 @@ fun CodeBlock.add(block: CodeBlock.Builder): CodeBlock.Builder {
     return block.add(this)
 }
 
-fun lazy(typeMirror: Element): TypeName {
-    val type = ClassName.get(typeMirror.asType())
-    return ParameterizedTypeName.get(lazyType, type)
+fun Element.asLazyType(): TypeName {
+    return ParameterizedTypeName.get(iocLazyType, asTypeName())
 }
 
-fun lazyCodeBlock(type: Element, name: String, code: CodeBlock.Builder): CodeBlock.Builder {
-    return CodeBlock.builder().add("\$T \$N = \$L;\n",
-            lazy(type),
-            "lazy_$name",
-            LazyAnonymousClass.get(code.build(), name, type))
+fun Element.asProviderType(): TypeName {
+    return ParameterizedTypeName.get(iocProviderType, asTypeName())
+}
+
+fun Element.asWeakType(): TypeName {
+    return ParameterizedTypeName.get(weakType, asTypeName())
 }
 
 fun viewModelFactoryCode(name: String, code: CodeBlock.Builder): CodeBlock.Builder {
     return CodeBlock.builder().add("\$T \$N = \$L;\n",
-            viewModelFactoryType,
-            "factory_$name",
-            ViewModelFactoryAnonymousClass.get(code.build()))
-}
-
-fun weak(typeMirror: Element): TypeName {
-    val type = ClassName.get(typeMirror.asType())
-    return weakType(typeMirror)
-}
-
-fun weakCodeBlock(type: Element, name: String): CodeBlock {
-    return CodeBlock.builder().addStatement("\$T \$N = new \$T(\$N)",
-            weak(type),
-            "weak_$name",
-            weakType(type),
-            name).build()
+        viewModelFactoryType,
+        "factory_$name",
+        ViewModelFactoryAnonymousClass.get(code.build()))
 }
 
 
@@ -102,6 +72,11 @@ inline fun measure(message: String, block: () -> Unit) {
 }
 
 
+fun isModuleKotlinObject(typeElement: TypeElement): Boolean {
+    val kmClass = KotlinUtil.kmClassOf(typeElement) ?: return false
+    return Flag.Class.IS_OBJECT.invoke(kmClass.flags)
+}
+
 fun Element?.isSupportedType(): Boolean {
     this ?: return false
     if (asType().kind == TypeKind.ARRAY) return false
@@ -115,8 +90,6 @@ fun Element?.isSupportedType(): Boolean {
     if (asType().kind == TypeKind.OTHER) return false
     if (asType().kind == TypeKind.UNION) return false
     if (asType().kind == TypeKind.INTERSECTION) return false
-    if (asType().toString() == String::class.java.canonicalName) return false
-    if (TypeName.get(asType()).isBoxedPrimitive) return false
     if (asType().kind.isPrimitive) return false
     return true
 }

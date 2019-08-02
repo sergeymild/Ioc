@@ -8,7 +8,4 @@ import com.example.common.PreferencesInt
 interface BottomFactory
 
 
-class BottomAdHolderFactory constructor(
-        private val preferences: Preferences,
-        private val applicationConfigProvider: ApplicationConfigProvider
-): BottomFactory
+class BottomAdHolderFactory: BottomFactory

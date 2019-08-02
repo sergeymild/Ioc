@@ -5,7 +5,6 @@ package com.ioc
  */
 
 private val uniqueNames = HashSet<String>()
-private val uniqueSingletons = HashMap<String, MutableSet<String>>()
 
 /**
  * Generates a unique name using `base`. If `base` has not yet been added, it will be
@@ -14,10 +13,6 @@ private val uniqueSingletons = HashMap<String, MutableSet<String>>()
 
 fun resetUniqueNames() {
     uniqueNames.clear()
-}
-
-fun resetUniqueSingletons() {
-    uniqueSingletons.clear()
 }
 
 fun uniqueName(base: CharSequence): String {

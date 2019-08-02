@@ -3,18 +3,13 @@ package com.ioc
 import android.app.Activity
 import android.content.Context
 import com.google.common.truth.Truth
-import com.google.common.truth.Truth.assertAbout
 import com.google.testing.compile.JavaFileObjects
 import com.google.testing.compile.JavaSourcesSubject
 import com.google.testing.compile.JavaSourcesSubjectFactory.javaSources
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import java.lang.annotation.Retention
-import java.lang.annotation.RetentionPolicy
-import java.util.*
 import javax.inject.Inject
-import javax.inject.Scope
 import javax.tools.JavaFileObject
 
 /**
@@ -32,1599 +27,190 @@ class ScopesTest : BaseTest {
     @Throws(Exception::class)
     fun nestedInjection() {
 
-
         val session = JavaFileObjects.forSourceLines("test.Session",
-                "package test;",
-                Context::class.java.import(),
+            "package test;",
+            "public interface Session {",
+            "}")
 
-                "@PerActivity",
-                "public class Session {",
-                "   Session(BrowserUi browserUi) {}",
-                "}")
+        val secondScoped = JavaFileObjects.forSourceLines("test.SecondScoped",
+            "package test;",
+            "public class SecondScoped {",
+            "}")
 
-        val perActivity = JavaFileObjects.forSourceLines("test.PerActivity",
-                "package test;",
-                Context::class.java.import(),
-                Scope::class.java.import(),
-                Retention::class.java.import(),
-                RetentionPolicy::class.java.import(),
-
-                "@Scope",
-                "@Retention(RetentionPolicy.RUNTIME)",
-                "public @interface PerActivity {",
-                "}")
-
-        val browserUi = JavaFileObjects.forSourceLines("test.BrowserUi",
-                "package test;",
-                Context::class.java.import(),
-
-                "public abstract class BrowserUi {",
-                "   BrowserUi(Context context) {}",
-                "}")
-
-        val phoneBrowserUi = JavaFileObjects.forSourceLines("test.PhoneBrowserUi",
-                "package test;",
-                Context::class.java.import(),
-                Dependency::class.java.import(),
-
-                "@PerActivity",
-                "@Dependency",
-                "public class PhoneBrowserUi extends BrowserUi {",
-                "   PhoneBrowserUi(Context context) { super(context); }",
-                "}")
-
-
-        val activityFile = JavaFileObjects.forSourceLines("test.MainActivity",
-                "package test;",
-                "",
-                Inject::class.java.import(),
-                ScopeRoot::class.java.import(),
-                Activity::class.java.import(),
-                "",
-                "@ScopeRoot",
-                "@PerActivity",
-                "public class MainActivity extends Activity {",
-                "",
-                "   @Inject",
-                "   public Session session;",
-                "}")
-
-        val injectedFile = JavaFileObjects.forSourceLines("test.MainActivityInjector",
-                "package test;",
-                "",
-                keepAnnotation,
-                nonNullAnnotation,
-                ScopeFactory::class.java.import(),
-                "",
-                "@Keep",
-                "public final class MainActivityInjector {",
-                "",
-                "   @Keep",
-                "   public final void inject(@NonNull final MainActivity target) {",
-                "       cacheBrowserUi(target);",
-                "       injectSessionInSession(target);",
-                "   }",
-                "",
-                "   private final void cacheBrowserUi(@NonNull final MainActivity target) {",
-                "       PhoneBrowserUi browserUi = new PhoneBrowserUi(target);",
-                "       ScopeFactory.cache(target, \"PerActivity\", \"browserUi\", browserUi);",
-                "   }",
-                "",
-                "   private final void injectSessionInSession(@NonNull final MainActivity target) {",
-                "       PhoneBrowserUi browserUi = ScopeFactory.get(target, \"PerActivity\", \"browserUi\");",
-                "       Session session = new Session(browserUi);",
-                "       target.session = session;",
-                "       ScopeFactory.cache(target, \"PerActivity\", \"session\", session);",
-                "   }",
-                "}")
-
-        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-                .that(Arrays.asList(activityFile, session, perActivity, browserUi, phoneBrowserUi))
-                .processedWith(IProcessor())
-                .compilesWithoutError()
-                .and().generatesSources(injectedFile)
-    }
-
-    @Test
-    @Throws(Exception::class)
-    fun nestedInjection2() {
-
-
-        val session = JavaFileObjects.forSourceLines("test.Session",
-                "package test;",
-                Context::class.java.import(),
-
-                "@PerActivity",
-                "public class Session {",
-                "   Session(BrowserUi browserUi) {}",
-                "}")
+        val sessionImpl = JavaFileObjects.forSourceLines("test.SessionImplementation",
+            "package test;",
+            Dependency::class.java.import(),
+            "@Dependency",
+            "public class SessionImplementation implements Session {",
+            "   SessionImplementation(BrowserUi browserUi, SecondScoped secondScoped) {}",
+            "}")
 
         val logger = JavaFileObjects.forSourceLines("test.Logger",
-                "package test;",
-
-                "public class Logger {",
-                "}")
-
-        val perActivity = JavaFileObjects.forSourceLines("test.PerActivity",
-                "package test;",
-                Scope::class.java.import(),
-                Retention::class.java.import(),
-                RetentionPolicy::class.java.import(),
-
-                "@Scope",
-                "@Retention(RetentionPolicy.RUNTIME)",
-                "public @interface PerActivity {",
-                "}")
+            "package test;",
+            Dependency::class.java.import(),
+            "@Dependency",
+            "public class Logger {",
+            "   Logger(BrowserUi browserUi) {}",
+            "}")
 
         val browserUi = JavaFileObjects.forSourceLines("test.BrowserUi",
-                "package test;",
-                Context::class.java.import(),
+            "package test;",
+            Context::class.java.import(),
 
-                "public abstract class BrowserUi {",
-                "   BrowserUi(Context context) {}",
-                "}")
+            "public abstract class BrowserUi {",
+            "   BrowserUi(Context context) {}",
+            "}")
 
         val phoneBrowserUi = JavaFileObjects.forSourceLines("test.PhoneBrowserUi",
-                "package test;",
-                Context::class.java.import(),
-                Dependency::class.java.import(),
+            "package test;",
+            Context::class.java.import(),
+            Dependency::class.java.import(),
 
-                "@PerActivity",
-                "@Dependency",
-                "public class PhoneBrowserUi extends BrowserUi {",
-                "   PhoneBrowserUi(Context context) { super(context); }",
-                "}")
+            "@Dependency",
+            "public class PhoneBrowserUi extends BrowserUi {",
+            "   PhoneBrowserUi(Context context) { super(context); }",
+            "}")
 
 
         val activityFile = JavaFileObjects.forSourceLines("test.MainActivity",
-                "package test;",
-                "",
-                Inject::class.java.import(),
-                ScopeRoot::class.java.import(),
-                Activity::class.java.import(),
-                "",
-                "@ScopeRoot",
-                "@PerActivity",
-                "public class MainActivity extends Activity {",
-                "",
-                "   @Inject",
-                "   public Session session;",
-                "}")
+            "package test;",
+            "",
+            Inject::class.java.import(),
+            LocalScope::class.java.import(),
+            Activity::class.java.import(),
+            "",
+            "public class MainActivity extends Activity {",
+            "",
+            "   @Inject",
+            "   public Session session;",
 
-        val secondActivityFile = JavaFileObjects.forSourceLines("test.SecondActivity",
-                "package test;",
-                "",
-                Inject::class.java.import(),
-                ScopeRoot::class.java.import(),
-                Activity::class.java.import(),
-                "",
-                "@ScopeRoot",
-                "@PerActivity",
-                "public class SecondActivity extends Activity {",
-                "",
-                "   @Inject",
-                "   public Session session;",
-                "}")
+            "   @Inject",
+            "   public Logger logger;",
 
-        val injectedFile = JavaFileObjects.forSourceLines("test.SecondActivityInjector",
-                "package test;",
-                "",
-                keepAnnotation,
-                nonNullAnnotation,
-                ScopeFactory::class.java.import(),
-                "",
-                "@Keep",
-                "public final class SecondActivityInjector {",
-                "",
-                "   @Keep",
-                "   public final void inject(@NonNull final SecondActivity target) {",
-                "       cacheBrowserUi(target);",
-                "       injectSessionInSession(target);",
-                "   }",
-                "",
-                "   private final void cacheBrowserUi(@NonNull final SecondActivity target) {",
-                "       PhoneBrowserUi browserUi = new PhoneBrowserUi(target);",
-                "       ScopeFactory.cache(target, \"PerActivity\", \"browserUi\", browserUi);",
-                "   }",
-                "",
-                "   private final void injectSessionInSession(@NonNull final SecondActivity target) {",
-                "       PhoneBrowserUi browserUi = ScopeFactory.get(target, \"PerActivity\", \"browserUi\");",
-                "       Session session2 = new Session(browserUi);",
-                "       target.session = session2;",
-                "       ScopeFactory.cache(target, \"PerActivity\", \"session\", session2);",
-                "   }",
-                "}")
+            "   @LocalScope",
+            "   @Inject",
+            "   public BrowserUi browserUi;",
 
-        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-                .that(Arrays.asList(activityFile, secondActivityFile, session, perActivity, logger, browserUi, phoneBrowserUi))
-                .processedWith(IProcessor())
-                .compilesWithoutError()
-                .and().generatesSources(injectedFile)
-    }
+            "   @LocalScope",
+            "   @Inject",
+            "   private SecondScoped secondScoped;",
 
-    @Test
-    @Throws(Exception::class)
-    fun scopedDependency() {
-
-
-        val session = JavaFileObjects.forSourceLines("test.Session",
-                "package test;",
-                Context::class.java.import(),
-
-                "@PerActivity",
-                "public class Session {",
-                "   Session(BrowserUi browserUi) {}",
-                "}")
-
-        val perActivity = JavaFileObjects.forSourceLines("test.PerActivity",
-                "package test;",
-                Context::class.java.import(),
-                Scope::class.java.import(),
-                Retention::class.java.import(),
-                RetentionPolicy::class.java.import(),
-
-                "@Scope",
-                "@Retention(RetentionPolicy.RUNTIME)",
-                "public @interface PerActivity {",
-                "}")
-
-        val browserUi = JavaFileObjects.forSourceLines("test.BrowserUi",
-                "package test;",
-                Context::class.java.import(),
-
-                "public abstract class BrowserUi {",
-                "   BrowserUi(Context context) {}",
-                "}")
-
-        val phoneBrowserUi = JavaFileObjects.forSourceLines("test.PhoneBrowserUi",
-                "package test;",
-                Context::class.java.import(),
-                Dependency::class.java.import(),
-
-                "@PerActivity",
-                "@Dependency",
-                "public class PhoneBrowserUi extends BrowserUi {",
-                "   PhoneBrowserUi(Context context) { super(context); }",
-                "}")
-
-
-        val activityFile = JavaFileObjects.forSourceLines("test.MainActivity",
-                "package test;",
-                "",
-                ScopeRoot::class.java.import(),
-                Inject::class.java.import(),
-                Activity::class.java.import(),
-                "",
-                "@ScopeRoot",
-                "@PerActivity",
-                "public class MainActivity extends Activity {",
-                "",
-                "   @Inject",
-                "   public Session session;",
-                "",
-                "   @Inject",
-                "   public BrowserUi browser;",
-                "}")
+            "   public void setSecondScoped(SecondScoped secondScoped) {};",
+            "   public SecondScoped getSecondScoped() { return null; };",
+            "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.MainActivityInjector",
-                "package test;",
-                "",
-                keepAnnotation,
-                nonNullAnnotation,
-                ScopeFactory::class.java.import(),
-                "",
-                "@Keep",
-                "public final class MainActivityInjector {",
-                "",
-                "   @Keep",
-                "   public final void inject(@NonNull final MainActivity target) {",
-                "       injectBrowserUiInBrowser(target);",
-                "       injectSessionInSession(target);",
-                "   }",
-                "",
-                "   private final void injectBrowserUiInBrowser(@NonNull final MainActivity target) {",
-                "       PhoneBrowserUi browserUi2 = new PhoneBrowserUi(target);",
-                "       target.browser = browserUi2;",
-                "       ScopeFactory.cache(target, \"PerActivity\", \"browserUi\", browserUi2);",
-                "   }",
-                "",
-                "   private final void injectSessionInSession(@NonNull final MainActivity target) {",
-                "       PhoneBrowserUi browserUi = ScopeFactory.get(target, \"PerActivity\", \"browserUi\");",
-                "       Session session = new Session(browserUi);",
-                "       target.session = session;",
-                "       ScopeFactory.cache(target, \"PerActivity\", \"session\", session);",
-                "   }",
-                "}")
-
-        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-                .that(Arrays.asList(activityFile, session, perActivity, browserUi, phoneBrowserUi))
-                .processedWith(IProcessor())
-                .compilesWithoutError()
-                .and().generatesSources(injectedFile)
-    }
-
-    @Test
-    @Throws(Exception::class)
-    fun parentScope2() {
-
-
-        val session = JavaFileObjects.forSourceLines("test.Session",
-                "package test;",
-                Context::class.java.import(),
-
-                "@PerActivity",
-                "public class Session {",
-                "   Session(BrowserUi browserUi) {}",
-                "}")
-
-        val perActivity = JavaFileObjects.forSourceLines("test.PerActivity",
-                "package test;",
-                Context::class.java.import(),
-                Scope::class.java.import(),
-                Retention::class.java.import(),
-                RetentionPolicy::class.java.import(),
-
-                "@Scope",
-                "@Retention(RetentionPolicy.RUNTIME)",
-                "public @interface PerActivity {",
-                "}")
-
-        val browserUi = JavaFileObjects.forSourceLines("test.BrowserUi",
-                "package test;",
-                Context::class.java.import(),
-
-                "public abstract class BrowserUi {",
-                "   BrowserUi(Context context) {}",
-                "}")
-
-        val phoneBrowserUi = JavaFileObjects.forSourceLines("test.PhoneBrowserUi",
-                "package test;",
-                Context::class.java.import(),
-                Dependency::class.java.import(),
-
-                "@PerActivity",
-                "@Dependency",
-                "public class PhoneBrowserUi extends BrowserUi {",
-                "   PhoneBrowserUi(Context context) { super(context); }",
-                "}")
-
-        val parentActivityFile = JavaFileObjects.forSourceLines("test.ParentActivity",
-                "package test;",
-                "",
-                ScopeRoot::class.java.import(),
-                Inject::class.java.import(),
-                Activity::class.java.import(),
-                "",
-                "public class ParentActivity extends Activity {",
-                "",
-                "   @Inject",
-                "   public BrowserUi browser;",
-                "}")
-
-        val activityFile = JavaFileObjects.forSourceLines("test.MainActivity",
-                "package test;",
-                "",
-                ScopeRoot::class.java.import(),
-                Inject::class.java.import(),
-                Activity::class.java.import(),
-                "",
-                "@ScopeRoot",
-                "@PerActivity",
-                "public class MainActivity extends ParentActivity {",
-                "",
-                "   @Inject",
-                "   public Session session;",
-                "}")
-
-        val injectedFile = JavaFileObjects.forSourceLines("test.MainActivityInjector",
-                "package test;",
-                "",
-                keepAnnotation,
-                nonNullAnnotation,
-                ScopeFactory::class.java.import(),
-                "",
-                "@Keep",
-                "public final class MainActivityInjector {",
-                "",
-                "   @Keep",
-                "   public final void inject(@NonNull final MainActivity target) {",
-                "       new ParentActivityInjector().inject(target);",
-                "       injectSessionInSession(target);",
-                "   }",
-                "",
-                "   private final void injectSessionInSession(@NonNull final MainActivity target) {",
-                "       PhoneBrowserUi browserUi = ScopeFactory.get(target, \"PerActivity\", \"browserUi\");",
-                "       Session session = new Session(browserUi);",
-                "       target.session = session;",
-                "       ScopeFactory.cache(target, \"PerActivity\", \"session\", session);",
-                "   }",
-                "}")
-
-        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-                .that(Arrays.asList(activityFile, parentActivityFile, session, perActivity, browserUi, phoneBrowserUi))
-                .processedWith(IProcessor())
-                .compilesWithoutError()
-                .and().generatesSources(injectedFile)
-    }
-
-
-    @Test
-    @Throws(Exception::class)
-    fun injectScopedDependencyFromParents() {
-
-
-        val session = JavaFileObjects.forSourceLines("test.Session",
-                "package test;",
-                Context::class.java.import(),
-
-                "@PerActivity",
-                "public class Session {",
-                "   Session(BrowserUi browserUi, Logger logger) {}",
-                "}")
-
-        val logger = JavaFileObjects.forSourceLines("test.Logger",
-                "package test;",
-                Context::class.java.import(),
-
-                "@PerActivity",
-                "public class Logger {",
-                "}")
-
-        val perActivity = JavaFileObjects.forSourceLines("test.PerActivity",
-                "package test;",
-                Context::class.java.import(),
-                Scope::class.java.import(),
-                Retention::class.java.import(),
-                RetentionPolicy::class.java.import(),
-
-                "@Scope",
-                "@Retention(RetentionPolicy.RUNTIME)",
-                "public @interface PerActivity {",
-                "}")
-
-        val browserUi = JavaFileObjects.forSourceLines("test.BrowserUi",
-                "package test;",
-                Context::class.java.import(),
-
-                "public abstract class BrowserUi {",
-                "   BrowserUi(Context context) {}",
-                "}")
-
-        val phoneBrowserUi = JavaFileObjects.forSourceLines("test.PhoneBrowserUi",
-                "package test;",
-                Context::class.java.import(),
-                Dependency::class.java.import(),
-
-                "@PerActivity",
-                "@Dependency",
-                "public class PhoneBrowserUi extends BrowserUi {",
-                "   PhoneBrowserUi(Context context) { super(context); }",
-                "}")
-
-        val parentParentActivityFile = JavaFileObjects.forSourceLines("test.SuperActivity",
-                "package test;",
-                "",
-                ScopeRoot::class.java.import(),
-                Inject::class.java.import(),
-                Activity::class.java.import(),
-                "",
-                "public class SuperActivity extends Activity {",
-                "",
-                "   @Inject",
-                "   public Logger logger;",
-                "}")
-
-        val parentActivityFile = JavaFileObjects.forSourceLines("test.ParentActivity",
-                "package test;",
-                "",
-                ScopeRoot::class.java.import(),
-                Inject::class.java.import(),
-                Activity::class.java.import(),
-                "",
-                "public class ParentActivity extends SuperActivity {",
-                "",
-                "   @Inject",
-                "   public BrowserUi browser;",
-                "}")
-
-        val activityFile = JavaFileObjects.forSourceLines("test.MainActivity",
-                "package test;",
-                "",
-                ScopeRoot::class.java.import(),
-                Inject::class.java.import(),
-                Activity::class.java.import(),
-                "",
-                "@ScopeRoot",
-                "@PerActivity",
-                "public class MainActivity extends ParentActivity {",
-                "",
-                "   @Inject",
-                "   public Session session;",
-                "}")
-
-        val injectedFile = JavaFileObjects.forSourceLines("test.MainActivityInjector",
-                "package test;",
-                "",
-                keepAnnotation,
-                nonNullAnnotation,
-                ScopeFactory::class.java.import(),
-                "",
-                "@Keep",
-                "public final class MainActivityInjector {",
-                "",
-                "   @Keep",
-                "   public final void inject(@NonNull final MainActivity target) {",
-                "       new ParentActivityInjector().inject(target);",
-                "       injectSessionInSession(target);",
-                "   }",
-                "",
-                "   private final void injectSessionInSession(@NonNull final MainActivity target) {",
-                "       PhoneBrowserUi browserUi = ScopeFactory.get(target, \"PerActivity\", \"browserUi\");",
-                "       Logger logger = ScopeFactory.get(target, \"PerActivity\", \"logger\");",
-                "       Session session = new Session(browserUi, logger);",
-                "       target.session = session;",
-                "       ScopeFactory.cache(target, \"PerActivity\", \"session\", session);",
-                "   }",
-                "}")
-
-        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-                .that(Arrays.asList(activityFile, parentParentActivityFile, logger, parentActivityFile, session, perActivity, browserUi, phoneBrowserUi))
-                .processedWith(IProcessor())
-                .compilesWithoutError()
-                .and().generatesSources(injectedFile)
-    }
-
-    @Test
-    @Throws(Exception::class)
-    fun injectScopedDependencyFromParents2() {
-
-
-        val session = JavaFileObjects.forSourceLines("test.Session",
-                "package test;",
-                Context::class.java.import(),
-
-                "@PerActivity",
-                "public class Session {",
-                "   Session(BrowserUi browserUi, Logger logger) {}",
-                "}")
-
-        val logger = JavaFileObjects.forSourceLines("test.Logger",
-                "package test;",
-                Context::class.java.import(),
-
-                "@PerActivity",
-                "public class Logger {",
-                "}")
-
-        val perActivity = JavaFileObjects.forSourceLines("test.PerActivity",
-                "package test;",
-                Context::class.java.import(),
-                Scope::class.java.import(),
-                Retention::class.java.import(),
-                RetentionPolicy::class.java.import(),
-
-                "@Scope",
-                "@Retention(RetentionPolicy.RUNTIME)",
-                "public @interface PerActivity {",
-                "}")
-
-        val browserUi = JavaFileObjects.forSourceLines("test.BrowserUi",
-                "package test;",
-                Context::class.java.import(),
-
-                "public abstract class BrowserUi {",
-                "   BrowserUi(Context context) {}",
-                "}")
-
-        val phoneBrowserUi = JavaFileObjects.forSourceLines("test.PhoneBrowserUi",
-                "package test;",
-                Context::class.java.import(),
-                Dependency::class.java.import(),
-
-                "@PerActivity",
-                "@Dependency",
-                "public class PhoneBrowserUi extends BrowserUi {",
-                "   PhoneBrowserUi(Context context) { super(context); }",
-                "}")
-
-        val parentParentActivityFile = JavaFileObjects.forSourceLines("test.SuperActivity",
-                "package test;",
-                "",
-                ScopeRoot::class.java.import(),
-                Inject::class.java.import(),
-                Activity::class.java.import(),
-                "",
-                "public class SuperActivity extends Activity {",
-                "",
-                "   @Inject",
-                "   public Logger logger;",
-                "}")
-
-        val parentActivityFile = JavaFileObjects.forSourceLines("test.ParentActivity",
-                "package test;",
-                "",
-                ScopeRoot::class.java.import(),
-                Inject::class.java.import(),
-                Activity::class.java.import(),
-                "",
-                "public class ParentActivity extends SuperActivity {",
-                "",
-                "   @Inject",
-                "   public BrowserUi browser;",
-                "}")
-
-        val activityFile = JavaFileObjects.forSourceLines("test.MainActivity",
-                "package test;",
-                "",
-                ScopeRoot::class.java.import(),
-                Inject::class.java.import(),
-                Activity::class.java.import(),
-                "",
-                "@ScopeRoot",
-                "@PerActivity",
-                "public class MainActivity extends ParentActivity {",
-                "",
-                "   @Inject",
-                "   public Session session;",
-                "}")
-
-        //SuperActivityInjector
-        val injectedFile = JavaFileObjects.forSourceLines("test.ParentActivityInjector",
-                "package test;",
-                "",
-                keepAnnotation,
-                nonNullAnnotation,
-                ScopeFactory::class.java.import(),
-                "",
-                "@Keep",
-                "public final class ParentActivityInjector {",
-                "",
-                "   @Keep",
-                "   public final void inject(@NonNull final ParentActivity target) {",
-                "       new SuperActivityInjector().inject(target);",
-                "       injectBrowserUiInBrowser(target);",
-                "   }",
-                "",
-                "   private final void injectBrowserUiInBrowser(@NonNull final ParentActivity target) {",
-                "       PhoneBrowserUi browserUi2 = new PhoneBrowserUi(target);",
-                "       target.browser = browserUi2;",
-                "       ScopeFactory.cache(target, \"PerActivity\", \"browserUi\", browserUi2);",
-                "   }",
-                "}")
-
-        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-                .that(Arrays.asList(activityFile, parentParentActivityFile, logger, parentActivityFile, session, perActivity, browserUi, phoneBrowserUi))
-                .processedWith(IProcessor())
-                .compilesWithoutError()
-                .and().generatesSources(injectedFile)
-    }
-
-    @Test
-    @Throws(Exception::class)
-    fun injectScopedDependencyFromParents3() {
-
-
-        val session = JavaFileObjects.forSourceLines("test.Session",
-                "package test;",
-                Context::class.java.import(),
-
-                "@PerActivity",
-                "public class Session {",
-                "   Session(BrowserUi browserUi, Logger logger) {}",
-                "}")
-
-        val logger = JavaFileObjects.forSourceLines("test.Logger",
-                "package test;",
-                Context::class.java.import(),
-
-                "@PerActivity",
-                "public class Logger {",
-                "}")
-
-        val perActivity = JavaFileObjects.forSourceLines("test.PerActivity",
-                "package test;",
-                Context::class.java.import(),
-                Scope::class.java.import(),
-                Retention::class.java.import(),
-                RetentionPolicy::class.java.import(),
-
-                "@Scope",
-                "@Retention(RetentionPolicy.RUNTIME)",
-                "public @interface PerActivity {",
-                "}")
-
-        val browserUi = JavaFileObjects.forSourceLines("test.BrowserUi",
-                "package test;",
-                Context::class.java.import(),
-
-                "public abstract class BrowserUi {",
-                "   BrowserUi(Context context) {}",
-                "}")
-
-        val phoneBrowserUi = JavaFileObjects.forSourceLines("test.PhoneBrowserUi",
-                "package test;",
-                Context::class.java.import(),
-                Dependency::class.java.import(),
-
-                "@PerActivity",
-                "@Dependency",
-                "public class PhoneBrowserUi extends BrowserUi {",
-                "   PhoneBrowserUi(Context context) { super(context); }",
-                "}")
-
-        val parentParentActivityFile = JavaFileObjects.forSourceLines("test.SuperActivity",
-                "package test;",
-                "",
-                ScopeRoot::class.java.import(),
-                Inject::class.java.import(),
-                Activity::class.java.import(),
-                "",
-                "public class SuperActivity extends Activity {",
-                "",
-                "   @Inject",
-                "   public Logger logger;",
-                "}")
-
-        val parentActivityFile = JavaFileObjects.forSourceLines("test.ParentActivity",
-                "package test;",
-                "",
-                ScopeRoot::class.java.import(),
-                Inject::class.java.import(),
-                Activity::class.java.import(),
-                "",
-                "public class ParentActivity extends SuperActivity {",
-                "",
-                "   @Inject",
-                "   public BrowserUi browser;",
-                "}")
-
-        val activityFile = JavaFileObjects.forSourceLines("test.MainActivity",
-                "package test;",
-                "",
-                ScopeRoot::class.java.import(),
-                Inject::class.java.import(),
-                Activity::class.java.import(),
-                "",
-                "@ScopeRoot",
-                "@PerActivity",
-                "public class MainActivity extends ParentActivity {",
-                "",
-                "   @Inject",
-                "   public Session session;",
-                "}")
-
-
-        val injectedFile = JavaFileObjects.forSourceLines("test.SuperActivityInjector",
-                "package test;",
-                "",
-                keepAnnotation,
-                nonNullAnnotation,
-                ScopeFactory::class.java.import(),
-                "",
-                "@Keep",
-                "public final class SuperActivityInjector {",
-                "",
-                "   @Keep",
-                "   public final void inject(@NonNull final SuperActivity target) {",
-                "       injectLoggerInLogger(target);",
-                "   }",
-                "",
-                "   private final void injectLoggerInLogger(@NonNull final SuperActivity target) {",
-                "       Logger logger2 = new Logger();",
-                "       target.logger = logger2;",
-                "       ScopeFactory.cache(target, \"PerActivity\", \"logger\", logger2);",
-                "   }",
-                "}")
-
-        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-                .that(Arrays.asList(activityFile, parentParentActivityFile, logger, parentActivityFile, session, perActivity, browserUi, phoneBrowserUi))
-                .processedWith(IProcessor())
-                .compilesWithoutError()
-                .and().generatesSources(injectedFile)
-    }
-
-    @Test
-    @Throws(Exception::class)
-    fun injectScopedDependencyFromParents4() {
-
-
-        val session = JavaFileObjects.forSourceLines("test.Session",
-                "package test;",
-                Context::class.java.import(),
-
-                "@PerActivity",
-                "public class Session {",
-                "   Session(BrowserUi browserUi, Logger logger) {}",
-                "}")
-
-        val logger = JavaFileObjects.forSourceLines("test.Logger",
-                "package test;",
-                Context::class.java.import(),
-
-                "@PerActivity",
-                "public class Logger {",
-                "}")
-
-        val perActivity = JavaFileObjects.forSourceLines("test.PerActivity",
-                "package test;",
-                Context::class.java.import(),
-                Scope::class.java.import(),
-                Retention::class.java.import(),
-                RetentionPolicy::class.java.import(),
-
-                "@Scope",
-                "@Retention(RetentionPolicy.RUNTIME)",
-                "public @interface PerActivity {",
-                "}")
-
-        val browserUi = JavaFileObjects.forSourceLines("test.BrowserUi",
-                "package test;",
-                Context::class.java.import(),
-
-                "public abstract class BrowserUi {",
-                "   BrowserUi(Context context) {}",
-                "}")
-
-        val phoneBrowserUi = JavaFileObjects.forSourceLines("test.PhoneBrowserUi",
-                "package test;",
-                Context::class.java.import(),
-                Dependency::class.java.import(),
-
-                "@PerActivity",
-                "@Dependency",
-                "public class PhoneBrowserUi extends BrowserUi {",
-                "   PhoneBrowserUi(Context context) { super(context); }",
-                "}")
-
-        val parentParentActivityFile = JavaFileObjects.forSourceLines("test.SuperActivity",
-                "package test;",
-                "",
-                ScopeRoot::class.java.import(),
-                Inject::class.java.import(),
-                Activity::class.java.import(),
-                "",
-                "public class SuperActivity extends Activity {",
-                "",
-                "   @Inject",
-                "   public Logger logger;",
-                "}")
-
-        val parentActivityFile = JavaFileObjects.forSourceLines("test.ParentActivity",
-                "package test;",
-                "",
-                ScopeRoot::class.java.import(),
-                Inject::class.java.import(),
-                Activity::class.java.import(),
-                "",
-                "public class ParentActivity extends SuperActivity {",
-                "",
-                "   @Inject",
-                "   public BrowserUi browser;",
-                "}")
-
-
-        val injectedFile = JavaFileObjects.forSourceLines("test.ParentActivityInjector",
-                "package test;",
-                "",
-                keepAnnotation,
-                nonNullAnnotation,
-                "",
-                "@Keep",
-                "public final class ParentActivityInjector {",
-                "",
-                "   @Keep",
-                "   public final void inject(@NonNull final ParentActivity target) {",
-                "       new SuperActivityInjector().inject(target);",
-                "       injectBrowserUiInBrowser(target);",
-                "   }",
-                "",
-                "   private final void injectBrowserUiInBrowser(@NonNull final ParentActivity target) {",
-                "       PhoneBrowserUi browserUi = new PhoneBrowserUi(target);",
-                "       target.browser = browserUi;",
-                "   }",
-                "}")
-
-        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-                .that(Arrays.asList(parentParentActivityFile, logger, parentActivityFile, session, perActivity, browserUi, phoneBrowserUi))
-                .processedWith(IProcessor())
-                .compilesWithoutError()
-                .and().generatesSources(injectedFile)
-    }
-
-    @Test
-    @Throws(Exception::class)
-    fun injectScopedDependencyFromParents5() {
-
-
-        val session = JavaFileObjects.forSourceLines("test.Session",
-                "package test;",
-                Context::class.java.import(),
-
-                "@PerActivity",
-                "public class Session {",
-                "   Session(BrowserUi browserUi, Logger logger) {}",
-                "}")
-
-        val logger = JavaFileObjects.forSourceLines("test.Logger",
-                "package test;",
-                Context::class.java.import(),
-
-                "@PerActivity",
-                "public class Logger {",
-                "}")
-
-        val perActivity = JavaFileObjects.forSourceLines("test.PerActivity",
-                "package test;",
-                Context::class.java.import(),
-                Scope::class.java.import(),
-                Retention::class.java.import(),
-                RetentionPolicy::class.java.import(),
-
-                "@Scope",
-                "@Retention(RetentionPolicy.RUNTIME)",
-                "public @interface PerActivity {",
-                "}")
-
-        val browserUi = JavaFileObjects.forSourceLines("test.BrowserUi",
-                "package test;",
-                Context::class.java.import(),
-
-                "public abstract class BrowserUi {",
-                "   BrowserUi(Context context) {}",
-                "}")
-
-        val phoneBrowserUi = JavaFileObjects.forSourceLines("test.PhoneBrowserUi",
-                "package test;",
-                Context::class.java.import(),
-                Dependency::class.java.import(),
-
-                "@PerActivity",
-                "@Dependency",
-                "public class PhoneBrowserUi extends BrowserUi {",
-                "   PhoneBrowserUi(Context context) { super(context); }",
-                "}")
-
-        val parentParentActivityFile = JavaFileObjects.forSourceLines("test.SuperActivity",
-                "package test;",
-                "",
-                ScopeRoot::class.java.import(),
-                Inject::class.java.import(),
-                Activity::class.java.import(),
-                "",
-                "public class SuperActivity extends Activity {",
-                "",
-                "   @Inject",
-                "   public Logger logger;",
-                "}")
-
-        val parentActivityFile = JavaFileObjects.forSourceLines("test.ParentActivity",
-                "package test;",
-                "",
-                ScopeRoot::class.java.import(),
-                Inject::class.java.import(),
-                Activity::class.java.import(),
-                "",
-                "public class ParentActivity extends SuperActivity {",
-                "",
-                "   @Inject",
-                "   public BrowserUi browser;",
-                "}")
-
-
-        val injectedFile = JavaFileObjects.forSourceLines("test.SuperActivityInjector",
-                "package test;",
-                "",
-                keepAnnotation,
-                nonNullAnnotation,
-                "",
-                "@Keep",
-                "public final class SuperActivityInjector {",
-                "",
-                "   @Keep",
-                "   public final void inject(@NonNull final SuperActivity target) {",
-                "       injectLoggerInLogger(target);",
-                "   }",
-                "",
-                "   private final void injectLoggerInLogger(@NonNull final SuperActivity target) {",
-                "       Logger logger = new Logger();",
-                "       target.logger = logger;",
-                "   }",
-                "}")
-
-        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-                .that(Arrays.asList(parentParentActivityFile, logger, parentActivityFile, session, perActivity, browserUi, phoneBrowserUi))
-                .processedWith(IProcessor())
-                .compilesWithoutError()
-                .and().generatesSources(injectedFile)
-    }
-
-    @Test
-    @Throws(Exception::class)
-    fun scopeOnMethod() {
-
-
-        val session = JavaFileObjects.forSourceLines("test.Session",
-                "package test;",
-                Context::class.java.import(),
-
-                "public class Session {",
-                "",
-                "}")
-
-        val sessionModule = JavaFileObjects.forSourceLines("test.SessionModule",
-                "package test;",
-                Context::class.java.import(),
-                Dependency::class.java.import(),
-
-                "public class SessionModule {",
-                "   @PerActivity",
-                "   @Dependency",
-                "   public static Session session() { return null; }",
-                "",
-                "}")
-
-
-
-        val perActivity = JavaFileObjects.forSourceLines("test.PerActivity",
-                "package test;",
-                Context::class.java.import(),
-                Scope::class.java.import(),
-                Retention::class.java.import(),
-                RetentionPolicy::class.java.import(),
-
-                "@Scope",
-                "@Retention(RetentionPolicy.RUNTIME)",
-                "public @interface PerActivity {",
-                "}")
-
-
-        val activityFile = JavaFileObjects.forSourceLines("test.MainActivity",
-                "package test;",
-                "",
-                Inject::class.java.import(),
-                ScopeRoot::class.java.import(),
-                Activity::class.java.import(),
-                "",
-                "@ScopeRoot",
-                "@PerActivity",
-                "public class MainActivity extends Activity {",
-                "",
-                "   @Inject",
-                "   public Session session;",
-                "}")
-
-        val injectedFile = JavaFileObjects.forSourceLines("test.MainActivityInjector",
-                "package test;",
-                "",
-                keepAnnotation,
-                nonNullAnnotation,
-                ScopeFactory::class.java.import(),
-                "",
-                "@Keep",
-                "public final class MainActivityInjector {",
-                "",
-                "   @Keep",
-                "   public final void inject(@NonNull final MainActivity target) {",
-                "       injectSessionInSession(target);",
-                "   }",
-                "",
-                "   private final void injectSessionInSession(@NonNull final MainActivity target) {",
-                "       Session session = SessionModule.session();",
-                "       target.session = session;",
-                "       ScopeFactory.cache(target, \"PerActivity\", \"session\", session);",
-                "   }",
-                "}")
+            "package test;",
+            "",
+            "import $keep",
+            "import $nonNull",
+            "",
+            "@Keep",
+            "public final class MainActivityInjector {",
+            "",
+            "   @Keep",
+            "   public final void inject(@NonNull final MainActivity target) {",
+            "       injectSecondScopedInSecondScoped(target);",
+            "       injectBrowserUiInBrowserUi(target);",
+            "       injectSessionInSession(target);",
+            "       injectLoggerInLogger(target);",
+            "   }",
+            "",
+            "   private final void injectSecondScopedInSecondScoped(@NonNull final MainActivity target) {",
+            "       SecondScoped secondScoped = new SecondScoped();",
+            "       target.setSecondScoped(secondScoped);",
+            "   }",
+            "",
+            "   private final void injectBrowserUiInBrowserUi(@NonNull final MainActivity target) {",
+            "       BrowserUi browserUi2 = new PhoneBrowserUi(target);",
+            "       target.browserUi = browserUi2;",
+            "   }",
+            "",
+            "   private final void injectSessionInSession(@NonNull final MainActivity target) {",
+            "       Session session = new SessionImplementation(target.browserUi, target.getSecondScoped());",
+            "       target.session = session;",
+            "   }",
+            "",
+            "   private final void injectLoggerInLogger(@NonNull final MainActivity target) {",
+            "       Logger logger = new Logger(target.browserUi);",
+            "       target.logger = logger;",
+            "   }",
+            "}")
 
         Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-                .that(Arrays.asList(activityFile, session, perActivity, sessionModule))
-                .processedWith(IProcessor())
-                .compilesWithoutError()
-                .and().generatesSources(injectedFile)
+            .that(listOf(activityFile, sessionImpl, secondScoped, logger, session, browserUi, phoneBrowserUi))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile)
     }
 
     @Test
     @Throws(Exception::class)
-    fun scopeOnMethodAndPassToConstructor() {
+    fun localScopeInConstructor() {
+        val alohabrowser = JavaFileObjects.forSourceLines("test.AlohaBrowserUi",
+            "package test;",
+            "public class AlohaBrowserUi {",
+            "}")
+
+        val autoCompleteListener = JavaFileObjects.forSourceLines("test.AutoCompleteListener",
+            "package test;",
+            "public interface AutoCompleteListener {",
+            "}")
+
+        val autoCompleteListenerImpl = JavaFileObjects.forSourceLines("test.AutoCompleteListenerImpl",
+            "package test;",
+            Dependency::class.java.import(),
+            "@Dependency",
+            "public class AutoCompleteListenerImpl implements AutoCompleteListener {",
+            "   public AutoCompleteListenerImpl(AlohaBrowserUi browserUi) {}",
+            "}")
+
+        val autocompleteController = JavaFileObjects.forSourceLines("test.AutocompleteController",
+            "package test;",
+            "public class AutocompleteController {",
+            "   public AutocompleteController(AutoCompleteListener listener) {}",
+            "}")
 
 
-        val session = JavaFileObjects.forSourceLines("test.Session",
-                "package test;",
-                Context::class.java.import(),
-
-                "public class Session {",
-                "",
-                "}")
-
-        val sessionModule = JavaFileObjects.forSourceLines("test.SessionModule",
-                "package test;",
-                Context::class.java.import(),
-                Dependency::class.java.import(),
-
-                "public class SessionModule {",
-                "   @PerActivity",
-                "   @Dependency",
-                "   public static Session session() { return null; }",
-                "",
-                "}")
-
-        val browserUi = JavaFileObjects.forSourceLines("test.BrowserUi",
-                "package test;",
-                Context::class.java.import(),
-
-                "@PerActivity",
-                "public class BrowserUi {",
-                "   BrowserUi(@PerActivity Session session) {}",
-                "}")
+        val logger = JavaFileObjects.forSourceLines("test.AddressBarListenerImpl",
+            "package test;",
+            LocalScope::class.java.import(),
+            Inject::class.java.import(),
+            "public class AddressBarListenerImpl {",
+            "   @Inject",
+            "   public AutocompleteController controller;",
+            "   @LocalScope",
+            "   private AlohaBrowserUi browserUi;",
+            "   AddressBarListenerImpl(AlohaBrowserUi browserUi) {}",
+            "   public AlohaBrowserUi getAlohaBrowserUi() { return null; }",
+            "}")
 
 
-
-        val perActivity = JavaFileObjects.forSourceLines("test.PerActivity",
-                "package test;",
-                Context::class.java.import(),
-                Scope::class.java.import(),
-                Retention::class.java.import(),
-                RetentionPolicy::class.java.import(),
-
-                "@Scope",
-                "@Retention(RetentionPolicy.RUNTIME)",
-                "public @interface PerActivity {",
-                "}")
-
-
-        val activityFile = JavaFileObjects.forSourceLines("test.MainActivity",
-                "package test;",
-                "",
-                Inject::class.java.import(),
-                ScopeRoot::class.java.import(),
-                Activity::class.java.import(),
-                "",
-                "@ScopeRoot",
-                "@PerActivity",
-                "public class MainActivity extends Activity {",
-                "",
-                "   @Inject",
-                "   public Session session;",
-                "   @Inject",
-                "   public BrowserUi ui;",
-                "}")
-
-        val injectedFile = JavaFileObjects.forSourceLines("test.MainActivityInjector",
-                "package test;",
-                "",
-                keepAnnotation,
-                nonNullAnnotation,
-                ScopeFactory::class.java.import(),
-                "",
-                "@Keep",
-                "public final class MainActivityInjector {",
-                "",
-                "   @Keep",
-                "   public final void inject(@NonNull final MainActivity target) {",
-                "       injectSessionInSession(target);",
-                "       injectBrowserUiInUi(target);",
-                "   }",
-                "",
-                "   private final void injectSessionInSession(@NonNull final MainActivity target) {",
-                "       Session session = SessionModule.session();",
-                "       target.session = session;",
-                "       ScopeFactory.cache(target, \"PerActivity\", \"session\", session);",
-                "   }",
-                "",
-                "   private final void injectBrowserUiInUi(@NonNull final MainActivity target) {",
-                "       Session session2 = ScopeFactory.get(target, \"PerActivity\", \"session\");",
-                "       BrowserUi browserUi = new BrowserUi(session2);",
-                "       target.ui = browserUi;",
-                "       ScopeFactory.cache(target, \"PerActivity\", \"browserUi\", browserUi);",
-                "}")
+        val injectedFile = JavaFileObjects.forSourceLines("test.AddressBarListenerImplInjector",
+            "package test;",
+            "",
+            "import $keep",
+            "import $nonNull",
+            "",
+            "@Keep",
+            "public final class AddressBarListenerImplInjector {",
+            "",
+            "   @Keep",
+            "   public final void inject(@NonNull final AddressBarListenerImpl target) {",
+            "       injectAutocompleteControllerInController(target);",
+            "   }",
+            "",
+            "   private final void injectAutocompleteControllerInController(@NonNull final AddressBarListenerImpl target) {",
+            "       AutoCompleteListener autoCompleteListener = new AutoCompleteListenerImpl(target.getAlohaBrowserUi());",
+            "       AutocompleteController autocompleteController = new AutocompleteController(autoCompleteListener);",
+            "       target.controller = autocompleteController;",
+            "   }",
+            "}")
 
         Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-                .that(Arrays.asList(activityFile, session, perActivity, browserUi, sessionModule))
-                .processedWith(IProcessor())
-                .compilesWithoutError()
-                .and().generatesSources(injectedFile)
-    }
-
-    @Test
-    @Throws(Exception::class)
-    fun scopeOnMethodAndPassToMethodAsParameter() {
-
-
-        val session = JavaFileObjects.forSourceLines("test.Session",
-                "package test;",
-                Context::class.java.import(),
-
-                "public class Session {",
-                "",
-                "}")
-
-        val sessionModule = JavaFileObjects.forSourceLines("test.SessionModule",
-                "package test;",
-                Context::class.java.import(),
-                Dependency::class.java.import(),
-
-                "public class SessionModule {",
-                "   @PerActivity",
-                "   @Dependency",
-                "   public static Session session() { return null; }",
-
-                "   @Dependency",
-                "   public static BrowserUi browserUi(@PerActivity Session session) { return null; }",
-                "",
-                "}")
-
-        val browserUi = JavaFileObjects.forSourceLines("test.BrowserUi",
-                "package test;",
-                Context::class.java.import(),
-
-                "public class BrowserUi {",
-                "   BrowserUi(Session session) {}",
-                "}")
-
-
-
-        val perActivity = JavaFileObjects.forSourceLines("test.PerActivity",
-                "package test;",
-                Context::class.java.import(),
-                Scope::class.java.import(),
-                Retention::class.java.import(),
-                RetentionPolicy::class.java.import(),
-
-                "@Scope",
-                "@Retention(RetentionPolicy.RUNTIME)",
-                "public @interface PerActivity {",
-                "}")
-
-
-        val activityFile = JavaFileObjects.forSourceLines("test.MainActivity",
-                "package test;",
-                "",
-                Inject::class.java.import(),
-                ScopeRoot::class.java.import(),
-                Activity::class.java.import(),
-                "",
-                "@ScopeRoot",
-                "@PerActivity",
-                "public class MainActivity extends Activity {",
-                "",
-                "   @Inject",
-                "   public Session session;",
-                "   @Inject",
-                "   public BrowserUi ui;",
-                "}")
-
-        val injectedFile = JavaFileObjects.forSourceLines("test.MainActivityInjector",
-                "package test;",
-                "",
-                keepAnnotation,
-                nonNullAnnotation,
-                ScopeFactory::class.java.import(),
-                "",
-                "@Keep",
-                "public final class MainActivityInjector {",
-                "",
-                "   @Keep",
-                "   public final void inject(@NonNull final MainActivity target) {",
-                "       injectSessionInSession(target);",
-                "       injectBrowserUiInUi(target);",
-                "   }",
-                "",
-                "   private final void injectSessionInSession(@NonNull final MainActivity target) {",
-                "       Session session = SessionModule.session();",
-                "       target.session = session;",
-                "       ScopeFactory.cache(target, \"PerActivity\", \"session\", session);",
-                "   }",
-                "",
-                "   private final void injectBrowserUiInUi(@NonNull final MainActivity target) {",
-                "       Session session2 = ScopeFactory.get(target, \"PerActivity\", \"session\");",
-                "       BrowserUi browserUi = SessionModule.browserUi(session2);",
-                "       target.ui = browserUi;",
-                "}")
-
-        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-                .that(Arrays.asList(activityFile, session, perActivity, browserUi, sessionModule))
-                .processedWith(IProcessor())
-                .compilesWithoutError()
-                .and().generatesSources(injectedFile)
-    }
-
-    @Test
-    @Throws(Exception::class)
-    fun scopeOnMethodAndPassToMethodAsParameterInNestedMethod() {
-
-
-        val session = JavaFileObjects.forSourceLines("test.DataSource",
-                "package test;",
-                Context::class.java.import(),
-
-                "public class DataSource {",
-                "",
-                "}")
-
-        val browser = JavaFileObjects.forSourceLines("test.FavoritesRepository",
-                "package test;",
-                Context::class.java.import(),
-
-                "public class FavoritesRepository {",
-                "",
-                "}")
-
-        val sessionModule = JavaFileObjects.forSourceLines("test.SessionModule",
-                "package test;",
-                Context::class.java.import(),
-                Dependency::class.java.import(),
-
-                "public class SessionModule {",
-                "   @PerActivity",
-                "   @Dependency",
-                "   public static DataSource session() { return null; }",
-
-                "   @Dependency",
-                "   @PerActivity",
-                "   public static FavoritesRepository browserUi(@PerActivity DataSource session) { return null; }",
-                "   @Dependency",
-                "   public static BrowserUi string(@PerActivity FavoritesRepository session) { return null; }",
-                "",
-                "}")
-
-        val browserUi = JavaFileObjects.forSourceLines("test.BrowserUi",
-                "package test;",
-                Context::class.java.import(),
-
-                "public class BrowserUi {",
-                "}")
-
-
-
-        val perActivity = JavaFileObjects.forSourceLines("test.PerActivity",
-                "package test;",
-                Context::class.java.import(),
-                Scope::class.java.import(),
-                Retention::class.java.import(),
-                RetentionPolicy::class.java.import(),
-
-                "@Scope",
-                "@Retention(RetentionPolicy.RUNTIME)",
-                "public @interface PerActivity {",
-                "}")
-
-
-        val activityFile = JavaFileObjects.forSourceLines("test.MainActivity",
-                "package test;",
-                "",
-                Inject::class.java.import(),
-                ScopeRoot::class.java.import(),
-                Activity::class.java.import(),
-                "",
-                "@ScopeRoot",
-                "@PerActivity",
-                "public class MainActivity extends Activity {",
-                "",
-                "   @Inject",
-                "   public DataSource session;",
-                "   @Inject",
-                "   public BrowserUi browser;",
-                "   @Inject",
-                "   public FavoritesRepository ui;",
-                "}")
-
-        val injectedFile = JavaFileObjects.forSourceLines("test.MainActivityInjector",
-                "package test;",
-                "",
-                keepAnnotation,
-                nonNullAnnotation,
-                ScopeFactory::class.java.import(),
-                "",
-                "@Keep",
-                "public final class MainActivityInjector {",
-                "",
-                "   @Keep",
-                "   public final void inject(@NonNull final MainActivity target) {",
-                "       injectDataSourceInSession(target);",
-                "       injectFavoritesRepositoryInUi(target);",
-                "       injectBrowserUiInBrowser(target);",
-                "   }",
-                "",
-                "   private final void injectDataSourceInSession(@NonNull final MainActivity target) {",
-                "       DataSource dataSource = SessionModule.session();",
-                "       target.session = dataSource;",
-                "       ScopeFactory.cache(target, \"PerActivity\", \"dataSource\", dataSource);",
-                "   }",
-                "",
-                "   private final void injectFavoritesRepositoryInUi(@NonNull final MainActivity target) {",
-                "       DataSource dataSource3 = ScopeFactory.get(target, \"PerActivity\", \"dataSource\");",
-                "       FavoritesRepository favoritesRepository2 = SessionModule.browserUi(dataSource3);",
-                "       target.ui = favoritesRepository2;",
-                "       ScopeFactory.cache(target, \"PerActivity\", \"favoritesRepository\", favoritesRepository2);",
-                "   }",
-                "",
-                "   private final void injectBrowserUiInBrowser(@NonNull final MainActivity target) {",
-                "       FavoritesRepository favoritesRepository = ScopeFactory.get(target, \"PerActivity\", \"favoritesRepository\");",
-                "       BrowserUi browserUi = SessionModule.string(favoritesRepository);",
-                "       target.browser = browserUi;",
-                "   }",
-                "}")
-
-        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-                .that(Arrays.asList(activityFile, session, perActivity, browserUi, browser, sessionModule))
-                .processedWith(IProcessor())
-                .compilesWithoutError()
-                .and().generatesSources(injectedFile)
-    }
-
-    @Test
-    @Throws(Exception::class)
-    fun scope() {
-
-        val preferences = JavaFileObjects.forSourceLines("test.Preferences",
-                "package test;",
-                "public class Preferences {",
-                "   Preferences() {}",
-                "}")
-
-        val session = JavaFileObjects.forSourceLines("test.Session",
-                "package test;",
-                Context::class.java.import(),
-
-                "@PerActivity",
-                "public class Session {",
-                "   Session(Preferences preferences) {}",
-                "}")
-
-        val perActivity = JavaFileObjects.forSourceLines("test.PerActivity",
-                "package test;",
-                Context::class.java.import(),
-                Scope::class.java.import(),
-                Retention::class.java.import(),
-                RetentionPolicy::class.java.import(),
-
-                "@Scope",
-                "@Retention(RetentionPolicy.RUNTIME)",
-                "public @interface PerActivity {",
-                "}")
-
-
-        val activityFile = JavaFileObjects.forSourceLines("test.MainActivity",
-                "package test;",
-                "",
-                Inject::class.java.import(),
-                ScopeRoot::class.java.import(),
-                Activity::class.java.import(),
-                "",
-                "@ScopeRoot",
-                "@PerActivity",
-                "public class MainActivity extends Activity {",
-                "   @Inject",
-                "   Presenter presenter;",
-                "}")
-
-        val presenterFile = JavaFileObjects.forSourceLines("test.Presenter",
-                "package test;",
-                "",
-                Inject::class.java.import(),
-                "",
-                "public class Presenter {",
-                "   @Inject",
-                "   @PerActivity Session session;",
-                "   Presenter() {}",
-                "}")
-
-        val injectedFile = JavaFileObjects.forSourceLines("test.MainActivityInjector",
-                "package test;",
-                "",
-                keepAnnotation,
-                nonNullAnnotation,
-                ScopeFactory::class.java.import(),
-                "",
-                "@Keep",
-                "public final class MainActivityInjector {",
-                "",
-                "   @Keep",
-                "   public final void inject(@NonNull final MainActivity target) {",
-                "       cacheSession(target);",
-                "       injectPresenterInPresenter(target);",
-                "   }",
-                "",
-                "   private final void cacheSession(@NonNull final MainActivity target) {",
-                "       Preferences preferences = new Preferences();",
-                "       Session session = new Session(preferences);",
-                "       ScopeFactory.cache(target, \"PerActivity\", \"session\", session);",
-                "   }",
-                "",
-                "   private final void injectPresenterInPresenter(@NonNull final MainActivity target) {",
-                "       Presenter presenter = new Presenter();",
-                "       target.presenter = presenter;",
-                "   }",
-                "}")
-
-        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-                .that(Arrays.asList(activityFile, preferences, session, perActivity, presenterFile))
-                .processedWith(IProcessor())
-                .compilesWithoutError()
-                .and().generatesSources(injectedFile)
-    }
-
-    @Test
-    @Throws(Exception::class)
-    fun scopeProvides() {
-
-        val preferences = JavaFileObjects.forSourceLines("test.Preferences",
-                "package test;",
-                "public class Preferences {",
-                "   Preferences() {}",
-                "}")
-
-        val session = JavaFileObjects.forSourceLines("test.Session",
-                "package test;",
-                Context::class.java.import(),
-
-                "@PerActivity",
-                "public class Session {",
-                "   Session(Preferences preferences) {}",
-                "}")
-
-        val perActivity = JavaFileObjects.forSourceLines("test.PerActivity",
-                "package test;",
-                Context::class.java.import(),
-                Scope::class.java.import(),
-                Retention::class.java.import(),
-                RetentionPolicy::class.java.import(),
-
-                "@Scope",
-                "@Retention(RetentionPolicy.RUNTIME)",
-                "public @interface PerActivity {",
-                "}")
-
-
-        val activityFile = JavaFileObjects.forSourceLines("test.MainActivity",
-                "package test;",
-                "",
-                Inject::class.java.import(),
-                ScopeRoot::class.java.import(),
-                Activity::class.java.import(),
-                "",
-                "@ScopeRoot",
-                "@PerActivity",
-                "public class MainActivity extends Activity {",
-                "   @Inject",
-                "   Presenter presenter;",
-                "}")
-
-        val presenterFile = JavaFileObjects.forSourceLines("test.Presenter",
-                "package test;",
-                "",
-                Inject::class.java.import(),
-                "",
-                "public class Presenter {",
-                "   @Inject",
-                "   @PerActivity Session session;",
-                "   Presenter() {}",
-                "}")
-
-        val injectedFile = JavaFileObjects.forSourceLines("test.PresenterInjector",
-                "package test;",
-                "",
-                keepAnnotation,
-                nonNullAnnotation,
-                ScopeFactory::class.java.import(),
-                "",
-                "@Keep",
-                "public final class PresenterInjector {",
-                "",
-                "   @Keep",
-                "   public final void inject(@NonNull final Presenter target) {",
-                "       injectSessionInSession(target);",
-                "   }",
-                "",
-                "   private final void injectSessionInSession(@NonNull final Presenter target) {",
-                "       Presenter presenter = new Presenter();",
-                "       target.presenter = presenter;",
-                "   }",
-                "}")
-
-        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-                .that(Arrays.asList(activityFile, preferences, session, perActivity, presenterFile))
-                .processedWith(IProcessor())
-                .compilesWithoutError()
-                .and().generatesSources(injectedFile)
+            .that(listOf(autoCompleteListener, autoCompleteListenerImpl, autocompleteController, logger, alohabrowser))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile)
     }
 }
