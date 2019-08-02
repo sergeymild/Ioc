@@ -9,6 +9,11 @@ import javax.lang.model.util.Types
  * Created by sergeygolishnikov on 10/07/2017.
  */
 
+class InjectMethod(
+    val methodSpec: MethodSpec,
+    val isTargetUsedAsDependency: Boolean,
+    val returnTypeDependencyModel: DependencyModel?)
+
 internal fun targetParameter(className: ClassName): ParameterSpec {
     return ParameterSpec.builder(className, "target", Modifier.FINAL)
         .addAnnotation(nonNullAnnotation)
@@ -17,7 +22,7 @@ internal fun targetParameter(className: ClassName): ParameterSpec {
 
 class ImplementationsSpec constructor(
     private val target: TargetType,
-    private val methods: List<MethodSpec>) {
+    private val methods: List<InjectMethod>) {
 
     init {
         target.parentsDependencies()
@@ -32,7 +37,7 @@ class ImplementationsSpec constructor(
 
         generateMethods().forEach { builder.addMethod(it) }
 
-        methods.forEach { builder.addMethod(it) }
+        methods.forEach { builder.addMethod(it.methodSpec) }
 
         return builder.build()
     }
@@ -52,8 +57,25 @@ class ImplementationsSpec constructor(
             builder.addStatement("new \$T().inject(target)", injectorType)
         }
 
-        this.methods.forEach {
-            builder.addStatement("\$N(target)", it.name)
+        for (method in this.methods) {
+            if (method.methodSpec.returnType == TypeName.VOID) {
+                if (method.isTargetUsedAsDependency) builder.addStatement("\$N(target)", method.methodSpec.name)
+                else builder.addStatement("\$N(target)", method.methodSpec.name)
+                continue
+            }
+            if (method.isTargetUsedAsDependency) {
+                if (method.returnTypeDependencyModel?.setterMethod != null) {
+                    builder.addStatement("target.${method.returnTypeDependencyModel.setterMethod?.simpleName}(\$N(target))", method.methodSpec.name)
+                } else {
+                    builder.addStatement("target.${method.returnTypeDependencyModel?.setterName()} = \$N(target)", method.methodSpec.name)
+                }
+            } else {
+                if (method.returnTypeDependencyModel?.setterMethod != null) {
+                    builder.addStatement("target.${method.returnTypeDependencyModel.setterMethod?.simpleName}(\$N())", method.methodSpec.name)
+                } else {
+                    builder.addStatement("target.${method.returnTypeDependencyModel?.setterName()} = \$N()", method.methodSpec.name)
+                }
+            }
         }
 
         val postInitialization = target.postInitialization
@@ -67,8 +89,18 @@ class ImplementationsSpec constructor(
 
     companion object {
 
+        private fun returnType(model: DependencyModel): TypeName {
+            return when {
+                model.isLazy -> model.originalType.asLazyType()
+                model.isProvider -> model.originalType.asProviderType()
+                model.isWeakDependency -> model.originalType.asWeakType()
+                else -> model.originalClassName()
+            }
+        }
+
         fun dependencyInjectionMethod(
             target: ClassName,
+            isTargetUsedAsDependency: Boolean,
             model: DependencyModel,
             codeBlock: CodeBlock): MethodSpec.Builder {
 
@@ -83,10 +115,14 @@ class ImplementationsSpec constructor(
             }
 
             val methodName = "inject${model.name.capitalize()}In${model.fieldName.capitalize()}"
-            return MethodSpec.methodBuilder(methodName)
+            val methodBuilder = MethodSpec.methodBuilder(methodName)
                 .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
-                .addParameter(targetParameter(target))
+                .returns(returnType(model))
                 .addCode(body.build())
+
+            if (isTargetUsedAsDependency) methodBuilder.addParameter(targetParameter(target))
+            methodBuilder.addStatement("return \$N", model.generatedName)
+            return methodBuilder
         }
 
         fun dependencyInjectionCode(
@@ -108,8 +144,8 @@ class ImplementationsSpec constructor(
             return builder
         }
 
-        fun addDataObservers(target: TargetType): List<MethodSpec> {
-            val methods = mutableListOf<MethodSpec>()
+        fun addDataObservers(target: TargetType): List<InjectMethod> {
+            val methods = mutableListOf<InjectMethod>()
             for (dataObserver in target.dataObservers) {
 
                 val liveDataTypeName = dataObserver.observingType.simpleName.toString()
@@ -130,7 +166,7 @@ class ImplementationsSpec constructor(
                 if (dataObserver.observeType == DataObserver.ObserveType.FOREVER) {
                     observeTypeString = "target.\$N.\$N.observeForever(\$L)"
                 }
-                methods.add(MethodSpec
+                methods.add(InjectMethod(MethodSpec
                     .methodBuilder("observe${dataObserver.liveDataName()}${liveDataTypeName}From$viewModelName")
                     .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
                     .addParameter(targetParameter(target.className))
@@ -138,7 +174,7 @@ class ImplementationsSpec constructor(
                         dataObserver.targetViewModelField.toString(),
                         dataObserver.viewModelLiveDataField.toString(),
                         observerClassSpec)
-                    .build())
+                    .build(), false, null))
             }
 
             return methods

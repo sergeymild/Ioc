@@ -49,17 +49,17 @@ class MethodInjection : BaseTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectDependencyModelInDependency(target);",
+            "       target.setDependency(injectDependencyModelInDependency());",
             "   }",
             "",
-            "   private final void injectDependencyModelInDependency(@NonNull final Activity target) {",
+            "   private final DependencyModel injectDependencyModelInDependency() {",
             "       DependencyModel dependencyModel = new DependencyModel();",
-            "       target.setDependency(dependencyModel);",
+            "       return dependencyModel;",
             "   }",
             "}")
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(activityFile, dependencyFile))
+            .that(listOf(activityFile, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -102,17 +102,17 @@ class MethodInjection : BaseTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectDependencyModelInDependency(target);",
+            "       target.setDependency(injectDependencyModelInDependency(target));",
             "   }",
             "",
-            "   private final void injectDependencyModelInDependency(@NonNull final Activity target) {",
+            "   private final DependencyModel injectDependencyModelInDependency(@NonNull final Activity target) {",
             "       DependencyModel dependencyModel = new DependencyModel(target);",
-            "       target.setDependency(dependencyModel);",
+            "       return dependencyModel;",
             "   }",
             "}")
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(activityFile, dependencyFile))
+            .that(listOf(activityFile, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -164,18 +164,18 @@ class MethodInjection : BaseTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectParentDependencyInDependency(target);",
+            "       target.setDependency(injectParentDependencyInDependency(target));",
             "   }",
             "",
-            "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
+            "   private final ParentDependency injectParentDependencyInDependency(@NonNull final Activity target) {",
             "       DependencyModel dependencyModel = new DependencyModel();",
             "       ParentDependency parentDependency = new ParentDependency(target, dependencyModel);",
-            "       target.setDependency(parentDependency);",
+            "       return parentDependency;",
             "   }",
             "}")
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(activityFile, dependencyFile, parentDependencyFile))
+            .that(listOf(activityFile, dependencyFile, parentDependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -225,18 +225,18 @@ class MethodInjection : BaseTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectParentDependencyInDependency(target);",
+            "       target.setDependency(injectParentDependencyInDependency());",
             "   }",
             "",
-            "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
+            "   private final ParentDependency injectParentDependencyInDependency() {",
             "       DependencyModel dependencyModel = new DependencyModel();",
             "       ParentDependency parentDependency = new ParentDependency(dependencyModel);",
-            "       target.setDependency(parentDependency);",
+            "       return parentDependency;",
             "   }",
             "}")
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(activityFile, dependencyFile, parentDependencyFile))
+            .that(listOf(activityFile, dependencyFile, parentDependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -296,18 +296,18 @@ class MethodInjection : BaseTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectParentDependencyInDependency(target);",
+            "       target.setDependency(injectParentDependencyInDependency());",
             "   }",
             "",
-            "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
+            "   private final ParentDependency injectParentDependencyInDependency() {",
             "       DependencyModel dependencyModel = new DependencyModel();",
             "       ParentDependency parentDependency = new ParentDependency(dependencyModel);",
-            "       target.setDependency(parentDependency);",
+            "       return parentDependency;",
             "   }",
             "}")
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(activityFile, dependencyFile, parentActivityFile, parentDependencyFile))
+            .that(listOf(activityFile, dependencyFile, parentActivityFile, parentDependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -359,18 +359,18 @@ class MethodInjection : BaseTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectParentDependencyInDependency(target);",
+            "       target.setDependency(injectParentDependencyInDependency(target));",
             "   }",
             "",
-            "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
+            "   private final ParentDependency injectParentDependencyInDependency(@NonNull final Activity target) {",
             "       DependencyModel dependencyModel = new DependencyModel(target);",
             "       ParentDependency parentDependency = new ParentDependency(dependencyModel);",
-            "       target.setDependency(parentDependency);",
+            "       return parentDependency;",
             "   }",
             "}")
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(activityFile, dependencyFile, parentDependencyFile))
+            .that(listOf(activityFile, dependencyFile, parentDependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -442,13 +442,13 @@ class MethodInjection : BaseTest {
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
             "       new BaseActivityInjector().inject(target);",
-            "       injectParentDependencyInDependency(target);",
+            "       target.dependency = injectParentDependencyInDependency(target);",
             "   }",
             "",
-            "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
+            "   private final ParentDependency injectParentDependencyInDependency(@NonNull final Activity target) {",
             "       DependencyModel dependencyModel = new DependencyModel(target);",
             "       ParentDependency parentDependency = new ParentDependency(dependencyModel);",
-            "       target.dependency = parentDependency;",
+            "       return parentDependency;",
             "   }",
             "}")
 
@@ -539,17 +539,17 @@ class MethodInjection : BaseTest {
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
             "       new ParentActivityInjector().inject(target);",
-            "       injectParentDependencyInDependency(target);",
+            "       target.dependency = injectParentDependencyInDependency();",
             "   }",
             "",
-            "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
+            "   private final ParentDependency injectParentDependencyInDependency() {",
             "       ParentDependency parentDependency = new ParentDependency();",
-            "       target.dependency = parentDependency;",
+            "       return parentDependency;",
             "   }",
             "}")
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(activityFile, resourcesFile, parentFile, baseFile, dependencyFile, parentDependencyFile))
+            .that(listOf(activityFile, resourcesFile, parentFile, baseFile, dependencyFile, parentDependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -634,17 +634,17 @@ class MethodInjection : BaseTest {
             "   @Keep",
             "   public final void inject(@NonNull final ParentActivity target) {",
             "       new BaseActivityInjector().inject(target);",
-            "       injectResourcesInResources(target);",
+            "       target.resources = injectResourcesInResources();",
             "   }",
             "",
-            "   private final void injectResourcesInResources(@NonNull final ParentActivity target) {",
+            "   private final Resources injectResourcesInResources() {",
             "       Resources resources = new Resources();",
-            "       target.resources = resources;",
+            "       return resources;",
             "   }",
             "}")
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(activityFile, resourcesFile, parentFile, baseFile, dependencyFile, parentDependencyFile))
+            .that(listOf(activityFile, resourcesFile, parentFile, baseFile, dependencyFile, parentDependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -715,14 +715,14 @@ class MethodInjection : BaseTest {
             "public final class BaseActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final BaseActivity target) {",
-            "       injectParentDependencyInParentDependency(target);",
+            "       target.parentDependency = injectParentDependencyInParentDependency();",
             "   }",
             "",
-            "   private final void injectParentDependencyInParentDependency(@NonNull final BaseActivity target) {",
+            "   private final ParentDependency injectParentDependencyInParentDependency() {",
             "       DependencyModel dependencyModel = new DependencyModel(Ioc.singleton(SingletonDependency.class), Ioc.singleton(NextSingleton.class));",
             "       Resources resources = new Resources(Ioc.singleton(SingletonDependency.class));",
             "       ParentDependency parentDependency = new ParentDependency(Ioc.singleton(SingletonDependency.class), Ioc.singleton(NextSingleton.class), dependencyModel, resources);",
-            "       target.parentDependency = parentDependency;",
+            "       return parentDependency;",
             "   }",
             "}")
 

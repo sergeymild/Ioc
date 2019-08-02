@@ -67,12 +67,12 @@ class SingletonNameTests : BaseTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "     injectCrashlitycsServiceInService(target);",
+            "     target.service = injectCrashlitycsServiceInService();",
             "   }",
             "",
-            "   private final void injectCrashlitycsServiceInService(@NonNull final Activity target) {",
+            "   private final CrashlitycsService injectCrashlitycsServiceInService() {",
             "        CrashlyticsLogger crashlyticsLogger = Ioc.singleton(CrashlyticsLogger.class);",
-            "        target.service = crashlyticsLogger;",
+            "        return crashlyticsLogger;",
             "   }",
             "}")
 
@@ -222,13 +222,13 @@ class SingletonNameTests : BaseTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectParentDependencyInDependency(target);",
+            "       target.setDependency(injectParentDependencyInDependency());",
             "   }",
             "",
-            "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
+            "   private final ParentDependency injectParentDependencyInDependency() {",
             "       DependencyModel dependencyModel = ModuleClass.getDependency();",
             "       ParentDependency parentDependency = ModuleClass.getParentDependency(dependencyModel, Ioc.singleton(Dependency2.class));",
-            "       target.setDependency(parentDependency);",
+            "       return parentDependency;",
             "   }",
             "}")
 
@@ -278,12 +278,12 @@ class SingletonNameTests : BaseTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "     injectCrashlyticsLoggerInService(target);",
+            "     target.service = injectCrashlyticsLoggerInService();",
             "   }",
             "",
-            "   private final void injectCrashlyticsLoggerInService(@NonNull final Activity target) {",
+            "   private final CrashlyticsLogger injectCrashlyticsLoggerInService() {",
             "       CrashlyticsLogger crashlyticsLogger = Ioc.singleton(CrashlyticsLogger.class);",
-            "       target.service = crashlyticsLogger;",
+            "       return crashlyticsLogger;",
             "   }",
             "}")
 

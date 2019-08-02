@@ -557,10 +557,10 @@ class SingletonTests : BaseTest {
             "",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectMainPresenterInPresenter(target);",
+            "       target.presenter = injectMainPresenterInPresenter();",
             "   }",
             "",
-            "   private final void injectMainPresenterInPresenter(@NonNull final Activity target) {",
+            "   private final MainPresenter injectMainPresenterInPresenter() {",
             "       IocLazy<DependencyModel> lazyDependencyModel = new IocLazy<DependencyModel>() {",
             "           protected DependencyModel initialize() {",
             "               DependencyModel dependencyModel = new DependencyModel(Ioc.singleton(SingletonDependency.class));",
@@ -568,7 +568,7 @@ class SingletonTests : BaseTest {
             "           }",
             "       };",
             "       MainPresenter mainPresenter = new MainPresenter(lazyDependencyModel, Ioc.singleton(SingletonDependency.class));",
-            "       target.presenter = mainPresenter;",
+            "       return mainPresenter;",
             "   }",
             "}")
 
@@ -638,10 +638,10 @@ class SingletonTests : BaseTest {
             "",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectMainPresenterInPresenter(target);",
+            "       target.presenter = injectMainPresenterInPresenter();",
             "   }",
             "",
-            "   private final void injectMainPresenterInPresenter(@NonNull final Activity target) {",
+            "   private final MainPresenter injectMainPresenterInPresenter() {",
             "       IocProvider<DependencyModel> providerDependencyModel = new IocProvider<DependencyModel>() {",
             "           protected DependencyModel initialize() {",
             "               DependencyModel dependencyModel = new DependencyModel(Ioc.singleton(SingletonDependency.class));",
@@ -649,7 +649,7 @@ class SingletonTests : BaseTest {
             "           }",
             "       };",
             "       MainPresenter mainPresenter = new MainPresenter(providerDependencyModel, Ioc.singleton(SingletonDependency.class));",
-            "       target.presenter = mainPresenter;",
+            "       return mainPresenter;",
             "   }",
             "}")
 

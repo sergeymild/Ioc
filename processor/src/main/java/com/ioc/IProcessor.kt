@@ -15,7 +15,6 @@ import javax.lang.model.element.Element
 import javax.lang.model.element.ElementKind
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.TypeElement
-import javax.lang.model.type.TypeKind
 import javax.lang.model.util.Types
 import javax.tools.Diagnostic
 import kotlin.properties.Delegates
@@ -155,31 +154,29 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
             SingletonFilter.findAll(v, singletons, uniqueSingletons)
         }
 
-        measure("targetWith") {
-            for (target in targetsWithDependencies) {
-                val dependencies = mutableListOf<DependencyModel>()
-                collectAllDependencies(target.value, dependencies)
-                val sorting = Sorting()
-                sorting.countOrder(" ", target.key.element.asType().toString(), dependencies, 0)
-                sorting.sortTargetDependencies(dependencies)
+        for (target in targetsWithDependencies) {
+            val dependencies = mutableListOf<DependencyModel>()
+            collectAllDependencies(target.value, dependencies)
+            val sorting = Sorting()
+            sorting.countOrder(" ", target.key.element.asType().toString(), dependencies, 0)
+            sorting.sortTargetDependencies(dependencies)
 
-                target.key.dependencies = target.value
-            }
+            target.key.dependencies = target.value
+        }
 
-            // set for every parent its own classesWithDependencyAnnotation
-            for (target in targetsWithDependencies) {
-                for (possibleParent in targetsWithDependencies) {
-                    target.key.findParent(possibleParent.key.element.asType())?.let {
-                        it.dependencies = possibleParent.key.dependencies
-                    }
+        // set for every parent its own classesWithDependencyAnnotation
+        for (target in targetsWithDependencies) {
+            for (possibleParent in targetsWithDependencies) {
+                target.key.findParent(possibleParent.key.element.asType())?.let {
+                    it.dependencies = possibleParent.key.dependencies
                 }
             }
+        }
 
-            for (target in targetTypes) {
-                var parentTarget = target.parentTarget
-                while (parentTarget != null) {
-                    parentTarget = parentTarget.parentTarget
-                }
+        for (target in targetTypes) {
+            var parentTarget = target.parentTarget
+            while (parentTarget != null) {
+                parentTarget = parentTarget.parentTarget
             }
         }
 
@@ -188,25 +185,30 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
             writeClassFile(singleton.packageName, spec.inject())
         }
 
-        // Generate target classesWithDependencyAnnotation
-        for (target in targetsWithDependencies) {
+        generateInjectableSpecs(targetsWithDependencies)
 
-            val sorted = target.key.dependencies.sortedByDescending { it.sortOrder }//.asReversed()
-            val methods = mutableListOf<MethodSpec>()
+        return true
+    }
+
+    private fun generateInjectableSpecs(targets: Map<TargetType, MutableList<DependencyModel>>) {
+        for (target in targets) {
+
+            val sorted = target.key.dependencies.sortedByDescending { it.sortOrder }
+            val methods = mutableListOf<InjectMethod>()
 
             for (dependency in sorted) {
-                // generate base injection code
                 val code = dependencyInjectionCode(dependency, processingEnv.typeUtils, target.key)
-                val methodBuilder = dependencyInjectionMethod(target.key.className, dependency, code.build())
-                methods.add(injectInTarget(methodBuilder, dependency))
+                println(code.build())
+                // generate base injection code
+                val isTargetUsedAsDependency = isTargetUsedWhileCreateDependency(target.key, dependency)
+                val methodBuilder = dependencyInjectionMethod(target.key.className, isTargetUsedAsDependency, dependency, code.build())
+                methods.add(InjectMethod(methodBuilder.build(), isTargetUsedAsDependency, dependency))
             }
 
             methods.addAll(addDataObservers(target.key))
             val typeSpec = ImplementationsSpec(target.key, methods).inject()
             writeClassFile(target.key.className.packageName(), typeSpec)
         }
-
-        return true
     }
 
     private fun validateSingletonUsage(
@@ -230,23 +232,22 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         }
     }
 
-    // TODO isParentDependencySingleton
-    private fun collectUsedSingletonsInMethodCreation(dependencies: List<DependencyModel>, isParentDependencySingleton: Boolean): MutableMap<String, DependencyModel> {
-        // try to find all singleton used in creation of current inject
-        var isLocalParentDependencySingleton = isParentDependencySingleton
-        val usedSingletons = mutableMapOf<String, DependencyModel>()
-        val queue = LinkedList(dependencies)
+    private fun isTargetUsedWhileCreateDependency(target: TargetType, dependency: DependencyModel): Boolean {
+        if (dependency.isViewModel) return true
+        if (target.isSubtype(dependency.typeElement)) return true
+        val queue = LinkedList<DependencyModel>()
+
+        queue.addAll(dependency.dependencies)
         while (queue.isNotEmpty()) {
             val dep = queue.pop()
-            val key = dep.typeElement.asType().toString()
-            if (dep.isSingleton && !usedSingletons.containsKey(key) && !isLocalParentDependencySingleton) {
-                usedSingletons[key] = dep
-                continue
+            if (target.isSubtype(dep.typeElement) ||
+                target.isLocalScope(dep.typeElement) ||
+                dep.isViewModel) {
+                return true
             }
-            isLocalParentDependencySingleton = dep.isSingleton
-            if (!dep.isSingleton) queue.addAll(dep.dependencies)
+            queue.addAll(dep.dependencies)
         }
-        return usedSingletons
+        return false
     }
 
     private fun collectAllDependencies(models: List<DependencyModel>, list: MutableList<DependencyModel>) {

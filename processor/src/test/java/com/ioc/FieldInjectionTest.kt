@@ -49,24 +49,24 @@ class FieldInjectionTest {
             "package test;",
             "",
 
-            "import android.support.annotation.Keep",
-            "import android.support.annotation.NonNull",
+            "import $keep",
+            "import $nonNull",
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectDependencyModelInDependency(target);",
+            "       target.dependency = injectDependencyModelInDependency();",
             "   }",
             "",
-            "   private final void injectDependencyModelInDependency(@NonNull final Activity target) {",
+            "   private final DependencyModel injectDependencyModelInDependency() {",
             "       DependencyModel dependencyModel = new DependencyModel();",
-            "       target.dependency = dependencyModel;",
+            "       return dependencyModel;",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(listOf<JavaFileObject>(activityFile, dependencyFile))
+            .that(listOf(activityFile, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -199,24 +199,24 @@ class FieldInjectionTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectDependencyModelInDependency(target);",
-            "       injectLoggerInLogger(target);",
-            "       injectPreferencesInSetPreferences(target);",
+            "       target.dependency = injectDependencyModelInDependency();",
+            "       target.setLogger(injectLoggerInLogger());",
+            "       target.setPreferences(injectPreferencesInSetPreferences());",
             "   }",
             "",
-            "   private final void injectDependencyModelInDependency(@NonNull final Activity target) {",
+            "   private final DependencyModel injectDependencyModelInDependency() {",
             "       DependencyModel dependencyModel = new DependencyModel();",
-            "       target.dependency = dependencyModel;",
+            "       return dependencyModel;",
             "   }",
             "",
-            "   private final void injectLoggerInLogger(@NonNull final Activity target) {",
+            "   private final Logger injectLoggerInLogger() {",
             "       Logger logger = new Logger();",
-            "       target.setLogger(logger);",
+            "       return logger;",
             "   }",
             "",
-            "   private final void injectPreferencesInSetPreferences(@NonNull final Activity target) {",
+            "   private final Preferences injectPreferencesInSetPreferences() {",
             "       Preferences preferences = new Preferences();",
-            "       target.setPreferences(preferences);",
+            "       return preferences;",
             "   }",
             "}")
 
@@ -316,17 +316,17 @@ class FieldInjectionTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectDependencyModelInDependency(target);",
+            "       target.dependency = injectDependencyModelInDependency();",
             "   }",
             "",
-            "   private final void injectDependencyModelInDependency(@NonNull final Activity target) {",
+            "   private final IocProvider<DependencyModel> injectDependencyModelInDependency() {",
             "       IocProvider<DependencyModel> providerDependencyModel = new IocProvider<DependencyModel>() {",
             "         protected DependencyModel initialize() {",
             "           DependencyModel dependencyModel = new DependencyModel();",
             "           return dependencyModel;",
             "         }",
             "       };",
-            "       target.dependency = providerDependencyModel;",
+            "       return providerDependencyModel;",
             "   }",
             "}")
 
@@ -366,30 +366,30 @@ class FieldInjectionTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import android.support.annotation.Keep",
-            "import android.support.annotation.NonNull",
+            "import $keep",
+            "import $nonNull",
             importType(IocProvider::class.java),
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectDependencyInterfaceInDependency(target);",
+            "       target.dependency = injectDependencyInterfaceInDependency();",
             "   }",
             "",
-            "   private final void injectDependencyInterfaceInDependency(@NonNull final Activity target) {",
+            "   private final IocProvider<DependencyInterface> injectDependencyInterfaceInDependency() {",
             "       IocProvider<DependencyInterface> providerDependencyInterface = new IocProvider<DependencyInterface>() {",
             "         protected DependencyInterface initialize() {",
             "           DependencyInterface dependencyInterface = new DependencyType();",
             "           return dependencyInterface;",
             "         }",
             "       };",
-            "       target.dependency = providerDependencyInterface;",
+            "       return providerDependencyInterface;",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, dependencyInterface, dependencyType))
+            .that(listOf(activityFile, dependencyInterface, dependencyType))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -424,25 +424,25 @@ class FieldInjectionTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import android.support.annotation.Keep",
-            "import android.support.annotation.NonNull",
+            "import $keep",
+            "import $nonNull",
             importType(IocLazy::class.java),
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectDependencyInterfaceInDependency(target);",
+            "       target.dependency = injectDependencyInterfaceInDependency();",
             "   }",
             "",
-            "   private final void injectDependencyInterfaceInDependency(@NonNull final Activity target) {",
+            "   private final IocLazy<DependencyInterface> injectDependencyInterfaceInDependency() {",
             "       IocLazy<DependencyInterface> lazyDependencyInterface = new IocLazy<DependencyInterface>() {",
             "         protected DependencyInterface initialize() {",
             "           DependencyInterface dependencyInterface = new DependencyType();",
             "           return dependencyInterface;",
             "         }",
             "       };",
-            "       target.dependency = lazyDependencyInterface;",
+            "       return lazyDependencyInterface;",
             "   }",
             "}")
 
@@ -487,12 +487,12 @@ class FieldInjectionTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectDependencyModelInDependency(target);",
+            "       target.dependency = injectDependencyModelInDependency(target);",
             "   }",
             "",
-            "   private final void injectDependencyModelInDependency(@NonNull final Activity target) {",
+            "   private final DependencyModel injectDependencyModelInDependency(@NonNull final Activity target) {",
             "       DependencyModel dependencyModel = new DependencyModel(target);",
-            "       target.dependency = dependencyModel;",
+            "       return dependencyModel;",
             "   }",
             "}")
 
@@ -546,18 +546,18 @@ class FieldInjectionTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectParentDependencyInDependency(target);",
+            "       target.dependency = injectParentDependencyInDependency(target);",
             "   }",
             "",
-            "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
+            "   private final ParentDependency injectParentDependencyInDependency(@NonNull final Activity target) {",
             "       DependencyModel dependencyModel = new DependencyModel();",
             "       ParentDependency parentDependency = new ParentDependency(target, dependencyModel);",
-            "       target.dependency = parentDependency;",
+            "       return parentDependency;",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, dependencyFile, parentDependencyFile))
+            .that(listOf(activityFile, dependencyFile, parentDependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -606,13 +606,13 @@ class FieldInjectionTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectParentDependencyInDependency(target);",
+            "       target.dependency = injectParentDependencyInDependency();",
             "   }",
             "",
-            "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
+            "   private final ParentDependency injectParentDependencyInDependency() {",
             "       DependencyModel dependencyModel = new DependencyModel();",
             "       ParentDependency parentDependency = new ParentDependency(dependencyModel);",
-            "       target.dependency = parentDependency;",
+            "       return parentDependency;",
             "   }",
             "}")
 
@@ -660,25 +660,25 @@ class FieldInjectionTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import android.support.annotation.Keep",
-            "import android.support.annotation.NonNull",
+            "import $keep",
+            "import $nonNull",
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectParentDependencyInDependency(target);",
+            "       target.dependency = injectParentDependencyInDependency(target);",
             "   }",
             "",
-            "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
+            "   private final ParentDependency injectParentDependencyInDependency(@NonNull final Activity target) {",
             "       DependencyModel dependencyModel = new DependencyModel(target);",
             "       ParentDependency parentDependency = new ParentDependency(dependencyModel);",
-            "       target.dependency = parentDependency;",
+            "       return parentDependency;",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, dependencyFile, parentDependencyFile))
+            .that(listOf(activityFile, dependencyFile, parentDependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -737,13 +737,13 @@ class FieldInjectionTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectParentDependencyInDependency(target);",
+            "       target.dependency = injectParentDependencyInDependency();",
             "   }",
             "",
-            "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
+            "   private final ParentDependency injectParentDependencyInDependency() {",
             "       DependencyModel dependencyModel = new DependencyModel();",
             "       ParentDependency parentDependency = new ParentDependency(dependencyModel);",
-            "       target.dependency = parentDependency;",
+            "       return parentDependency;",
             "   }",
             "}")
 
@@ -810,18 +810,18 @@ class FieldInjectionTest {
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
             "       new ParentActivityInjector().inject(target);",
-            "       injectParentDependencyInDependency(target);",
+            "       target.dependency = injectParentDependencyInDependency();",
             "   }",
             "",
-            "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
+            "   private final ParentDependency injectParentDependencyInDependency() {",
             "       DependencyModel dependencyModel = new DependencyModel();",
             "       ParentDependency parentDependency = new ParentDependency(dependencyModel);",
-            "       target.dependency = parentDependency;",
+            "       return parentDependency;",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, dependencyFile, parentActivityFile, parentDependencyFile))
+            .that(listOf(activityFile, dependencyFile, parentActivityFile, parentDependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -872,19 +872,19 @@ class FieldInjectionTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectDependencyModelInDependency(target);",
-            "       injectParentDependencyInParentDependency(target);",
+            "       target.dependency = injectDependencyModelInDependency();",
+            "       target.parentDependency = injectParentDependencyInParentDependency();",
             "   }",
             "",
-            "   private final void injectDependencyModelInDependency(@NonNull final Activity target) {",
+            "   private final DependencyModel injectDependencyModelInDependency() {",
             "       DependencyModel dependencyModel2 = new DependencyModel();",
-            "       target.dependency = dependencyModel2;",
+            "       return dependencyModel2;",
             "   }",
             "",
-            "   private final void injectParentDependencyInParentDependency(@NonNull final Activity target) {",
+            "   private final ParentDependency injectParentDependencyInParentDependency() {",
             "       DependencyModel dependencyModel = new DependencyModel();",
             "       ParentDependency parentDependency = new ParentDependency(dependencyModel);",
-            "       target.parentDependency = parentDependency;",
+            "       return parentDependency;",
             "   }",
             "}")
 
@@ -939,12 +939,12 @@ class FieldInjectionTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectDependencyModelInDependency(target);",
+            "       target.dependency = injectDependencyModelInDependency();",
             "   }",
             "",
-            "   private final void injectDependencyModelInDependency(@NonNull final Activity target) {",
+            "   private final DependencyModel injectDependencyModelInDependency() {",
             "       DependencyModel dependencyModel = new ReleaseDependency();",
-            "       target.dependency = dependencyModel;",
+            "       return dependencyModel;",
             "   }",
             "}")
 
@@ -999,12 +999,12 @@ class FieldInjectionTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectDependencyModelInDependency(target);",
+            "       target.dependency = injectDependencyModelInDependency();",
             "   }",
             "",
-            "   private final void injectDependencyModelInDependency(@NonNull final Activity target) {",
+            "   private final DependencyModel injectDependencyModelInDependency() {",
             "       DependencyModel dependencyModel = new DependencyModel();",
-            "       target.dependency = dependencyModel;",
+            "       return dependencyModel;",
             "   }",
             "}")
 
@@ -1075,15 +1075,15 @@ class FieldInjectionTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectDependencyModelInDependency(target);",
+            "       target.dependency = injectDependencyModelInDependency();",
             "   }",
             "",
-            "   private final void injectDependencyModelInDependency(@NonNull final Activity target) {",
+            "   private final DependencyModel injectDependencyModelInDependency() {",
             "       Context context = new Context();",
             "       Context context2 = new Context();",
             "       Resource resource = new Resource(context2);",
             "       DependencyModel dependencyModel = new DependencyModel(context, resource);",
-            "       target.dependency = dependencyModel;",
+            "       return dependencyModel;",
             "   }",
             "}")
 
@@ -1164,13 +1164,13 @@ class FieldInjectionTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectDependencyModelInDependency(target);",
+            "       target.dependency = injectDependencyModelInDependency();",
             "   }",
             "",
-            "   private final void injectDependencyModelInDependency(@NonNull final Activity target) {",
+            "   private final DependencyModel injectDependencyModelInDependency() {",
             "       Context context = ContextModule.context();",
             "       DependencyModel dependencyModel = new DependencyModel(context, Ioc.singleton(Resource.class));",
-            "       target.dependency = dependencyModel;",
+            "       return dependencyModel;",
             "   }",
             "}")
 
@@ -1229,12 +1229,12 @@ class FieldInjectionTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectDependencyModelInDependency(target);",
+            "       target.dependency = injectDependencyModelInDependency();",
             "   }",
             "",
-            "   private final void injectDependencyModelInDependency(@NonNull final Activity target) {",
+            "   private final DependencyModel injectDependencyModelInDependency() {",
             "       DependencyModel dependencyModel = new AppModel();",
-            "       target.dependency = dependencyModel;",
+            "       return dependencyModel;",
             "   }",
             "}")
 
@@ -1299,12 +1299,12 @@ class FieldInjectionTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectDependencyModelInDependency(target);",
+            "       target.dependency = injectDependencyModelInDependency();",
             "   }",
             "",
-            "   private final void injectDependencyModelInDependency(@NonNull final Activity target) {",
+            "   private final DependencyModel injectDependencyModelInDependency() {",
             "       DependencyModel dependencyModel = new AppModel();",
-            "       target.dependency = dependencyModel;",
+            "       return dependencyModel;",
             "   }",
             "}")
 
@@ -1386,12 +1386,12 @@ class FieldInjectionTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectDependencyModelInDependency(target);",
+            "       target.dependency = injectDependencyModelInDependency();",
             "   }",
             "",
-            "   private final void injectDependencyModelInDependency(@NonNull final Activity target) {",
+            "   private final DependencyModel injectDependencyModelInDependency() {",
             "       DependencyModel dependencyModel = new AppModel(Ioc.singleton(Context.class));",
-            "       target.dependency = dependencyModel;",
+            "       return dependencyModel;",
             "   }",
             "}")
 
@@ -1464,12 +1464,12 @@ class FieldInjectionTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectBaseModelInDependency(target);",
+            "       target.dependency = injectBaseModelInDependency();",
             "   }",
             "",
-            "   private final void injectBaseModelInDependency(@NonNull final Activity target) {",
+            "   private final BaseModel injectBaseModelInDependency() {",
             "       BaseModel baseModel = new BaseModel(Ioc.singleton(Amplitude.class), Ioc.singleton(Amplitude.class));",
-            "       target.dependency = baseModel;",
+            "       return baseModel;",
             "   }",
             "}")
 
@@ -1542,12 +1542,12 @@ class FieldInjectionTest {
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
             "       new BaseActivityInjector().inject(target);",
-            "       injectClickedEventLoggerInClickedEventLogger(target);",
+            "       target.clickedEventLogger = injectClickedEventLoggerInClickedEventLogger();",
             "   }",
             "",
-            "   private final void injectClickedEventLoggerInClickedEventLogger(@NonNull final Activity target) {",
+            "   private final ClickedEventLogger injectClickedEventLoggerInClickedEventLogger() {",
             "       Amplitude amplitude = Ioc.singleton(Amplitude.class);",
-            "       target.clickedEventLogger = amplitude;",
+            "       return amplitude;",
             "   }",
             "}")
 
@@ -1816,17 +1816,17 @@ class FieldInjectionTest {
             "",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectBuildCheckInAppendBuildCheck(target);",
+            "       target.appendBuildCheck(injectBuildCheckInAppendBuildCheck());",
             "   }",
             "",
-            "   private final void injectBuildCheckInAppendBuildCheck(@NonNull final Activity target) {",
+            "   private final BuildCheck injectBuildCheckInAppendBuildCheck() {",
             "       BuildCheck buildCheck = new BuildCheck(Ioc.singleton(Preferences.class));",
-            "       target.appendBuildCheck(buildCheck);",
+            "       return buildCheck;",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(listOf<JavaFileObject>(activityFile, contextModuleFile, contextFile, preferencesFile, buildCheckFile))
+            .that(listOf(activityFile, contextModuleFile, contextFile, preferencesFile, buildCheckFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -1885,13 +1885,13 @@ class FieldInjectionTest {
             "",
             "   @Keep",
             "   public final void inject(@NonNull final MyActivity target) {",
-            "       injectControllerInAppendBuildCheck(target);",
+            "       target.appendBuildCheck(injectControllerInAppendBuildCheck(target));",
             "   }",
             "",
-            "   private final void injectControllerInAppendBuildCheck(@NonNull final MyActivity target) {",
+            "   private final Controller injectControllerInAppendBuildCheck(@NonNull final MyActivity target) {",
             "       Listener listener = new AutoCompleteListenerImpl(target);",
             "       Controller controller = new Controller(listener);",
-            "       target.appendBuildCheck(controller);",
+            "       return controller;",
             "   }",
             "}")
 
@@ -1963,13 +1963,13 @@ class FieldInjectionTest {
             "",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectControllerInAppendBuildCheck(target);",
+            "       target.appendBuildCheck(injectControllerInAppendBuildCheck());",
             "   }",
             "",
-            "   private final void injectControllerInAppendBuildCheck(@NonNull final Activity target) {",
+            "   private final Controller injectControllerInAppendBuildCheck() {",
             "       HttpLoggingInterceptor httpLoggingInterceptor = RestModule.provideHttpLoggingInterceptor();",
             "       Controller controller = new Controller(httpLoggingInterceptor);",
-            "       target.appendBuildCheck(controller);",
+            "       return controller;",
             "   }",
             "}")
 
@@ -2062,12 +2062,12 @@ class FieldInjectionTest {
             "",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectSpeedDialDisplayedEventLoggerInLogger(target);",
+            "       target.setLogger(injectSpeedDialDisplayedEventLoggerInLogger());",
             "   }",
             "",
-            "   private final void injectSpeedDialDisplayedEventLoggerInLogger(@NonNull final Activity target) {",
+            "   private final SpeedDialDisplayedEventLogger injectSpeedDialDisplayedEventLoggerInLogger() {",
             "       AmplitudeDefaultLogger amplitudeDefaultLogger = Ioc.singleton(AmplitudeDefaultLogger.class);",
-            "       target.setLogger(amplitudeDefaultLogger);",
+            "       return amplitudeDefaultLogger;",
             "   }",
             "}")
 
@@ -2223,25 +2223,25 @@ class FieldInjectionTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import android.support.annotation.Keep",
-            "import android.support.annotation.NonNull",
+            "import $keep",
+            "import $nonNull",
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "     injectPresenterInPresenter(target);",
+            "     target.set(injectPresenterInPresenter(target));",
             "   }",
             "",
-            "   private final void injectPresenterInPresenter(@NonNull final Activity target) {",
+            "   private final Presenter injectPresenterInPresenter(@NonNull final Activity target) {",
             "       Presenter presenter = new Presenter(target, target);",
-            "       target.set(presenter);",
+            "       return presenter;",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, runnable, parentActivity, context, presenter))
+            .that(listOf(activityFile, runnable, parentActivity, context, presenter))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -2331,13 +2331,13 @@ class FieldInjectionTest {
             "",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectPreferencesInPreferences(target);",
+            "       target.preferences = injectPreferencesInPreferences();",
             "   }",
             "",
-            "   private final void injectPreferencesInPreferences(@NonNull final Activity target) {",
+            "   private final Preferences injectPreferencesInPreferences() {",
             "       Context context = ContextModule.context(Ioc.singleton(AmplitudeDefaultLogger.class));",
             "       Preferences preferences = new Preferences(context, Ioc.singleton(AmplitudeDefaultLogger.class));",
-            "       target.preferences = preferences;",
+            "       return preferences;",
             "   }",
             "}")
 
@@ -2404,14 +2404,14 @@ class FieldInjectionTest {
             "",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectPresenterInPresenter(target);",
+            "       target.presenter = injectPresenterInPresenter();",
             "   }",
             "",
-            "   private final void injectPresenterInPresenter(@NonNull final Activity target) {",
+            "   private final Presenter injectPresenterInPresenter() {",
             "       Context context = ContextModule.context();",
             "       WeakReference<Context> weakContext = new WeakReference<Context>(context);",
             "       Presenter presenter = new Presenter(weakContext);",
-            "       target.presenter = presenter;",
+            "       return presenter;",
             "   }",
             "}")
 
@@ -2479,10 +2479,10 @@ class FieldInjectionTest {
             "",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectPresenterInPresenter(target);",
+            "       target.presenter = injectPresenterInPresenter();",
             "   }",
             "",
-            "   private final void injectPresenterInPresenter(@NonNull final Activity target) {",
+            "   private final Presenter injectPresenterInPresenter() {",
             "       IocProvider<Context> providerContext = new IocProvider<Context>() {",
             "           protected Context initialize() {",
             "             Context context = ContextModule.context();",
@@ -2490,7 +2490,7 @@ class FieldInjectionTest {
             "           }",
             "       }",
             "       Presenter presenter = new Presenter(providerContext);",
-            "       target.presenter = presenter;",
+            "       return presenter;",
             "   }",
             "}")
 
@@ -2521,8 +2521,8 @@ class FieldInjectionTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import android.support.annotation.Keep",
-            "import android.support.annotation.NonNull",
+            "import $keep",
+            "import $nonNull",
             importType(CompositeDisposable::class.java),
             "",
             "@Keep",
@@ -2530,17 +2530,17 @@ class FieldInjectionTest {
             "",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectCompositeDisposableInSubscription(target);",
+            "       target.subscription = injectCompositeDisposableInSubscription();",
             "   }",
             "",
-            "   private final void injectCompositeDisposableInSubscription(@NonNull final Activity target) {",
+            "   private final CompositeDisposable injectCompositeDisposableInSubscription() {",
             "       CompositeDisposable compositeDisposable = new CompositeDisposable();",
-            "       target.subscription = compositeDisposable;",
+            "       return compositeDisposable;",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile))
+            .that(listOf(activityFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -2594,8 +2594,8 @@ class FieldInjectionTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import android.support.annotation.Keep",
-            "import android.support.annotation.NonNull",
+            "import $keep",
+            "import $nonNull",
             importType(IocLazy::class.java),
             "",
             "@Keep",
@@ -2603,10 +2603,10 @@ class FieldInjectionTest {
             "",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectPresenterInPresenter(target);",
+            "       target.presenter = injectPresenterInPresenter();",
             "   }",
             "",
-            "   private final void injectPresenterInPresenter(@NonNull final Activity target) {",
+            "   private final Presenter injectPresenterInPresenter() {",
             "       IocLazy<Context> lazyContext = new IocLazy<Context>() {",
             "           protected Context initialize() {",
             "             Context context = ContextModule.context();",
@@ -2614,12 +2614,12 @@ class FieldInjectionTest {
             "           }",
             "       }",
             "       Presenter presenter = new Presenter(lazyContext);",
-            "       target.presenter = presenter;",
+            "       return presenter;",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, presenter, contextModule, context))
+            .that(listOf(activityFile, presenter, contextModule, context))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -2681,10 +2681,10 @@ class FieldInjectionTest {
             "",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectPresenterInPresenter(target);",
+            "       target.presenter = injectPresenterInPresenter();",
             "   }",
             "",
-            "   private final void injectPresenterInPresenter(@NonNull final Activity target) {",
+            "   private final IocLazy<Presenter> injectPresenterInPresenter() {",
             "       IocLazy<Presenter> lazyPresenter = new IocLazy<Presenter>() {",
             "           protected Presenter initialize() {",
             "             Context context = ContextModule.context();",
@@ -2692,7 +2692,7 @@ class FieldInjectionTest {
             "             return presenter;",
             "           }",
             "       }",
-            "       target.presenter = lazyPresenter;",
+            "       return lazyPresenter;",
             "   }",
             "}")
 
@@ -2760,27 +2760,27 @@ class FieldInjectionTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import android.support.annotation.Keep",
-            "import android.support.annotation.NonNull",
+            "import $keep",
+            "import $nonNull",
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectPresenterInPresenter(target);",
+            "       target.presenter = injectPresenterInPresenter(target);",
             "   }",
             "",
-            "   private final void injectPresenterInPresenter(@NonNull final Activity target) {",
+            "   private final Presenter injectPresenterInPresenter(@NonNull final Activity target) {",
             "       Resource resource = ContextModule.resource();",
             "       Context context = ContextModule.context(resource, target);",
             "       Presenter presenter = ContextModule.presenter(context);",
-            "       target.presenter = presenter;",
+            "       return presenter;",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, resources, presenter, contextModule, context))
+            .that(listOf(activityFile, resources, presenter, contextModule, context))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -2853,12 +2853,12 @@ class FieldInjectionTest {
             "",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectPresenterInPresenter(target);",
+            "       target.presenter = injectPresenterInPresenter();",
             "   }",
             "",
-            "   private final void injectPresenterInPresenter(@NonNull final Activity target) {",
+            "   private final Presenter injectPresenterInPresenter() {",
             "       Presenter presenter = ContextModule.presenter(Ioc.singleton(Context.class));",
-            "       target.presenter = presenter;",
+            "       return presenter;",
             "   }",
             "}")
 
@@ -2976,13 +2976,13 @@ class FieldInjectionTest {
             "",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectPresenterInPresenter(target);",
+            "       target.presenter = injectPresenterInPresenter();",
             "   }",
             "",
-            "   private final void injectPresenterInPresenter(@NonNull final Activity target) {",
+            "   private final Presenter injectPresenterInPresenter() {",
             "       Resource resource = new Resource(Ioc.singleton(Context.class));",
             "       Presenter presenter = new Presenter(Ioc.singleton(Context.class), resource);",
-            "       target.presenter = presenter;",
+            "       return presenter;",
             "   }",
             "}")
 
@@ -3008,8 +3008,8 @@ class FieldInjectionTest {
 
         val resource = JavaFileObjects.forSourceLines("test.Resource",
             "package test;",
-            importType(Singleton::class.java),
-            importType(Dependency::class.java),
+            "import $singleton;",
+            "import $dependency;",
 
             "@Dependency",
             "public class Resource extends Context {",
@@ -3039,26 +3039,26 @@ class FieldInjectionTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import android.support.annotation.Keep",
-            "import android.support.annotation.NonNull",
+            "import $keep",
+            "import $nonNull",
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectContextInContext(target);",
+            "       target.context = injectContextInContext();",
             "   }",
             "",
-            "   private final void injectContextInContext(@NonNull final Activity target) {",
+            "   private final Context injectContextInContext() {",
             "       Preferences preferences = new Preferences();",
             "       Context context = new Resource(preferences);",
-            "       target.context = context;",
+            "       return context;",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, presenter, resource, context))
+            .that(listOf(activityFile, presenter, resource, context))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -3114,13 +3114,13 @@ class FieldInjectionTest {
             "",
             "   @Keep",
             "   public final void inject(@NonNull final MainActivity target) {",
-            "       injectPresenterInPresenter(target);",
+            "       target.presenter = injectPresenterInPresenter(target);",
             "   }",
             "",
-            "   private final void injectPresenterInPresenter(@NonNull final MainActivity target) {",
+            "   private final Presenter injectPresenterInPresenter(@NonNull final MainActivity target) {",
             "       SharedPreferences sharedPreferences = PreferencesModule.getPreferences(target);",
             "       Presenter presenter = new Presenter(sharedPreferences);",
-            "       target.presenter = presenter;",
+            "       return presenter;",
             "   }",
             "}")
 
@@ -3188,8 +3188,8 @@ class FieldInjectionTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.MainActivityInjector",
             "package test;",
             "",
-            "import android.support.annotation.Keep",
-            "import android.support.annotation.NonNull",
+            "import $keep",
+            "import $nonNull",
             "",
             "@Keep",
             "public final class MainActivityInjector {",
@@ -3197,17 +3197,17 @@ class FieldInjectionTest {
             "   @Keep",
             "   public final void inject(@NonNull final MainActivity target) {",
             "       new SuperActivityInjector().inject(target);",
-            "       injectFileManagerInFileManager(target);",
+            "       target.fileManager = injectFileManagerInFileManager();",
             "   }",
             "",
-            "   private final void injectFileManagerInFileManager(@NonNull final MainActivity target) {",
+            "   private final FileManager injectFileManagerInFileManager() {",
             "       FileManager fileManager = new FileManager();",
-            "       target.fileManager = fileManager;",
+            "       return fileManager;",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, logger, fileManager, superFile, parentFile))
+            .that(listOf(activityFile, logger, fileManager, superFile, parentFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -3269,8 +3269,8 @@ class FieldInjectionTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.MainActivityInjector",
             "package test;",
             "",
-            "import android.support.annotation.Keep",
-            "import android.support.annotation.NonNull",
+            "import $keep",
+            "import $nonNull",
             "",
             "@Keep",
             "public final class MainActivityInjector {",
@@ -3278,17 +3278,17 @@ class FieldInjectionTest {
             "   @Keep",
             "   public final void inject(@NonNull final MainActivity target) {",
             "       new ParentActivityInjector().inject(target);",
-            "       injectFileManagerInFileManager(target);",
+            "       target.fileManager = injectFileManagerInFileManager();",
             "   }",
             "",
-            "   private final void injectFileManagerInFileManager(@NonNull final MainActivity target) {",
+            "   private final FileManager injectFileManagerInFileManager() {",
             "       FileManager fileManager = new FileManager();",
-            "       target.fileManager = fileManager;",
+            "       return fileManager;",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, logger, fileManager, superFile, parentFile))
+            .that(listOf(activityFile, logger, fileManager, superFile, parentFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -3352,10 +3352,10 @@ class FieldInjectionTest {
             "",
             "   @Keep",
             "   public final void inject(@NonNull final MainActivity target) {",
-            "       injectDependencyInDependency(target);",
+            "       target.dependency = injectDependencyInDependency();",
             "   }",
             "",
-            "   private final void injectDependencyInDependency(@NonNull final MainActivity target) {",
+            "   private final Dependency injectDependencyInDependency() {",
             "       Logger logger = new Logger();",
             "       IocProvider<FileManager> providerFileManager = new IocProvider<FileManager>() {",
             "           protected FileManager initialize() {",
@@ -3364,7 +3364,7 @@ class FieldInjectionTest {
             "          }",
             "      };",
             "      Dependency dependency = new Dependency(logger, providerFileManager);",
-            "      target.dependency = dependency;",
+            "      return dependency;",
             "   }",
             "}")
 
@@ -3433,10 +3433,10 @@ class FieldInjectionTest {
             "",
             "   @Keep",
             "   public final void inject(@NonNull final MainActivity target) {",
-            "       injectDependencyInDependency(target);",
+            "       target.dependency = injectDependencyInDependency();",
             "   }",
             "",
-            "   private final void injectDependencyInDependency(@NonNull final MainActivity target) {",
+            "   private final Dependency injectDependencyInDependency() {",
             "       Logger logger = new Logger();",
             "       IocLazy<FileManager> lazyFileManager = new IocLazy<FileManager>() {",
             "           protected FileManager initialize() {",
@@ -3445,7 +3445,7 @@ class FieldInjectionTest {
             "          }",
             "      };",
             "      Dependency dependency = new Dependency(logger, lazyFileManager);",
-            "      target.dependency = dependency;",
+            "      return dependency;",
             "   }",
             "}")
 
@@ -3508,12 +3508,12 @@ class FieldInjectionTest {
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
             "       new ParentActivityInjector().inject(target);",
-            "       injectDependencyModelInDependency(target);",
+            "       target.dependency = injectDependencyModelInDependency();",
             "   }",
             "",
-            "   private final void injectDependencyModelInDependency(@NonNull final Activity target) {",
+            "   private final DependencyModel injectDependencyModelInDependency() {",
             "       DependencyModel dependencyModel = new DependencyModel();",
-            "       target.dependency = dependencyModel;",
+            "       return dependencyModel;",
             "   }",
             "}")
 
@@ -3569,18 +3569,18 @@ class FieldInjectionTest {
             "",
             "   @Keep",
             "   public final void inject(@NonNull final MyActivity target) {",
-            "       injectSubjectInBooleanSubject(target);",
-            "       injectSubjectInIntegerSubject(target);",
+            "       target.booleanSubject = injectSubjectInBooleanSubject();",
+            "       target.integerSubject = injectSubjectInIntegerSubject();",
             "   }",
             "",
-            "   private final void injectSubjectInBooleanSubject(@NonNull final MyActivity target) {",
+            "   private final Subject<Boolean> injectSubjectInBooleanSubject() {",
             "       Subject<Boolean> subject = SubjectModule.get();",
-            "       target.booleanSubject = subject;",
+            "       return subject;",
             "   }",
             "",
-            "   private final void injectSubjectInIntegerSubject(@NonNull final MyActivity target) {",
+            "   private final Subject<Integer> injectSubjectInIntegerSubject() {",
             "       Subject<Integer> subject2 = SubjectModule.getIntegerSubject();",
-            "       target.integerSubject = subject2;",
+            "       return subject2;",
             "   }",
             "}")
 
@@ -3639,12 +3639,12 @@ class FieldInjectionTest {
             "public final class MyActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final MyActivity target) {",
-            "       injectIncognitoInIncognito(target);",
+            "       target.incognito = injectIncognitoInIncognito();",
             "   }",
             "",
-            "   private final void injectIncognitoInIncognito(@NonNull final MyActivity target) {",
+            "   private final Incognito injectIncognitoInIncognito() {",
             "       Incognito incognito = new Settings();",
-            "       target.incognito = incognito;",
+            "       return incognito;",
             "   }",
             "}")
 
@@ -3696,24 +3696,24 @@ class FieldInjectionTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.MyActivityInjector",
             "package test;",
             "",
-            "import android.support.annotation.Keep",
-            "import android.support.annotation.NonNull",
+            "import $keep",
+            "import $nonNull",
             "",
             "@Keep",
             "public final class MyActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final MyActivity target) {",
-            "       injectIncognitoInIncognito(target);",
+            "       target.incognito = injectIncognitoInIncognito();",
             "   }",
             "",
-            "   private final void injectIncognitoInIncognito(@NonNull final MyActivity target) {",
+            "   private final Incognito injectIncognitoInIncognito() {",
             "       Incognito incognito = new Settings();",
-            "       target.incognito = incognito;",
+            "       return incognito;",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, incognito, privacy, settings))
+            .that(listOf(activityFile, incognito, privacy, settings))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -3836,23 +3836,23 @@ class FieldInjectionTest {
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
-            "import android.support.annotation.Keep",
-            "import android.support.annotation.NonNull",
+            "import $keep",
+            "import $nonNull",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
             "       new ParentActivityInjector().inject(target);",
-            "       injectDependencyModelInChildDependency(target);",
+            "       target.childDependency = injectDependencyModelInChildDependency();",
             "   }",
-            "   private final void injectDependencyModelInChildDependency(@NonNull final Activity target) {",
+            "   private final DependencyModel injectDependencyModelInChildDependency() {",
             "       DependencyModel dependencyModel = new DependencyModel();",
-            "       target.childDependency = dependencyModel;",
+            "       return dependencyModel;",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(listOf<JavaFileObject>(activityFile, activityParentFile, dependencyFile, parentDependencyFile))
+            .that(listOf(activityFile, activityParentFile, dependencyFile, parentDependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)

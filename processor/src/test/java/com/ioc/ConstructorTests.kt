@@ -55,18 +55,18 @@ class ConstructorTests : BaseTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectParentDependencyInDependency(target);",
+            "       target.dependency = injectParentDependencyInDependency();",
             "   }",
             "",
-            "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
+            "   private final ParentDependency injectParentDependencyInDependency() {",
             "       DependencyModel dependencyModel = new DependencyModel();",
             "       ParentDependency parentDependency = new ParentDependency(dependencyModel);",
-            "       target.dependency = parentDependency;",
+            "       return parentDependency;",
             "   }",
             "}")
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(activityFile, dependencyFile, parentDependencyFile))
+            .that(listOf(activityFile, dependencyFile, parentDependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -252,18 +252,18 @@ class ConstructorTests : BaseTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       injectDependencyModelInDependency(target);",
+            "       target.dependency = injectDependencyModelInDependency();",
             "       target.postInitialization();",
             "   }",
             "",
-            "   private final void injectDependencyModelInDependency(@NonNull final Activity target) {",
+            "   private final DependencyModel injectDependencyModelInDependency() {",
             "       DependencyModel dependencyModel = new DependencyModel();",
-            "       target.dependency = dependencyModel;",
+            "       return dependencyModel;",
             "   }",
             "}")
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(activityFile, dependencyFile))
+            .that(listOf(activityFile, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
