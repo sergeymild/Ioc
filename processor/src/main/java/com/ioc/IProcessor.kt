@@ -213,7 +213,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
                     continue
                 }
 
-                val code = dependencyInjectionCode(dependency, processingEnv.typeUtils, target.key)
+                val code = dependencyInjectionCode(dependency, target.key)
                 // generate base injection code
                 val isTargetUsedAsDependency = isTargetUsedWhileCreateDependency(target.key, dependency)
                 val methodBuilder = provideInjectionMethod(target.key.className, isTargetUsedAsDependency, dependency, code.build())

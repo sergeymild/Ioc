@@ -54,7 +54,7 @@ class NewSingletonSpec(
             .addModifiers(Modifier.PROTECTED, Modifier.FINAL)
             .returns(dependencyModel.className)
 
-        val code = DependencyTree.get(dependencyModel.dependencies, typeUtils)
+        val code = DependencyTree.get(dependencyModel.dependencies)
         builder.addCode(code)
 
         applyIsLoadIfNeed(dependencyModel.dependencies, null)

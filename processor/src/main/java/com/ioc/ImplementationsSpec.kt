@@ -3,7 +3,6 @@ package com.ioc
 import com.ioc.common.*
 import com.squareup.javapoet.*
 import javax.lang.model.element.Modifier
-import javax.lang.model.util.Types
 
 /**
  * Created by sergeygolishnikov on 10/07/2017.
@@ -123,7 +122,6 @@ class ImplementationsSpec constructor(
 
         fun dependencyInjectionCode(
             dependency: DependencyModel,
-            typeUtils: Types,
             target: TargetType): CodeBlock.Builder {
 
             val packageName = dependency.originalType.asTypeElement().getPackage()
@@ -134,7 +132,7 @@ class ImplementationsSpec constructor(
 
             val builder = CodeBlock.builder()
 
-            val code = DependencyTree.generateWithLocalScope(listOf(dependency), typeUtils, target)
+            val code = DependencyTree.get(listOf(dependency), skipCheckLocalScope = true, target = target)
             builder.add(code)
             return builder
         }

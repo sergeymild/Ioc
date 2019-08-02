@@ -4,7 +4,6 @@ import com.ioc.common.asTypeElement
 import com.ioc.common.iocType
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.CodeBlock
-import javax.lang.model.util.Types
 
 /**
  * Created by sergeygolishnikov on 11/07/2017.
@@ -59,12 +58,9 @@ fun applyIsLoadIfNeed(dependencies: List<DependencyModel>, target: TargetType?) 
     }
 }
 
-fun argumentsConstructor(
-    model: DependencyModel,
-    typeUtils: Types,
-    target: TargetType?): CodeBlock {
+fun argumentsConstructor(model: DependencyModel, target: TargetType?): CodeBlock {
 
-    val dependencies = DependencyTree.get(model.dependencies, typeUtils, target)
+    val dependencies = DependencyTree.get(model.dependencies, target = target)
     val builder = CodeBlock.builder().add(dependencies)
 
     applyIsLoadIfNeed(model.dependencies, target)
@@ -75,21 +71,6 @@ fun argumentsConstructor(
         model.originalType.asType(),
         model.generatedName,
         model.className, names).build()
-}
-
-fun singletonProvider(model: DependencyModel): String {
-    val singletonName = model.dependency.asTypeElement().qualifiedName.toString()
-    return CodeBlock.builder()
-        .add("\$T.singleton(\$T.class)", ClassName.get(Ioc::class.java), ClassName.bestGuess(singletonName))
-        .build().toString()
-    //return "com.ioc.Ioc.singleton($singletonName.class)"
-}
-
-fun singletonProviderCode(model: DependencyModel): CodeBlock {
-    val singletonName = model.dependency.asTypeElement().qualifiedName.toString()
-    return CodeBlock.builder()
-        .add("\$T.singleton(\$T.class)", ClassName.get(Ioc::class.java), ClassName.bestGuess(singletonName))
-        .build()
 }
 
 fun singleton(model: DependencyModel): CodeBlock {

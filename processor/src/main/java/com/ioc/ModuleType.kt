@@ -9,7 +9,7 @@ import javax.lang.model.element.Element
  */
 
 fun dependencyName(model: DependencyModel) = when {
-    model.isSingleton -> singletonProviderCode(model)
+    model.isSingleton -> iocGetSingleton(model)
     model.isLocal -> CodeBlock.of("target.\$N", model.fieldName)
     else -> CodeBlock.of("\$N", model.generatedName)
 }

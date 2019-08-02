@@ -2,7 +2,6 @@ package com.ioc
 
 import com.ioc.common.emptyCodBlock
 import com.squareup.javapoet.CodeBlock
-import javax.lang.model.util.Types
 
 /**
  * Created by sergeygolishnikov on 20/11/2017.
@@ -12,7 +11,6 @@ object ProviderMethodBuilder {
     fun build(
         provider: DependencyProvider,
         dependencyModel: DependencyModel,
-        typeUtils: Types,
         target: TargetType?): CodeBlock {
 
         if (provider.dependencyModels.isEmpty()) {
@@ -22,7 +20,7 @@ object ProviderMethodBuilder {
         val builder = CodeBlock.builder()
 
         if (!provider.isSingleton) {
-            DependencyTree.get(provider.dependencyModels, typeUtils, target)
+            DependencyTree.get(provider.dependencyModels, target = target)
                 .also { builder.add(it) }
         }
 
