@@ -46,22 +46,15 @@ object DependencyTree {
 
         if (dependency.isSingleton) return emptyCodBlock
 
-        if (dependency.isViewModel) {
-            return get(dependency.dependencies, target = target)
+        if (dependency.isViewModel) return get(dependency.dependencies, target = target)
+
+        for (implementation in dependency.implementations) {
+            if (implementation.isMethod) {
+                return ProviderMethodBuilder.build(implementation, dependency, target)
+            }
+
+            return buildForSingleton(implementation, dependency, target)
         }
-
-        // Generate dependency from method provider
-        dependency.implementations.filter { it.isMethod }
-            .map { ProviderMethodBuilder.build(it, dependency, target) }
-            .firstOrNull()
-            ?.let { return it }
-
-
-        // Generate dependency from implementations (i.e. interface implementations)
-        dependency.implementations.filter { !it.isMethod }
-            .map { buildForSingleton(it, dependency, target) }
-            .firstOrNull()
-            ?.let { return it }
 
         // if we here it's mean what we have dependency with arguments constructor or empty constructor
         if (dependency.argumentsConstructor != null) {
