@@ -109,14 +109,6 @@ class ImplementationsSpec constructor(
             codeBlock: CodeBlock): MethodSpec.Builder {
 
             val body = codeBlock.toBuilder()
-            if (model.isSingleton) {
-                val singletonName = model.dependency.asTypeElement().qualifiedName.toString()
-                body.add("\$T \$N = \$T.singleton(\$T.class);\n",
-                    model.className,
-                    model.generatedName,
-                    iocType,
-                    ClassName.bestGuess(singletonName))
-            }
 
             val methodName = "provide${model.originalType.simpleName.capitalize()}"
             val methodBuilder = MethodSpec.methodBuilder(methodName)
@@ -144,7 +136,6 @@ class ImplementationsSpec constructor(
 
             val code = DependencyTree.generateWithLocalScope(listOf(dependency), typeUtils, target)
             builder.add(code)
-            //applyIsLoadIfNeed(listOf(dependency), target, usedSingletons)
             return builder
         }
 
