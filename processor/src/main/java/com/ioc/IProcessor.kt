@@ -3,10 +3,8 @@ package com.ioc
 import com.ioc.ImplementationsSpec.Companion.addDataObservers
 import com.ioc.ImplementationsSpec.Companion.dependencyInjectionCode
 import com.ioc.ImplementationsSpec.Companion.dependencyInjectionMethod
-import com.ioc.ImplementationsSpec.Companion.injectInTarget
 import com.ioc.common.*
 import com.squareup.javapoet.JavaFile
-import com.squareup.javapoet.MethodSpec
 import com.squareup.javapoet.TypeSpec
 import java.util.*
 import javax.annotation.processing.*

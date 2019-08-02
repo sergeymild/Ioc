@@ -59,34 +59,21 @@ class ImplementationsSpec constructor(
         }
 
         for (singleton in singletonsToInject) {
-            val singletonName = singleton.dependency.asTypeElement().qualifiedName.toString()
-            val className = ClassName.bestGuess(singletonName)
-            if (singleton.setterMethod != null) {
-                builder.addStatement("target.${singleton.setterMethod?.simpleName}(\$T.singleton(\$T.class))", ClassName.get(Ioc::class.java), className)
-            } else {
-                builder.addStatement("target.${singleton.setterName()} = \$T.singleton(\$T.class)", ClassName.get(Ioc::class.java), className)
-            }
+            builder.addCode(setInTarget(singleton, iocGetSingleton(singleton)))
         }
 
         for (method in this.methods) {
             if (method.methodSpec.returnType == TypeName.VOID) {
-                if (method.isTargetUsedAsDependency) builder.addStatement("\$N(target)", method.methodSpec.name)
-                else builder.addStatement("\$N(target)", method.methodSpec.name)
+                builder.addStatement("\$N(target)", method.methodSpec.name)
                 continue
             }
-            if (method.isTargetUsedAsDependency) {
-                if (method.returnTypeDependencyModel?.setterMethod != null) {
-                    builder.addStatement("target.${method.returnTypeDependencyModel.setterMethod?.simpleName}(\$N(target))", method.methodSpec.name)
-                } else {
-                    builder.addStatement("target.${method.returnTypeDependencyModel?.setterName()} = \$N(target)", method.methodSpec.name)
-                }
+
+            val callMethodCode = if (method.isTargetUsedAsDependency) {
+                CodeBlock.of("\$N(target)", method.methodSpec.name)
             } else {
-                if (method.returnTypeDependencyModel?.setterMethod != null) {
-                    builder.addStatement("target.${method.returnTypeDependencyModel.setterMethod?.simpleName}(\$N())", method.methodSpec.name)
-                } else {
-                    builder.addStatement("target.${method.returnTypeDependencyModel?.setterName()} = \$N()", method.methodSpec.name)
-                }
+                CodeBlock.of("\$N()", method.methodSpec.name)
             }
+            builder.addCode(setInTarget(method.returnTypeDependencyModel!!, callMethodCode))
         }
 
         val postInitialization = target.postInitialization
@@ -121,7 +108,7 @@ class ImplementationsSpec constructor(
                 body.add("\$T \$N = \$T.singleton(\$T.class);\n",
                     model.className,
                     model.generatedName,
-                    ClassName.get(Ioc::class.java),
+                    iocType,
                     ClassName.bestGuess(singletonName))
             }
 
@@ -189,11 +176,6 @@ class ImplementationsSpec constructor(
             }
 
             return methods
-        }
-
-        fun injectInTarget(builder: MethodSpec.Builder, dependency: DependencyModel): MethodSpec {
-            builder.addCode(dependency.setDependency("target.${dependency.setterName()}", dependency.generatedName))
-            return builder.build()
         }
     }
 

@@ -1,6 +1,7 @@
 package com.ioc
 
 import com.ioc.common.asTypeElement
+import com.ioc.common.iocType
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.CodeBlock
 import javax.lang.model.util.Types
@@ -9,6 +10,19 @@ import javax.lang.model.util.Types
  * Created by sergeygolishnikov on 11/07/2017.
  */
 private val SINGLETON = "Singleton"
+
+fun iocGetSingleton(model: DependencyModel): CodeBlock {
+    val singletonName = model.dependency.asTypeElement().qualifiedName.toString()
+    val className = ClassName.bestGuess(singletonName)
+    return CodeBlock.builder().add("\$T.singleton(\$T.class)", iocType, className).build()
+}
+
+fun setInTarget(dependency: DependencyModel, codeBlock: CodeBlock): CodeBlock {
+    val setterCodeBlock = CodeBlock.builder()
+    if (dependency.setterMethod != null) setterCodeBlock.addStatement("target.\$N(\$L)", dependency.setterName(), codeBlock)
+    else setterCodeBlock.addStatement("target.\$N = \$L", dependency.setterName(), codeBlock)
+    return setterCodeBlock.build()
+}
 
 fun CodeBlock.Builder.emptyConstructor(model: DependencyModel): CodeBlock {
     return addStatement("\$T \$N = new \$T()",

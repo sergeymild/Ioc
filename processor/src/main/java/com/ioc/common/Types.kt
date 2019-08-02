@@ -1,5 +1,6 @@
 package com.ioc.common
 
+import com.ioc.Ioc
 import com.ioc.IocLazy
 import com.ioc.IocProvider
 import com.squareup.javapoet.ClassName
@@ -8,6 +9,7 @@ import java.lang.ref.WeakReference
 val lifecyclePackage = "androidx.lifecycle"
 val iocLazyType = ClassName.get(IocLazy::class.java)
 val iocProviderType = ClassName.get(IocProvider::class.java)
+val iocType = ClassName.get(Ioc::class.java)
 val weakType = ClassName.get(WeakReference::class.java)
 val viewModelFactoryType = ClassName.bestGuess("$lifecyclePackage.ViewModelProvider.Factory")
 val keepAnnotation = ClassName.bestGuess("android.support.annotation.Keep")
