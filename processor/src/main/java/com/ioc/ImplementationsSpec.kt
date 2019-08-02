@@ -23,10 +23,6 @@ class ImplementationsSpec constructor(
     private val target: TargetType,
     private val methods: List<InjectMethod>) {
 
-    init {
-        target.parentsDependencies()
-    }
-
     @Throws(Throwable::class)
     fun inject(
         singletonsToInject: List<DependencyModel>,

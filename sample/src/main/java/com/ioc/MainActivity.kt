@@ -1,28 +1,17 @@
 package com.ioc
 
 
-import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModel
-import com.ios.injector.R
 import javax.inject.Inject
-import javax.inject.Singleton
 
-class MyViewModel: ViewModel() {
-    val liveData = MutableLiveData<String>()
-}
+interface Dep
 
+class DepImpl: Dep
 
-class Fra: Fragment() {
-    @Inject
-    var myViewModel: MyViewModel? = null
-
-    @DataObserver
-    fun dataObserver(string: String) {
-
+object Module {
+    @Dependency
+    fun provide(): Dep {
+        return DepImpl()
     }
 }
 
@@ -32,7 +21,7 @@ class MainActivity : AppCompatActivity() {
 
 
     @Inject
-    lateinit var myViewModel: MyViewModel
+    lateinit var dep: Dep
 //
 //    override fun onCreate(savedInstanceState: Bundle?) {
 //        super.onCreate(savedInstanceState)

@@ -8,7 +8,6 @@ import com.squareup.javapoet.CodeBlock
 /**
  * Created by sergeygolishnikov on 11/07/2017.
  */
-private val SINGLETON = "Singleton"
 
 fun iocGetSingleton(model: DependencyModel): CodeBlock {
     val singletonName = model.dependency.asTypeElement().qualifiedName.toString()
@@ -65,29 +64,9 @@ fun argumentsConstructor(model: DependencyModel, target: TargetType?): CodeBlock
 
     applyIsLoadIfNeed(model.dependencies, target)
 
-    val names = model.dependencyNames()
-
     return builder.addStatement("\$T \$N = new \$T(\$L)",
         model.originalType.asType(),
         model.generatedName,
-        model.className, names).build()
-}
-
-fun singleton(model: DependencyModel): CodeBlock {
-    val name = model.dependency.simpleName.toString()
-    model.generatedName = uniqueName(name).decapitalize()
-    val singleton = ClassName.bestGuess("${model.packageName}.${model.dependency.asTypeElement().simpleName}$SINGLETON")
-    val type = model.dependency.asTypeElement()
-    return CodeBlock.builder()
-        .addStatement("\$T \$N = \$T.get()",
-            type,
-            model.generatedName,
-            singleton)
-        .build()
-}
-
-fun singleton(name: String, model: DependencyModel): CodeBlock {
-    val singleton = ClassName.bestGuess("${model.packageName}.${model.dependency.asTypeElement().simpleName}$SINGLETON")
-    val type = model.dependency.asTypeElement()
-    return CodeBlock.builder().addStatement("\$T \$N = \$T.get()", type, name, singleton).build()
+        model.className,
+        model.dependencyNames()).build()
 }

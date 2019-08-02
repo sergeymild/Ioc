@@ -67,7 +67,7 @@ class ModuleTests {
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, moduleFile, dependencyFile))
+            .that(listOf(activityFile, moduleFile, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -176,7 +176,7 @@ class ModuleTests {
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, moduleFile, dependencyFile))
+            .that(listOf(activityFile, moduleFile, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -234,7 +234,7 @@ class ModuleTests {
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, moduleFile, dependencyFile))
+            .that(listOf(activityFile, moduleFile, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -302,7 +302,7 @@ class ModuleTests {
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, moduleFile, parentDependencyFile, dependencyFile))
+            .that(listOf(activityFile, moduleFile, parentDependencyFile, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -372,7 +372,7 @@ class ModuleTests {
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, moduleFile, parentDependencyFile, dependencyFile))
+            .that(listOf(activityFile, moduleFile, parentDependencyFile, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -441,7 +441,7 @@ class ModuleTests {
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, moduleFile, parentDependencyFile, dependencyFile))
+            .that(listOf(activityFile, moduleFile, parentDependencyFile, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -512,7 +512,7 @@ class ModuleTests {
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, moduleFile, parentDependencyFile, dependencyFile))
+            .that(listOf(activityFile, moduleFile, parentDependencyFile, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -886,7 +886,7 @@ class ModuleTests {
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, moduleFile, parentDependencyFile))
+            .that(listOf(activityFile, moduleFile, parentDependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -1610,7 +1610,7 @@ class ModuleTests {
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, countryServiceImplementation, countryServiceFile, moduleFile))
+            .that(listOf(activityFile, countryServiceImplementation, countryServiceFile, moduleFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -1721,7 +1721,7 @@ class ModuleTests {
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, countryServiceFile, moduleFile))
+            .that(listOf(activityFile, countryServiceFile, moduleFile))
             .processedWith(IProcessor())
             .failsToCompile()
             .withErrorContaining("ModuleFile.getService() returns test.CountryService which is interface also must contain implementation as parameter")
@@ -1762,7 +1762,7 @@ class ModuleTests {
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, countryServiceFile, moduleFile))
+            .that(listOf(activityFile, countryServiceFile, moduleFile))
             .processedWith(IProcessor())
             .failsToCompile()
             .withErrorContaining("ModuleFile.getService(test.CountryService) returns test.CountryService which is interface also contains interface as parameter must be implementation")
@@ -1799,7 +1799,7 @@ class ModuleTests {
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, moduleFile))
+            .that(listOf(activityFile, moduleFile))
             .processedWith(IProcessor())
             .failsToCompile()
             .withErrorContaining("ModuleFile.getServiceName() is annotated with @Dependency must be static and public")
@@ -1949,7 +1949,7 @@ class ModuleTests {
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, service, moduleFile))
+            .that(listOf(activityFile, service, moduleFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -2145,7 +2145,7 @@ class ModuleTests {
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, moduleFile, countryRepository, countryService))
+            .that(listOf(activityFile, moduleFile, countryRepository, countryService))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -2216,7 +2216,7 @@ class ModuleTests {
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, moduleFile, countryProvider, countryService))
+            .that(listOf(activityFile, moduleFile, countryProvider, countryService))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -2295,7 +2295,7 @@ class ModuleTests {
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, moduleFile, countryProvider, countryRepository, countryService))
+            .that(listOf(activityFile, moduleFile, countryProvider, countryRepository, countryService))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)

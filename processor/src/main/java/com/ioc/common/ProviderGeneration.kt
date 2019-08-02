@@ -37,11 +37,4 @@ object ProviderGeneration {
             .addMethod(providerMethod(type, name, body))
             .build()
     }
-
-    fun generateLazyClass(body: CodeBlock, name: String, type: Element): TypeSpec {
-        return TypeSpec.classBuilder("${type.simpleName}IocProvider")
-            .superclass(type.asProviderType())
-            .addMethod(providerMethod(type, name, body))
-            .build()
-    }
 }

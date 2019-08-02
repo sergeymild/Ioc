@@ -4,7 +4,10 @@ import com.ioc.common.asTypeElement
 import com.ioc.common.isEqualTo
 import com.ioc.common.isInterface
 import com.squareup.javapoet.ClassName
-import javax.lang.model.element.*
+import javax.lang.model.element.Element
+import javax.lang.model.element.ElementKind
+import javax.lang.model.element.ExecutableElement
+import javax.lang.model.element.TypeElement
 import javax.lang.model.type.TypeMirror
 
 /**
@@ -53,8 +56,6 @@ class TargetType(val element: TypeElement) {
     val superclass: TypeMirror?
         get() = supertypes.firstOrNull { !it.asTypeElement().isInterface() }
 
-    var parentDependencies = mutableListOf<DependencyModel>()
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other?.javaClass != javaClass) return false
@@ -64,16 +65,6 @@ class TargetType(val element: TypeElement) {
         if (element != other.element) return false
 
         return true
-    }
-
-
-    fun parentsDependencies() {
-        parentDependencies.clear()
-        var parent = parentTarget
-        while (parent != null) {
-            parentDependencies.addAll(parent.dependencies)
-            parent = parent.parentTarget
-        }
     }
 
     fun findParent(superType: TypeMirror): TargetType? {
@@ -103,6 +94,4 @@ class TargetType(val element: TypeElement) {
     override fun toString(): String {
         return "TargetType(element=${element.asType()})"
     }
-
-
 }
