@@ -31,13 +31,14 @@ class ImplementationsSpec constructor(
     @Throws(Throwable::class)
     fun inject(
         singletonsToInject: List<DependencyModel>,
-        emptyConstructorToInject: List<DependencyModel>): TypeSpec {
+        emptyConstructorToInject: List<DependencyModel>,
+        emptyModuleMethodToInject: MutableList<DependencyModel>): TypeSpec {
 
         val builder = TypeSpec.classBuilder("${target.name}Injector")
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
             .addAnnotation(keepAnnotation)
 
-        generateMethods(singletonsToInject, emptyConstructorToInject).forEach { builder.addMethod(it) }
+        generateMethods(singletonsToInject, emptyConstructorToInject, emptyModuleMethodToInject).forEach { builder.addMethod(it) }
 
         methods.forEach { builder.addMethod(it.methodSpec) }
 
@@ -46,7 +47,8 @@ class ImplementationsSpec constructor(
 
     private fun generateMethods(
         singletonsToInject: List<DependencyModel>,
-        emptyConstructorToInject: List<DependencyModel>
+        emptyConstructorToInject: List<DependencyModel>,
+        emptyModuleMethodToInject: MutableList<DependencyModel>
     ): List<MethodSpec> {
 
         val methods = mutableListOf<MethodSpec>()
@@ -69,6 +71,10 @@ class ImplementationsSpec constructor(
 
         for (dependency in emptyConstructorToInject) {
             builder.addCode(setInTarget(dependency, emptyConstructor(dependency)))
+        }
+
+        for (dependency in emptyModuleMethodToInject) {
+            builder.addCode(setInTarget(dependency, emptyModuleMethodProvide(dependency)))
         }
 
         for (method in this.methods) {

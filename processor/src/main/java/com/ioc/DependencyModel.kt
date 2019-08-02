@@ -32,6 +32,16 @@ fun DependencyModel.isAllowEmptyConstructorInjection(): Boolean {
         && !isViewModel
 }
 
+fun DependencyModel.isAllowModuleMethodProvide(): Boolean {
+    val method = provideMethod()
+    return method != null
+        && method.dependencyModels.isEmpty()
+        && !isProvider
+        && !isLazy
+        && !isWeakDependency
+        && !isViewModel
+}
+
 class DependencyModel constructor(
     var dependency: Element,
     var originalType: Element,

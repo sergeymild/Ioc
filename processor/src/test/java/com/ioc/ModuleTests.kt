@@ -62,12 +62,7 @@ class ModuleTests {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       target.dependency = injectDependencyModelInDependency();",
-            "   }",
-            "",
-            "   private final DependencyModel injectDependencyModelInDependency() {",
-            "       DependencyModel dependencyModel = ModuleClass.getDependency();",
-            "       return dependencyModel;",
+            "       target.dependency = ModuleClass.getDependency();",
             "   }",
             "}")
 
@@ -120,17 +115,12 @@ class ModuleTests {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       target.setDependency(injectDependencyModelInDependency());",
-            "   }",
-            "",
-            "   private final DependencyModel injectDependencyModelInDependency() {",
-            "       DependencyModel dependencyModel = ModuleClass.getDependency();",
-            "       return dependencyModel;",
+            "       target.setDependency(ModuleClass.getDependency());",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, moduleFile, dependencyFile))
+            .that(listOf(activityFile, moduleFile, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -891,12 +881,7 @@ class ModuleTests {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       target.dependency = injectParentDependencyInDependency();",
-            "   }",
-            "",
-            "   private final ParentDependency injectParentDependencyInDependency() {",
-            "       ParentDependency parentDependency = ModuleClass.getParentDependency();",
-            "       return parentDependency;",
+            "       target.dependency = ModuleClass.getParentDependency();",
             "   }",
             "}")
 
@@ -1883,13 +1868,8 @@ class ModuleTests {
             "",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       target.serviceName = injectStringInServiceName();",
+            "       target.serviceName = ModuleFile.getServiceName();",
             "       target.service = injectServiceInService();",
-            "   }",
-            "",
-            "   private final String injectStringInServiceName() {",
-            "       String string = ModuleFile.getServiceName();",
-            "       return string;",
             "   }",
             "",
             "   private final Service injectServiceInService() {",
@@ -1900,7 +1880,7 @@ class ModuleTests {
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, service, moduleFile))
+            .that(listOf(activityFile, service, moduleFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -1962,13 +1942,8 @@ class ModuleTests {
             "",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       target.serviceNumber = injectIntegerInServiceNumber();",
+            "       target.serviceNumber = ModuleFile.getServiceName();",
             "       target.service = injectServiceInService();",
-            "   }",
-            "",
-            "   private final Integer injectIntegerInServiceNumber() {",
-            "       Integer integer = ModuleFile.getServiceName();",
-            "       return integer;",
             "   }",
             "",
             "   private final Service injectServiceInService() {",
@@ -2028,7 +2003,6 @@ class ModuleTests {
             "",
             "import android.support.annotation.Keep;",
             "import android.support.annotation.NonNull;",
-            "import java.lang.String;",
             "",
             "@Keep",
             "public final class ActivityInjector {",
@@ -2036,17 +2010,12 @@ class ModuleTests {
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
             "       target.service = new CountryService();",
-            "       target.someString = injectStringInSomeString();",
-            "   }",
-            "",
-            "   private final String injectStringInSomeString() {",
-            "       String string = ModuleFile.NestedModule.getString();",
-            "       return string;",
+            "       target.someString = ModuleFile.NestedModule.getString();",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, moduleFile, countryService))
+            .that(listOf(activityFile, moduleFile, countryService))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -2102,17 +2071,12 @@ class ModuleTests {
             "",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       target.service = injectCountryServiceInService();",
-            "   }",
-            "",
-            "   private final CountryService injectCountryServiceInService() {",
-            "       CountryService countryService = Module.INSTANCE.getCountryService();",
-            "       return countryService;",
+            "       target.service = Module.INSTANCE.getCountryService();",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, moduleFile, countryService))
+            .that(listOf(activityFile, moduleFile, countryService))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)

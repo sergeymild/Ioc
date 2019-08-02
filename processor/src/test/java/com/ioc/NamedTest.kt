@@ -64,12 +64,7 @@ class NamedTest : BaseTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       target.dependency = injectDependencyModelInDependency();",
-            "   }",
-            "",
-            "   private final DependencyModel injectDependencyModelInDependency() {",
-            "       DependencyModel dependencyModel = ModuleFile.debug();",
-            "       return dependencyModel;",
+            "       target.dependency = ModuleFile.debug();",
             "   }",
             "}")
 
@@ -904,12 +899,7 @@ class NamedTest : BaseTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       target.dependency = injectDependencyModelInDependency();",
-            "   }",
-            "",
-            "   private final DependencyModel injectDependencyModelInDependency() {",
-            "       DependencyModel dependencyModel = ModuleFile.debug();",
-            "       return dependencyModel;",
+            "       target.dependency = ModuleFile.debug();",
             "   }",
             "}")
 

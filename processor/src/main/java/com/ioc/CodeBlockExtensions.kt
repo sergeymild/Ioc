@@ -23,6 +23,13 @@ fun emptyConstructor(model: DependencyModel): CodeBlock {
     return CodeBlock.builder().add("new \$T()", className).build()
 }
 
+fun emptyModuleMethodProvide(model: DependencyModel): CodeBlock {
+    val method = model.provideMethod()!!
+    var statementString = "\$T.\$N()"
+    if (method.isKotlinModule) statementString = "\$T.INSTANCE.\$N()"
+    return CodeBlock.of(statementString, method.module, method.name)
+}
+
 fun setInTarget(dependency: DependencyModel, codeBlock: CodeBlock): CodeBlock {
     val setterCodeBlock = CodeBlock.builder()
     if (dependency.setterMethod != null) setterCodeBlock.addStatement("target.\$N(\$L)", dependency.setterName(), codeBlock)
