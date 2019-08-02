@@ -3,6 +3,7 @@ package com.ioc
 import com.ioc.common.*
 import com.squareup.javapoet.*
 import javax.lang.model.element.Modifier
+import javax.lang.model.element.TypeElement
 import javax.lang.model.util.Types
 
 /**
@@ -29,20 +30,20 @@ class ImplementationsSpec constructor(
     }
 
     @Throws(Throwable::class)
-    fun inject(): TypeSpec {
+    fun inject(singletonsToInject: List<DependencyModel>): TypeSpec {
 
         val builder = TypeSpec.classBuilder("${target.name}Injector")
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
             .addAnnotation(keepAnnotation)
 
-        generateMethods().forEach { builder.addMethod(it) }
+        generateMethods(singletonsToInject).forEach { builder.addMethod(it) }
 
         methods.forEach { builder.addMethod(it.methodSpec) }
 
         return builder.build()
     }
 
-    private fun generateMethods(): List<MethodSpec> {
+    private fun generateMethods(singletonsToInject: List<DependencyModel>): List<MethodSpec> {
         val methods = mutableListOf<MethodSpec>()
 
         val builder = MethodSpec.methodBuilder("inject")
@@ -55,6 +56,16 @@ class ImplementationsSpec constructor(
             val parentType = it.className
             val injectorType = ClassName.get(parentType.packageName(), "${parentType.simpleName()}Injector")
             builder.addStatement("new \$T().inject(target)", injectorType)
+        }
+
+        for (singleton in singletonsToInject) {
+            val singletonName = singleton.dependency.asTypeElement().qualifiedName.toString()
+            val className = ClassName.bestGuess(singletonName)
+            if (singleton.setterMethod != null) {
+                builder.addStatement("target.${singleton.setterMethod?.simpleName}(\$T.singleton(\$T.class))", ClassName.get(Ioc::class.java), className)
+            } else {
+                builder.addStatement("target.${singleton.setterName()} = \$T.singleton(\$T.class)", ClassName.get(Ioc::class.java), className)
+            }
         }
 
         for (method in this.methods) {

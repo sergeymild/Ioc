@@ -67,12 +67,7 @@ class SingletonNameTests : BaseTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "     target.service = injectCrashlitycsServiceInService();",
-            "   }",
-            "",
-            "   private final CrashlitycsService injectCrashlitycsServiceInService() {",
-            "        CrashlyticsLogger crashlyticsLogger = Ioc.singleton(CrashlyticsLogger.class);",
-            "        return crashlyticsLogger;",
+            "     target.service = Ioc.singleton(CrashlyticsLogger.class);",
             "   }",
             "}")
 
@@ -278,12 +273,7 @@ class SingletonNameTests : BaseTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "     target.service = injectCrashlyticsLoggerInService();",
-            "   }",
-            "",
-            "   private final CrashlyticsLogger injectCrashlyticsLoggerInService() {",
-            "       CrashlyticsLogger crashlyticsLogger = Ioc.singleton(CrashlyticsLogger.class);",
-            "       return crashlyticsLogger;",
+            "     target.service = Ioc.singleton(CrashlyticsLogger.class);",
             "   }",
             "}")
 

@@ -196,9 +196,13 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
             val sorted = target.key.dependencies.sortedByDescending { it.sortOrder }
             val methods = mutableListOf<InjectMethod>()
 
+            val singletonsToInject = mutableListOf<DependencyModel>()
             for (dependency in sorted) {
+                if (dependency.isSingleton) {
+                    singletonsToInject.add(dependency)
+                    continue
+                }
                 val code = dependencyInjectionCode(dependency, processingEnv.typeUtils, target.key)
-                println(code.build())
                 // generate base injection code
                 val isTargetUsedAsDependency = isTargetUsedWhileCreateDependency(target.key, dependency)
                 val methodBuilder = dependencyInjectionMethod(target.key.className, isTargetUsedAsDependency, dependency, code.build())
@@ -206,7 +210,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
             }
 
             methods.addAll(addDataObservers(target.key))
-            val typeSpec = ImplementationsSpec(target.key, methods).inject()
+            val typeSpec = ImplementationsSpec(target.key, methods).inject(singletonsToInject)
             writeClassFile(target.key.className.packageName(), typeSpec)
         }
     }

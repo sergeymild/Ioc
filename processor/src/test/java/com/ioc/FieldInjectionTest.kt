@@ -1542,12 +1542,7 @@ class FieldInjectionTest {
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
             "       new BaseActivityInjector().inject(target);",
-            "       target.clickedEventLogger = injectClickedEventLoggerInClickedEventLogger();",
-            "   }",
-            "",
-            "   private final ClickedEventLogger injectClickedEventLoggerInClickedEventLogger() {",
-            "       Amplitude amplitude = Ioc.singleton(Amplitude.class);",
-            "       return amplitude;",
+            "       target.clickedEventLogger = Ioc.singleton(Amplitude.class);",
             "   }",
             "}")
 
@@ -2062,12 +2057,7 @@ class FieldInjectionTest {
             "",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       target.setLogger(injectSpeedDialDisplayedEventLoggerInLogger());",
-            "   }",
-            "",
-            "   private final SpeedDialDisplayedEventLogger injectSpeedDialDisplayedEventLoggerInLogger() {",
-            "       AmplitudeDefaultLogger amplitudeDefaultLogger = Ioc.singleton(AmplitudeDefaultLogger.class);",
-            "       return amplitudeDefaultLogger;",
+            "       target.setLogger(Ioc.singleton(AmplitudeDefaultLogger.class));",
             "   }",
             "}")
 
