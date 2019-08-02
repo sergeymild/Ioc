@@ -31,8 +31,8 @@ class Fra: Fragment() {
 class MainActivity : AppCompatActivity() {
 
 
-//    @Inject
-//    lateinit var myViewModel: MyViewModel
+    @Inject
+    lateinit var myViewModel: MyViewModel
 //
 //    override fun onCreate(savedInstanceState: Bundle?) {
 //        super.onCreate(savedInstanceState)

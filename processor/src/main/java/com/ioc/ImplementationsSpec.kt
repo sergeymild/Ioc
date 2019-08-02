@@ -3,7 +3,6 @@ package com.ioc
 import com.ioc.common.*
 import com.squareup.javapoet.*
 import javax.lang.model.element.Modifier
-import javax.lang.model.element.TypeElement
 import javax.lang.model.util.Types
 
 /**
@@ -30,20 +29,26 @@ class ImplementationsSpec constructor(
     }
 
     @Throws(Throwable::class)
-    fun inject(singletonsToInject: List<DependencyModel>): TypeSpec {
+    fun inject(
+        singletonsToInject: List<DependencyModel>,
+        emptyConstructorToInject: List<DependencyModel>): TypeSpec {
 
         val builder = TypeSpec.classBuilder("${target.name}Injector")
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
             .addAnnotation(keepAnnotation)
 
-        generateMethods(singletonsToInject).forEach { builder.addMethod(it) }
+        generateMethods(singletonsToInject, emptyConstructorToInject).forEach { builder.addMethod(it) }
 
         methods.forEach { builder.addMethod(it.methodSpec) }
 
         return builder.build()
     }
 
-    private fun generateMethods(singletonsToInject: List<DependencyModel>): List<MethodSpec> {
+    private fun generateMethods(
+        singletonsToInject: List<DependencyModel>,
+        emptyConstructorToInject: List<DependencyModel>
+    ): List<MethodSpec> {
+
         val methods = mutableListOf<MethodSpec>()
 
         val builder = MethodSpec.methodBuilder("inject")
@@ -58,8 +63,12 @@ class ImplementationsSpec constructor(
             builder.addStatement("new \$T().inject(target)", injectorType)
         }
 
-        for (singleton in singletonsToInject) {
-            builder.addCode(setInTarget(singleton, iocGetSingleton(singleton)))
+        for (dependency in singletonsToInject) {
+            builder.addCode(setInTarget(dependency, iocGetSingleton(dependency)))
+        }
+
+        for (dependency in emptyConstructorToInject) {
+            builder.addCode(setInTarget(dependency, emptyConstructor(dependency)))
         }
 
         for (method in this.methods) {

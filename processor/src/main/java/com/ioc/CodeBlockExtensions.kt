@@ -17,6 +17,12 @@ fun iocGetSingleton(model: DependencyModel): CodeBlock {
     return CodeBlock.builder().add("\$T.singleton(\$T.class)", iocType, className).build()
 }
 
+fun emptyConstructor(model: DependencyModel): CodeBlock {
+    val singletonName = model.dependency.asTypeElement().qualifiedName.toString()
+    val className = ClassName.bestGuess(singletonName)
+    return CodeBlock.builder().add("new \$T()", className).build()
+}
+
 fun setInTarget(dependency: DependencyModel, codeBlock: CodeBlock): CodeBlock {
     val setterCodeBlock = CodeBlock.builder()
     if (dependency.setterMethod != null) setterCodeBlock.addStatement("target.\$N(\$L)", dependency.setterName(), codeBlock)

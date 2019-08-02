@@ -130,12 +130,7 @@ class NamedTest : BaseTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       target.dependency = injectDependencyModelInDependency();",
-            "   }",
-            "",
-            "   private final DependencyModel injectDependencyModelInDependency() {",
-            "       DependencyModel dependencyModel = new DependencyModel();",
-            "       return dependencyModel;",
+            "       target.dependency = new DependencyModel();",
             "   }",
             "}")
 
@@ -1069,8 +1064,8 @@ class NamedTest : BaseTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
+            "       target.viewModel = new ViewModel();",
             "       target.presenter = injectMainPresenterInPresenter();",
-            "       target.viewModel = injectViewModelInViewModel();",
             "   }",
             "",
             "   private final MainPresenter injectMainPresenterInPresenter() {",
@@ -1078,11 +1073,6 @@ class NamedTest : BaseTest {
             "       DependencyModel dependencyModel = new DebugModel(coffee);",
             "       MainPresenter mainPresenter = new MainPresenter(dependencyModel);",
             "       return mainPresenter;",
-            "   }",
-            "",
-            "   private final ViewModel injectViewModelInViewModel() {",
-            "       ViewModel viewModel = new ViewModel();",
-            "       return viewModel;",
             "   }",
             "}")
 

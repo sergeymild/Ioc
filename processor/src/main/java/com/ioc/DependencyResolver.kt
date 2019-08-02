@@ -5,6 +5,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
+import javax.lang.model.element.Modifier
 import javax.lang.model.element.TypeElement
 import javax.lang.model.util.ElementFilter
 import javax.lang.model.util.Types
@@ -205,7 +206,7 @@ class DependencyResolver(
 
     private fun findEmptyConstructor(typeElement: TypeElement): ExecutableElement? {
         ElementFilter.constructorsIn(typeElement.enclosedElements)
-            .firstOrNull { it.parameters.isEmpty() && !it.isHasAnnotation(Inject::class.java) }
+            .firstOrNull { it.parameters.isEmpty() && !it.isHasAnnotation(Inject::class.java) && !it.modifiers.contains(Modifier.PRIVATE) }
             ?.let { return it }
         return null
     }

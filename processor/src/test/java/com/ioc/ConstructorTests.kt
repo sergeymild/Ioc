@@ -252,13 +252,8 @@ class ConstructorTests : BaseTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       target.dependency = injectDependencyModelInDependency();",
+            "       target.dependency = new DependencyModel();",
             "       target.postInitialization();",
-            "   }",
-            "",
-            "   private final DependencyModel injectDependencyModelInDependency() {",
-            "       DependencyModel dependencyModel = new DependencyModel();",
-            "       return dependencyModel;",
             "   }",
             "}")
 

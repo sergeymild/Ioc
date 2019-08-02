@@ -8,6 +8,7 @@ import com.squareup.javapoet.ParameterizedTypeName
 import com.squareup.javapoet.TypeName
 import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
+import javax.lang.model.element.Modifier
 import javax.lang.model.element.TypeElement
 import javax.lang.model.type.TypeMirror
 
@@ -19,6 +20,16 @@ fun targetDependencyModel(element: Element): DependencyModel {
     val dependency = DependencyModel(element, element, element.simpleName.toString(), element.asType(), false, false, false)
     dependency.generatedName = "target"
     return dependency
+}
+
+fun DependencyModel.isAllowEmptyConstructorInjection(): Boolean {
+    return emptyConstructor != null
+        && !emptyConstructor!!.modifiers.contains(Modifier.PRIVATE)
+        && dependencies.isEmpty()
+        && !isProvider
+        && !isLazy
+        && !isWeakDependency
+        && !isViewModel
 }
 
 class DependencyModel constructor(

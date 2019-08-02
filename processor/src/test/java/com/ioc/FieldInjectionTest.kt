@@ -56,12 +56,7 @@ class FieldInjectionTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       target.dependency = injectDependencyModelInDependency();",
-            "   }",
-            "",
-            "   private final DependencyModel injectDependencyModelInDependency() {",
-            "       DependencyModel dependencyModel = new DependencyModel();",
-            "       return dependencyModel;",
+            "       target.dependency = new DependencyModel();",
             "   }",
             "}")
 
@@ -74,7 +69,14 @@ class FieldInjectionTest {
 
     @Test
     @Throws(Exception::class)
-    fun skipExcludedPackage() {
+    fun skipExcludedPackage1() {
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+            "package test;",
+            "",
+            "public class DependencyModel {",
+            "   private DependencyModel() {}",
+            "}")
+
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
@@ -84,16 +86,16 @@ class FieldInjectionTest {
             "public class Activity {",
             "",
             "   @Inject",
-            "   public AssetManager assetManagerDependency;",
+            "   public DependencyModel model;",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(listOf<JavaFileObject>(activityFile))
+            .that(listOf(activityFile, dependencyFile))
             .processedWith(IProcessor())
             .failsToCompile()
-            .withErrorContaining("Can't find implementations of `android.content.res.AssetManager android.content.res.AssetManager` maybe you forgot add correct @Named, @Qualifier or @Scope annotations or add @Dependency on provides method")
-            .`in`(activityFile)
-            .onLine(6)
+            .withErrorContaining("Can't find default constructor or provide method for `test.DependencyModel`")
+            .`in`(dependencyFile)
+            .onLine(3)
     }
 
     @Test
@@ -199,24 +201,9 @@ class FieldInjectionTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       target.dependency = injectDependencyModelInDependency();",
-            "       target.setLogger(injectLoggerInLogger());",
-            "       target.setPreferences(injectPreferencesInSetPreferences());",
-            "   }",
-            "",
-            "   private final DependencyModel injectDependencyModelInDependency() {",
-            "       DependencyModel dependencyModel = new DependencyModel();",
-            "       return dependencyModel;",
-            "   }",
-            "",
-            "   private final Logger injectLoggerInLogger() {",
-            "       Logger logger = new Logger();",
-            "       return logger;",
-            "   }",
-            "",
-            "   private final Preferences injectPreferencesInSetPreferences() {",
-            "       Preferences preferences = new Preferences();",
-            "       return preferences;",
+            "       target.dependency = new DependencyModel();",
+            "       target.setLogger(new Logger());",
+            "       target.setPreferences(new Preferences());",
             "   }",
             "}")
 
@@ -872,13 +859,8 @@ class FieldInjectionTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       target.dependency = injectDependencyModelInDependency();",
+            "       target.dependency = new DependencyModel();",
             "       target.parentDependency = injectParentDependencyInParentDependency();",
-            "   }",
-            "",
-            "   private final DependencyModel injectDependencyModelInDependency() {",
-            "       DependencyModel dependencyModel2 = new DependencyModel();",
-            "       return dependencyModel2;",
             "   }",
             "",
             "   private final ParentDependency injectParentDependencyInParentDependency() {",
@@ -999,12 +981,7 @@ class FieldInjectionTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       target.dependency = injectDependencyModelInDependency();",
-            "   }",
-            "",
-            "   private final DependencyModel injectDependencyModelInDependency() {",
-            "       DependencyModel dependencyModel = new DependencyModel();",
-            "       return dependencyModel;",
+            "       target.dependency = new DependencyModel();",
             "   }",
             "}")
 
@@ -2520,12 +2497,7 @@ class FieldInjectionTest {
             "",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       target.subscription = injectCompositeDisposableInSubscription();",
-            "   }",
-            "",
-            "   private final CompositeDisposable injectCompositeDisposableInSubscription() {",
-            "       CompositeDisposable compositeDisposable = new CompositeDisposable();",
-            "       return compositeDisposable;",
+            "       target.subscription = new CompositeDisposable();",
             "   }",
             "}")
 
@@ -3187,12 +3159,7 @@ class FieldInjectionTest {
             "   @Keep",
             "   public final void inject(@NonNull final MainActivity target) {",
             "       new SuperActivityInjector().inject(target);",
-            "       target.fileManager = injectFileManagerInFileManager();",
-            "   }",
-            "",
-            "   private final FileManager injectFileManagerInFileManager() {",
-            "       FileManager fileManager = new FileManager();",
-            "       return fileManager;",
+            "       target.fileManager = new FileManager();",
             "   }",
             "}")
 
@@ -3268,12 +3235,7 @@ class FieldInjectionTest {
             "   @Keep",
             "   public final void inject(@NonNull final MainActivity target) {",
             "       new ParentActivityInjector().inject(target);",
-            "       target.fileManager = injectFileManagerInFileManager();",
-            "   }",
-            "",
-            "   private final FileManager injectFileManagerInFileManager() {",
-            "       FileManager fileManager = new FileManager();",
-            "       return fileManager;",
+            "       target.fileManager = new FileManager();",
             "   }",
             "}")
 
@@ -3498,12 +3460,7 @@ class FieldInjectionTest {
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
             "       new ParentActivityInjector().inject(target);",
-            "       target.dependency = injectDependencyModelInDependency();",
-            "   }",
-            "",
-            "   private final DependencyModel injectDependencyModelInDependency() {",
-            "       DependencyModel dependencyModel = new DependencyModel();",
-            "       return dependencyModel;",
+            "       target.dependency = new DependencyModel();",
             "   }",
             "}")
 
@@ -3833,11 +3790,7 @@ class FieldInjectionTest {
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
             "       new ParentActivityInjector().inject(target);",
-            "       target.childDependency = injectDependencyModelInChildDependency();",
-            "   }",
-            "   private final DependencyModel injectDependencyModelInChildDependency() {",
-            "       DependencyModel dependencyModel = new DependencyModel();",
-            "       return dependencyModel;",
+            "       target.childDependency = new DependencyModel();",
             "   }",
             "}")
 

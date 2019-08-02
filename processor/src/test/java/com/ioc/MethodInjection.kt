@@ -49,12 +49,7 @@ class MethodInjection : BaseTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       target.setDependency(injectDependencyModelInDependency());",
-            "   }",
-            "",
-            "   private final DependencyModel injectDependencyModelInDependency() {",
-            "       DependencyModel dependencyModel = new DependencyModel();",
-            "       return dependencyModel;",
+            "       target.setDependency(new DependencyModel());",
             "   }",
             "}")
 
@@ -634,12 +629,7 @@ class MethodInjection : BaseTest {
             "   @Keep",
             "   public final void inject(@NonNull final ParentActivity target) {",
             "       new BaseActivityInjector().inject(target);",
-            "       target.resources = injectResourcesInResources();",
-            "   }",
-            "",
-            "   private final Resources injectResourcesInResources() {",
-            "       Resources resources = new Resources();",
-            "       return resources;",
+            "       target.resources = new Resources();",
             "   }",
             "}")
 
