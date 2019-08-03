@@ -16,7 +16,7 @@ interface SingletonWrapper {
     val originalType: TypeElement
     val packageName: String
     var dependencies: List<DependencyModel>
-    var implementations: List<DependencyProvider>
+    var methodProvider: ModuleMethodProvider?
     val originalClassName: TypeName
 }
 
@@ -57,7 +57,7 @@ class NewSingletonSpec(private val dependency: SingletonWrapper) {
         applyIsLoadIfNeed(dependency.dependencies, null)
         val names = dependency.dependencyNames(metadata)
 
-        dependency.implementations.firstOrNull { it.isMethod }?.let {
+        dependency.methodProvider?.let {
             return builder.addStatement("return \$T.\$N(\$L)", it.module, it.name, names).build()
         }
         builder.addStatement("return new \$T(\$L)", dependency.originalClassName, names)

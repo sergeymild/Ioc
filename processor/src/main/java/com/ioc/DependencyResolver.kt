@@ -95,30 +95,29 @@ class DependencyResolver(
             isSingleton = it.isSingleton || isSingleton
         }
 
-        var implementations = emptyList<DependencyProvider>()
+        var methodProvider: ModuleMethodProvider? = null
         if (possibleImplementation == null) {
-            implementations = dependencyTypesFinder.findFor(dependencyElement, named, target, dependencyTypeElement)
+            methodProvider = dependencyTypesFinder.findFor(dependencyElement, named, target, dependencyTypeElement)
         }
 
         // if we did't find any providers of this type, try to find constructors of concrete type
-        var argumentConstructor = if (implementations.isEmpty()) findArgumentConstructor(dependencyTypeElement) else null
-        var noArgsConstructor = if (implementations.isEmpty()) findEmptyConstructor(dependencyTypeElement) else null
+        var argumentConstructor = if (methodProvider == null) findArgumentConstructor(dependencyTypeElement) else null
+        var noArgsConstructor = if (methodProvider == null) findEmptyConstructor(dependencyTypeElement) else null
 
         if (argumentConstructor != null && argumentConstructor.parameters.isEmpty() && noArgsConstructor == null) {
             noArgsConstructor = argumentConstructor
             argumentConstructor = null
         }
 
-        val dependencies = IProcessor.singletons.getOrDefault("${dependencyTypeElement.asType()}", mutableListOf())
+        var dependencies = IProcessor.singletons.getOrDefault("${dependencyTypeElement.asType()}", emptyList()).map { it.copy() }
 
         if (dependencies.isEmpty()) {
             argumentConstructor?.let {
-                resolveConstructorArguments(dependencyTypeElement, it, dependencies, target, isSingleton)
+                dependencies = resolveConstructorArguments(dependencyTypeElement, it, target, isSingleton)
                 IProcessor.singletons["${dependencyTypeElement.asType()}"] = dependencies
             }
         }
 
-        val implementation = implementations.firstOrNull()
         val dependency = DependencyModel(
             dependency = dependencyElement,
             originalType = dependencyTypeElement,
@@ -126,11 +125,11 @@ class DependencyResolver(
             isProvider = isProvider,
             isLazy = isLazy,
             isWeak = isWeak,
-            isSingleton = implementation?.isSingleton ?: isSingleton,
+            isSingleton = methodProvider?.isSingleton ?: isSingleton,
             isViewModel = isViewModel)
 
 
-        dependency.implementations = implementations
+        dependency.methodProvider = methodProvider
         dependency.typeArguments.addAll(if (isProvider || isWeak || isLazy) emptyList() else element.asType().typeArguments())
         dependency.dependencies = dependencies.map { it.copy() }
         dependency.named = named
@@ -146,27 +145,28 @@ class DependencyResolver(
     private fun resolveConstructorArguments(
         typeElement: TypeElement,
         argumentConstructor: ExecutableElement?,
-        dependencies: MutableList<DependencyModel>,
         target: TargetType,
-        isParentSingleton: Boolean) {
-
+        isParentSingleton: Boolean): List<DependencyModel> {
+        val constructorDependencies = mutableListOf<DependencyModel>()
         val constructorArguments = argumentConstructor?.parameters ?: emptyList()
 
         // TODO generic type
         for (argument in constructorArguments) {
             // TODO !isParentSingleton
             if (target.isSubtype(argument, argument) && !isParentSingleton) {
-                dependencies.add(targetDependencyModel(argument))
+                constructorDependencies.add(targetDependencyModel(argument))
                 continue
             }
 
             if (target.isLocalScope(argument, argument) && !isParentSingleton) {
-                dependencies.add(targetDependencyModel(argument))
+                constructorDependencies.add(targetDependencyModel(argument))
                 continue
             }
 
             // Ioc not supported primitive types for now
-            if (argument.isPrimitive()) return
+            if (argument.isPrimitive()) {
+                throw ProcessorException("Constructor used primitive type").setElement(argument)
+            }
             var element: Element = argument
             val isProvider = element.isProvider()
             val isWeakDependency = element.isWeak()
@@ -182,20 +182,20 @@ class DependencyResolver(
                 newTarget = IProcessor.createTarget(typeElement, dependencyTypesFinder)
             }
 
-            resolveDependency(element, newTarget, named).let {
-                it.isWeak = isWeakDependency
-                it.isProvider = isProvider
-                it.isLazy = isLazy
-
-                if (it.named.isNullOrEmpty()) {
-                    it.named = qualifierFinder.getQualifier(argument)
+            val dependency = resolveDependency(element, newTarget, named)//.let {
+                dependency.isWeak = isWeakDependency
+                dependency.isProvider = isProvider
+                dependency.isLazy = isLazy
+                if (dependency.named.isNullOrEmpty()) {
+                    dependency.named = qualifierFinder.getQualifier(argument)
                 }
 
                 //it.originalType = element
 
-                dependencies.add(it)
-            }
+                constructorDependencies.add(dependency)
+            //}
         }
+        return constructorDependencies
     }
 
     private fun findArgumentConstructor(typeElement: TypeElement): ExecutableElement? {

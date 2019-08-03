@@ -21,14 +21,8 @@ fun targetDependencyModel(element: Element): DependencyModel {
 }
 
 fun DependencyModel.isAllowEmptyConstructorInjection(): Boolean {
-    if (implementations.isNotEmpty() && !implementations.first().isMethod) {
-        if (implementations.first().dependencyModels.isEmpty()) {
-            if (!isProvider && !isLazy && !isWeak && !isViewModel) {
-                return true
-            }
-        }
-    }
-    return (emptyConstructor != null && !emptyConstructor!!.modifiers.contains(Modifier.PRIVATE))
+    return methodProvider == null
+        && (emptyConstructor != null && !emptyConstructor!!.modifiers.contains(Modifier.PRIVATE))
         && dependencies.isEmpty()
         && !isProvider
         && !isLazy
@@ -68,7 +62,7 @@ fun DependencyModel.copy(): DependencyModel {
         isLocal
     ).also {
         it.typeArguments = typeArguments
-        it.implementations = implementations
+        it.methodProvider = methodProvider
         it.argumentsConstructor = argumentsConstructor
         it.emptyConstructor = emptyConstructor
         it.sortOrder = sortOrder
@@ -99,14 +93,12 @@ class DependencyModel constructor(
     //val originalTypeClassName by lazy { ClassName.get(originalType.asType())!! }
     override var dependencies: List<DependencyModel> = emptyList()
         get() {
-            return if (implementations.isEmpty()) field
-            else implementations[0].dependencyModels
+            methodProvider?.let { return it.dependencyModels }
+            return field
         }
     var typeArguments = mutableListOf<TypeMirror>()
-    override var implementations: List<DependencyProvider> = emptyList()
-    fun provideMethod(): DependencyProvider? {
-        return implementations.firstOrNull { it.isMethod }
-    }
+    override var methodProvider: ModuleMethodProvider? = null
+    fun provideMethod() = methodProvider
 
     var argumentsConstructor: ExecutableElement? = null
     var emptyConstructor: ExecutableElement? = null

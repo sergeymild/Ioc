@@ -2727,6 +2727,7 @@ class FieldInjectionTest {
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
             .that(listOf(activityFile, resources, presenter, contextModule, context))
             .processedWith(IProcessor())
+
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
     }

@@ -2,7 +2,6 @@ package com.ioc
 
 import com.ioc.IProcessor.Companion.qualifierFinder
 import com.ioc.common.*
-import com.squareup.javapoet.ClassName
 import javax.lang.model.element.Element
 import javax.lang.model.element.TypeElement
 import javax.lang.model.type.TypeKind
@@ -22,52 +21,27 @@ class DependencyTypesFinder(
         element: Element,
         named: String?,
         target: TargetType,
-        typeElement: Element): List<DependencyProvider> {
+        typeElement: Element): ModuleMethodProvider? {
 
         val isInterface = typeElement.isInterface()
         val isAbstractClass = typeElement.isAbstract()
 
-        val implementations = mutableListOf<DependencyProvider>()
+
 
         // Try find dependency by annotated @Dependency method
-        findNotAbstractModuleMethodProvider(element, named, typeElement, target, implementations)
+        val methodProvider = findNotAbstractModuleMethodProvider(element, named, target)
+        methodProvider?.let { return it }
 
-        if (implementations.size > 1) {
-            throw ProcessorException("Ambiguous classesWithDependencyAnnotation for type [${element.asType()}] with qualifiers [${if (named?.isBlank() == true) "@Default" else "@$named"}] founded [${implementations.joinToString { it.method.asType().toString() }}]")
-                .setElement(element)
+        if (!isInterface && !isAbstractClass) return null
+
+        if ((isInterface || isAbstractClass) && methodProvider == null) {
+            throwCantFindImplementations(element, target)
         }
 
-        if (implementations.isNotEmpty()) {
-            return implementations
-        }
-
-        if (!isInterface && !isAbstractClass) return emptyList()
-
-        if (implementations.isNotEmpty()) return implementations
-
-        if (implementations.size > 1) {
-            throw ProcessorException("Ambiguous classesWithDependencyAnnotation for type [${element.asType()}] with qualifiers [${if (named?.isBlank() == true) "@Default" else "@" + (if (named == null) "Default" else named)}]")
-                .setElement(element)
-        }
-
-        if (implementations.isNotEmpty()) {
-            return implementations
-        }
-
-        if (implementations.size > 1) {
-            throw ProcessorException("Ambiguous classesWithDependencyAnnotation for type [${element.asType()}] with qualifiers [${if (named?.isBlank() == true) "@Default" else "@" + (if (named == null) "Default" else named)}]")
-                .setElement(element)
-        }
-
-        if ((isInterface || isAbstractClass) && implementations.isEmpty()) {
-            throw ProcessorException("Can't find implementations of `${element.asType()} ${element.enclosingElement}` forTarget: ${target.element} maybe you forgot add correct @Named, @Qualifier or @Scope annotations or add @Dependency on provides method.").setElement(element)
-                .setElement(element)
-        }
-
-        return implementations
+        return null
     }
 
-    fun findClassWithDependencyAnnotation(element: Element, named: String?): DependencyModel? {
+    private fun findClassWithDependencyAnnotation(element: Element, named: String?): DependencyModel? {
         val implementations = mutableListOf<DependencyModel>()
         for (implementation in classesWithDependencyAnnotation()) {
             // is the same type skip it
@@ -77,18 +51,18 @@ class DependencyTypesFinder(
                 implementations.add(DependencyModel(
                     dependency = element,
                     originalType = implementationType,
-                    //fieldName = element.simpleName,
                     isSingleton = implementationType.isSingleton()
                 ))
-                throwMoreThanOneDependencyFoundIfNeed(element, named, implementations)
+                throwMoreThanOneDependencyFoundIfNeed(element, named, implementations.map { it.originalTypeString })
             }
         }
         return implementations.firstOrNull()
     }
 
-    fun findAbstractModuleMethodProvider(element: Element, named: String?): DependencyModel? {
+    private fun findAbstractModuleMethodProvider(element: Element, named: String?): DependencyModel? {
         val implementations = mutableListOf<DependencyModel>()
-        for (method in abstractMethodsWithDependencyAnnotations()) {
+        for (method in methodsWithDependencyAnnotation()) {
+            if (!method.isAbstract()) continue
             val type = method.returnType.asTypeElement()
             if (!isSubtype(element, type, named)) continue
 
@@ -103,7 +77,7 @@ class DependencyTypesFinder(
                 //fieldName = element.simpleName,
                 isSingleton = method.isSingleton()
             ))
-            throwMoreThanOneDependencyFoundIfNeed(element, named, implementations)
+            throwMoreThanOneDependencyFoundIfNeed(element, named, implementations.map { it.originalTypeString })
         }
         return implementations.firstOrNull()
     }
@@ -114,66 +88,48 @@ class DependencyTypesFinder(
         return null
     }
 
-    private fun findNotAbstractModuleMethodProvider(element: Element, named: String?, typeElement: Element, target: TargetType, implementations: MutableList<DependencyProvider>) {
+    private fun findNotAbstractModuleMethodProvider(element: Element, named: String?, target: TargetType): ModuleMethodProvider? {
+        val implementations = mutableListOf<ModuleMethodProvider>()
         for (provider in methodsWithDependencyAnnotation()) {
-            val isKotlinModule = isModuleKotlinObject(provider.enclosingElement.asTypeElement())
-            // if method is abstract skip
             if (provider.isAbstract()) continue
+            val isKotlinModule = isModuleKotlinObject(provider.enclosingElement.asTypeElement())
 
-            if (!provider.isStatic() && !isKotlinModule) {
-                throw ProcessorException("${provider.enclosingElement.simpleName}.${provider.simpleName}() is annotated with @Dependency must be static and public").setElement(provider)
-            }
+            validateModuleMethod(isKotlinModule, provider)
 
             if (!provider.returnType.isEqualTo(element) || !qualifierFinder.hasNamed(named, provider)) continue
 
             val returnType = provider.returnType.asTypeElement()
 
-            val type = createModuleMethodProvider(returnType, typeElement, target, provider.parameters, isMethod = true)
+            val type = createModuleMethodProvider(returnType, provider.enclosingElement, target, provider.parameters)
             type.isKotlinModule = isKotlinModule
             type.name = provider.simpleName
-            type.module = ClassName.get(provider.enclosingElement.asTypeElement())
             type.isSingleton = type.isSingleton || provider.isSingleton()
-            if (type.isSingleton) {
-                type.packageName = returnType.getPackage().toString()
-                if (type.dependencyModels.any { target.isSubtype(it.dependency, it.originalType) }) {
-                    throw ProcessorException("target can't be user as dependency in Singleton").setElement(provider)
-                }
-            }
+            if (type.isSingleton) throwIfTargetUsedInSingleton(target, provider, type.dependencyModels)
             implementations.add(type)
+            throwMoreThanOneDependencyFoundIfNeed(element, named, implementations.map { it.name })
         }
+
+        return implementations.firstOrNull()
     }
 
     private fun createModuleMethodProvider(
         implementation: TypeElement,
-        parent: Element,
+        module: Element,
         target: TargetType,
-        methodParameters: List<Element>,
-        isMethod: Boolean): DependencyProvider {
-
-        val modulePackageName = implementation.getPackage().toString()
+        methodParameters: List<Element>): ModuleMethodProvider {
 
         val named = qualifierFinder.getQualifier(implementation)
-        val provider = DependencyProvider(implementation, implementation.isSingleton(), ClassName.get(implementation))
-        provider.named = named
-        provider.isMethod = isMethod
-        if (provider.isSingleton) {
-            provider.packageName = modulePackageName
-        }
+        val provider = ModuleMethodProvider(implementation.simpleName, module, named)
 
         if (methodParameters.isEmpty()) return provider
         for (dependency in methodParameters) {
-            if (target.isLocalScope(dependency, dependency)) {
+            if (target.isLocalScope(dependency, dependency) || target.isSubtype(dependency, dependency)) {
                 provider.dependencyModels.add(targetDependencyModel(dependency))
                 continue
             }
 
-            if (target.isSubtype(dependency, dependency)) {
-                provider.dependencyModels.add(targetDependencyModel(dependency))
-                continue
-            }
-
-            if (dependency.isEqualTo(parent.asType())) {
-                throw ProcessorException("Cyclic graph detected building ${dependency.asType()} cyclic: ${dependency.asType()}").setElement(parent)
+            if (dependency.isEqualTo(implementation.asType())) {
+                throw ProcessorException("Cyclic graph detected building ${dependency.asType()} cyclic: ${dependency.asType()}").setElement(implementation)
             }
             val resolved = dependencyResolver.resolveDependency(dependency, target = target)
             provider.dependencyModels.add(resolved)

@@ -1,6 +1,8 @@
 package com.ioc.common
 
 import com.ioc.*
+import com.squareup.javapoet.ClassName
+import com.squareup.javapoet.TypeName
 import java.lang.ref.WeakReference
 import java.util.*
 import javax.annotation.processing.ProcessingEnvironment
@@ -176,13 +178,6 @@ fun classesWithDependencyAnnotation(): List<Element> {
     return IProcessor.classesWithDependencyAnnotation
 }
 
-// Only get all classes with annotation @Dependency
-fun abstractMethodsWithDependencyAnnotations(): List<ExecutableElement> {
-    return IProcessor
-        .methodsWithDependencyAnnotation
-        .filter { it.modifiers.contains(Modifier.ABSTRACT) }
-}
-
 fun Element.isNotMethodAndInterface(): Boolean {
     return kind != ElementKind.METHOD && kind != ElementKind.INTERFACE
 }
@@ -217,6 +212,10 @@ fun TypeMirror.getGenericFirstType(): Element {
 
 fun TypeMirror.asElement(): Element {
     return MoreTypes.asElement(this)
+}
+
+fun Element.asClassName(): TypeName {
+    return ClassName.get(asType())
 }
 
 fun TypeMirror.asTypeElement(): TypeElement {
@@ -360,7 +359,8 @@ fun findDependencyGetter(element: Element): Element {
     if (element.isPublic()) return element
     return element.enclosingElement.methods {
         it.isPublic() && it.parameters.isEmpty() && it.returnType.toString() == element.asType().toString()
-    }.firstOrNull() ?: throw ProcessorException("@Inject annotation placed on field `${element.simpleName}` in `${element.enclosingElement.simpleName}` with private access and which does't have public getter method.").setElement(element)
+    }.firstOrNull()
+        ?: throw ProcessorException("@Inject annotation placed on field `${element.simpleName}` in `${element.enclosingElement.simpleName}` with private access and which does't have public getter method.").setElement(element)
 }
 
 fun TypeMirror.isJavaObject(): Boolean {

@@ -21,8 +21,8 @@
 //    fun validate(element: Element) {
 //
 //        if (!element.isMethod() && element.asTypeElement().isInterface()) {
-//            val implementations = findAllImplementations(element)
-//            for (implementation in implementations) {
+//            val methodProvider = findAllImplementations(element)
+//            for (implementation in methodProvider) {
 //                validateConstructorCyclic(implementation, element)
 //            }
 //            return
@@ -34,7 +34,7 @@
 //    private fun findAllImplementations(element: Element): List<Element> {
 //        cachedImplementations[element.asType().toString()]?.let { return it }
 //
-//        val implementations = mutableListOf<Element>()
+//        val methodProvider = mutableListOf<Element>()
 //        for (rootElement in roundEnv.rootElements) {
 //            if (rootElement.kind == ElementKind.METHOD) continue
 //            if (rootElement.kind == ElementKind.ANNOTATION_TYPE) continue
@@ -47,13 +47,13 @@
 //            if (rootElement.modifiers.contains(Modifier.ABSTRACT)) continue
 //
 //            if (DependencyTypesFinder.isSubtype(element, rootElement as TypeElement)) {
-//                implementations.add(rootElement)
+//                methodProvider.add(rootElement)
 //            }
 //        }
 //
-//        cachedImplementations[element.asType().toString()] = implementations
+//        cachedImplementations[element.asType().toString()] = methodProvider
 //
-//        return implementations
+//        return methodProvider
 //    }
 //
 //
@@ -77,8 +77,8 @@
 //            if (TargetChecker.isSubtype(target, parameter)) continue
 //
 //            if (parameter.asTypeElement().isInterface()) {
-//                val implementations = findAllImplementations(parameter)
-//                for (implementation in implementations) {
+//                val methodProvider = findAllImplementations(parameter)
+//                for (implementation in methodProvider) {
 //
 //                    if (checkConstructors(constructorDependsOf[parameter.asType()], typeElement.asType())) {
 //                        throw ProcessorException("Cyclic graph detected building ${typeElement.asType()} cyclic: ${parameter.asType()}").setElement(typeElement)
@@ -123,9 +123,9 @@
 //            if (TargetChecker.isSubtype(target, field)) continue
 //
 //            if (field.asTypeElement().isInterface()) {
-//                val implementations = findAllImplementations(field)
+//                val methodProvider = findAllImplementations(field)
 //                val list = fieldsDependsOf.getOrPut(originalElement.asType()) { mutableListOf() }
-//                for (implementation in implementations) {
+//                for (implementation in methodProvider) {
 //                    if (checkConstructors(constructorDependsOf[field.asType()], typeElement.asType())) {
 //                        throw ProcessorException("Cyclic graph detected building ${typeElement.asType()} cyclic: ${field.asType()}").setElement(typeElement)
 //                    }

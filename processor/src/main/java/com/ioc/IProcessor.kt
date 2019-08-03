@@ -6,7 +6,6 @@ import com.ioc.ImplementationsSpec.Companion.provideInjectionMethod
 import com.ioc.common.*
 import com.squareup.javapoet.JavaFile
 import com.squareup.javapoet.TypeSpec
-import java.io.File
 import java.util.*
 import javax.annotation.processing.*
 import javax.lang.model.SourceVersion
@@ -31,7 +30,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
     companion object {
         val classesWithDependencyAnnotation = mutableListOf<Element>()
         val methodsWithDependencyAnnotation = mutableListOf<ExecutableElement>()
-        var singletons = mutableMapOf<String, MutableList<DependencyModel>>()
+        var singletons = mutableMapOf<String, List<DependencyModel>>()
         var messager: Messager by Delegates.notNull()
         var dependencyFinder: DependencyTypesFinder by Delegates.notNull()
         var processingEnvironment: ProcessingEnvironment by Delegates.notNull()
@@ -227,13 +226,9 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
                     continue
                 }
 
-                if (dependency.isAllowEmptyConstructorInjection()) {
+                if (dependency.isAllowEmptyConstructorInjection() ||
+                    dependency.isAllowModuleMethodProvide()) {
                     emptyConstructorToInject.add(dependency)
-                    continue
-                }
-
-                if (dependency.isAllowModuleMethodProvide()) {
-                    emptyModuleMethodToInject.add(dependency)
                     continue
                 }
 
@@ -274,15 +269,11 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
     private fun collectAllDependencies(models: List<DependencyModel>, list: MutableList<DependencyModel>) {
         for (model in models) {
             list.add(model)
-            for (implementation in model.implementations) {
-                collectAllDependencies(implementation.dependencyModels, list)
-            }
+            model.methodProvider?.let { collectAllDependencies(it.dependencyModels, list) }
             for (dependency in model.dependencies) {
                 list.add(dependency)
                 collectAllDependencies(dependency.dependencies, list)
-                for (implementation in dependency.implementations) {
-                    collectAllDependencies(implementation.dependencyModels, list)
-                }
+                dependency.methodProvider?.let { collectAllDependencies(it.dependencyModels, list) }
             }
         }
     }

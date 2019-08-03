@@ -24,11 +24,11 @@ object SingletonFilter {
 
             queue.addAll(model.dependencies)
 
-            for (implementation in model.implementations) {
-                if (implementation.isSingleton && uniqueSingletons.add(model.originalTypeString)) {
+            model.methodProvider?.let {
+                if (it.isSingleton && uniqueSingletons.add(model.originalTypeString)) {
                     singletons.add(model)
                 }
-                queue.addAll(implementation.dependencyModels)
+                queue.addAll(it.dependencyModels)
             }
         }
     }

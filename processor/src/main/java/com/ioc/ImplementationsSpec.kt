@@ -121,7 +121,7 @@ class ImplementationsSpec constructor(
             val packageName = metadata.model.originalType.asTypeElement().getPackage()
             val isAllowedPackage = excludedPackages.any { packageName.toString().startsWith(it) }
             if (metadata.model.provideMethod() == null && isAllowedPackage) {
-                throwCantFindImplementations(metadata.model, metadata.target)
+                throwCantFindImplementations(metadata.model.dependency, metadata.target)
             }
 
             val builder = CodeBlock.builder()

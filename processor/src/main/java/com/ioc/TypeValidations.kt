@@ -1,9 +1,6 @@
 package com.ioc
 
-import com.ioc.common.asTypeElement
-import com.ioc.common.isCanHaveViewModel
-import com.ioc.common.isInterface
-import com.ioc.common.message
+import com.ioc.common.*
 import java.util.*
 import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
@@ -53,6 +50,12 @@ fun validateAbstractModuleMethodProvider(method: ExecutableElement) {
     }
 }
 
+fun validateModuleMethod(isKotlinModule: Boolean, provider: ExecutableElement) {
+    if (!provider.isStatic() && !isKotlinModule) {
+        throw ProcessorException("${provider.enclosingElement.simpleName}.${provider.simpleName}() is annotated with @Dependency must be static and public").setElement(provider)
+    }
+}
+
 fun validateIsAllowCanHaveViewModel(viewModel: Element, targetElement: TypeElement) {
     if (targetElement.isCanHaveViewModel()) return
     throw ProcessorException("@Inject annotation is placed on `${viewModel.asType()}` class which declared not in either FragmentActivity or Fragment").setElement(viewModel)
@@ -83,12 +86,18 @@ fun namedStringForError(named: String?): String {
     return if (named.isNullOrBlank()) "@Default" else "@$named"
 }
 
-fun throwMoreThanOneDependencyFoundIfNeed(element: Element, named: String?, models: List<DependencyModel>) {
+fun throwMoreThanOneDependencyFoundIfNeed(element: Element, named: String?, models: List<CharSequence>) {
     if (models.size <= 1) return
-    throw ProcessorException("Found more than one implementation of `${element.asType()}` with qualifier `${namedStringForError(named)}` [${models.joinToString { it.originalTypeString }}]")
+    throw ProcessorException("Found more than one implementation of `${element.asType()}` with qualifier `${namedStringForError(named)}` [${models.joinToString()}]")
         .setElement(element)
 }
 
-fun throwCantFindImplementations(model: DependencyModel, target: TargetType) {
-    throw ProcessorException("Can't find implementations of `${model.dependency.asType()} ${model.dependency}` maybe you forgot add correct @Named, @Qualifier or @Scope annotations or add @Dependency on provides method, `${target.element}`").setElement(target.element)
+fun throwCantFindImplementations(model: Element, target: TargetType) {
+    throw ProcessorException("Can't find methodProvider of `${model.asType()} ${model.enclosingElement}` maybe you forgot add correct @Named, @Qualifier annotations or add @Dependency on provides method, `${target.element}`").setElement(target.element)
+}
+
+fun throwIfTargetUsedInSingleton(target: TargetType, parentElement: Element, models: List<DependencyModel>) {
+    if (models.any { target.isSubtype(it.dependency, it.originalType) }) {
+        throw ProcessorException("target can't be user as dependency in Singleton").setElement(parentElement)
+    }
 }

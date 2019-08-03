@@ -1,5 +1,6 @@
 package com.ioc
 
+import com.ioc.common.asClassName
 import com.ioc.common.emptyCodBlock
 import com.squareup.javapoet.CodeBlock
 
@@ -9,7 +10,7 @@ import com.squareup.javapoet.CodeBlock
 
 object ProviderMethodBuilder {
     fun build(
-        provider: DependencyProvider,
+        provider: ModuleMethodProvider,
         dependencyModel: DependencyModel,
         metadata: InjectMethodMetadata,
         target: TargetType?): CodeBlock {
@@ -30,7 +31,7 @@ object ProviderMethodBuilder {
     @Throws(Throwable::class)
     private fun generateWithDependencies(
         model: DependencyModel,
-        method: DependencyProvider,
+        method: ModuleMethodProvider,
         metadata: InjectMethodMetadata,
         target: TargetType?): CodeBlock {
 
@@ -45,8 +46,9 @@ object ProviderMethodBuilder {
         builder.addStatement(statementString,
             model.originalClassName,
             model.generatedName,
-            method.module,
-            method.name, names)
+            method.module.asClassName(),
+            method.name,
+            names)
 
         return builder.build()
     }
