@@ -1,7 +1,6 @@
 package com.ioc
 
 
-import com.ioc.ProviderImplementationBuilder.buildForSingleton
 import com.ioc.common.*
 import com.squareup.javapoet.CodeBlock
 
@@ -52,8 +51,6 @@ object DependencyTree {
             if (implementation.isMethod) {
                 return ProviderMethodBuilder.build(implementation, dependency, metadata, target)
             }
-
-            return buildForSingleton(implementation, dependency, metadata, target)
         }
 
         // if we here it's mean what we have dependency with arguments constructor or empty constructor
