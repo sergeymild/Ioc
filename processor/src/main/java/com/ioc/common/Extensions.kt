@@ -47,7 +47,7 @@ fun Element.asWeakType(): TypeName {
     return ParameterizedTypeName.get(weakType, asTypeName())
 }
 
-fun viewModelFactoryCode(name: String, code: CodeBlock.Builder): CodeBlock.Builder {
+fun viewModelFactoryCode(name: CharSequence, code: CodeBlock.Builder): CodeBlock.Builder {
     return CodeBlock.builder().add("\$T \$N = \$L;\n",
         viewModelFactoryType,
         "factory_$name",

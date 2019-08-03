@@ -334,8 +334,9 @@ class ConstructorTests : BaseTest {
             "   }",
             "",
             "   protected final Manager initialize() {",
-            "       DbMapper dbMapper = new DbMapperImpl();",
-            "       DbMapper dbMapper2 = new DbMapperImpl();",
+            "       DbMapperImpl dbMapper = new DbMapperImpl();",
+            "       DbMapperImpl" +
+                " dbMapper2 = new DbMapperImpl();",
             "       DbRepository dbRepository = new DbRepository(dbMapper2);",
             "       return new Manager(dbMapper, dbRepository);",
             "   }",

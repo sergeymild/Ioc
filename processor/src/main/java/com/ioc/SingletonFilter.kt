@@ -10,23 +10,22 @@ object SingletonFilter {
 
     fun findAll(
         dependencyModel: List<DependencyModel>,
-        singletons: MutableList<SingletonWrapper>) {
-
-        val uniqueSingletons = mutableSetOf<String>()
+        singletons: MutableList<SingletonWrapper>,
+        uniqueSingletons: MutableSet<String>) {
 
         val queue = LinkedList(dependencyModel)
 
         while (queue.isNotEmpty()) {
             val model = queue.pop()
 
-            if (model.isSingleton && uniqueSingletons.add(model.typeElementString)) {
+            if (model.isSingleton && uniqueSingletons.add(model.originalTypeString)) {
                 singletons.add(model)
             }
 
             queue.addAll(model.dependencies)
 
             for (implementation in model.implementations) {
-                if (implementation.isSingleton && uniqueSingletons.add(model.typeElementString)) {
+                if (implementation.isSingleton && uniqueSingletons.add(model.originalTypeString)) {
                     singletons.add(model)
                 }
                 queue.addAll(implementation.dependencyModels)

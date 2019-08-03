@@ -61,7 +61,7 @@
 //    private fun validateConstructorCyclic(element: Element, originalElement: Element) {
 //
 //        var typeElement: Element = element
-//        if (typeElement.isWeakDependency() /*|| typeElement.isProvideDependency(types)*/) {
+//        if (typeElement.isWeak() /*|| typeElement.isProvider(types)*/) {
 //            typeElement = typeElement.getGenericFirstType().asTypeElement()
 //        }
 //

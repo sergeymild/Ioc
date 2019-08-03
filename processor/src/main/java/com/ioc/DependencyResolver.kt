@@ -2,7 +2,6 @@ package com.ioc
 
 import com.ioc.common.*
 import javax.inject.Inject
-import javax.inject.Singleton
 import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.Modifier
@@ -26,12 +25,11 @@ class DependencyResolver(
         named: String? = null): DependencyModel {
 
         //val isTarget = TargetChecker.isSubtype(target, element)
-        if (target.isSubtype(element))
-            return targetDependencyModel(element)
+        if (target.isSubtype(element, element)) return targetDependencyModel(element)
 
         var setterMethod: ExecutableElement? = null
         var dependencyElement = element
-        val fieldName = dependencyElement.simpleName.toString()
+        val fieldName = dependencyElement.simpleName
 
         if (element.isMethod() && element.isPrivate()) {
             throw ProcessorException("@Inject annotation is placed on method `$element` in `${element.enclosingElement}` with private access").setElement(element)
@@ -61,22 +59,23 @@ class DependencyResolver(
         // Check is android viewModel field
         val isViewModel = dependencyElement.isViewModel()
 
-        if (isViewModel && !target.element.isCanHaveViewModel()) {
-            throw ProcessorException("@Inject annotation is placed on `${dependencyElement.asType()}` class which declared not in either FragmentActivity or Fragment").setElement(element)
-        }
+        if (isViewModel) validateIsAllowCanHaveViewModel(dependencyElement, target.element)
 
 
-        val isProvider = dependencyElement.isProvideDependency()
-        val isWeakDependency = dependencyElement.isWeakDependency()
-        val isLazy = dependencyElement.isLazyDependency()
-        if (isProvider || isWeakDependency || isLazy) {
+        var isProvider = dependencyElement.isProvider()
+        var isWeak = dependencyElement.isWeak()
+        var isLazy = dependencyElement.isLazy()
+        if (isProvider || isWeak || isLazy) {
             dependencyElement = dependencyElement.getGenericFirstType()
         }
 
-        val dependencyTypeElement = dependencyElement.asTypeElement()
+        var dependencyTypeElement = dependencyElement.asTypeElement()
+
+        if (target.isSubtype(element, dependencyTypeElement))
+            return targetDependencyModel(element)
 
 
-        val isSingleton = dependencyTypeElement.isHasAnnotation(Singleton::class.java)
+        var isSingleton = dependencyTypeElement.isSingleton()
 
 
         val named = named
@@ -84,11 +83,26 @@ class DependencyResolver(
             ?: qualifierFinder.getQualifier(dependencyElement)
             ?: qualifierFinder.getQualifier(dependencyTypeElement)
 
-        val dependencyImplementations = dependencyTypesFinder.findFor(dependencyElement, named, target, dependencyTypeElement)
+        var possibleImplementation: DependencyModel? = null
+        if (dependencyTypeElement.isInterface() || dependencyTypeElement.isAbstract()) {
+            possibleImplementation = dependencyTypesFinder.findImplementationFromAbstractModuleMethodProviderOrFromClassWithDependencyAnnotation(dependencyElement, named)
+        }
+        possibleImplementation?.let {
+            dependencyTypeElement = it.originalType.asTypeElement()
+            isProvider = it.isProvider || isProvider
+            isLazy = it.isLazy || isLazy
+            isWeak = it.isWeak || isWeak
+            isSingleton = it.isSingleton || isSingleton
+        }
+
+        var implementations = emptyList<DependencyProvider>()
+        if (possibleImplementation == null) {
+            implementations = dependencyTypesFinder.findFor(dependencyElement, named, target, dependencyTypeElement)
+        }
 
         // if we did't find any providers of this type, try to find constructors of concrete type
-        var argumentConstructor = if (dependencyImplementations.isEmpty()) findArgumentConstructor(dependencyTypeElement) else null
-        var noArgsConstructor = if (dependencyImplementations.isEmpty()) findEmptyConstructor(dependencyTypeElement) else null
+        var argumentConstructor = if (implementations.isEmpty()) findArgumentConstructor(dependencyTypeElement) else null
+        var noArgsConstructor = if (implementations.isEmpty()) findEmptyConstructor(dependencyTypeElement) else null
 
         if (argumentConstructor != null && argumentConstructor.parameters.isEmpty() && noArgsConstructor == null) {
             noArgsConstructor = argumentConstructor
@@ -104,41 +118,29 @@ class DependencyResolver(
             }
         }
 
-        val depdendency = DependencyModel(dependencyElement,
-            dependencyElement,
-            fieldName,
-            types.erasure(dependencyElement.asType()),
-            isProvider,
-            isLazy,
-            isWeakDependency)
+        val implementation = implementations.firstOrNull()
+        val dependency = DependencyModel(
+            dependency = dependencyElement,
+            originalType = dependencyTypeElement,
+            fieldName = fieldName,
+            isProvider = isProvider,
+            isLazy = isLazy,
+            isWeak = isWeak,
+            isSingleton = implementation?.isSingleton ?: isSingleton,
+            isViewModel = isViewModel)
 
 
-        depdendency.implementations = dependencyImplementations
-        depdendency.typeArguments.addAll(if (isProvider || isWeakDependency || isLazy) emptyList() else element.asType().typeArguments())
+        dependency.implementations = implementations
+        dependency.typeArguments.addAll(if (isProvider || isWeak || isLazy) emptyList() else element.asType().typeArguments())
+        dependency.dependencies = dependencies.map { it.copy() }
+        dependency.named = named
 
-        depdendency.originalType = dependencyTypeElement
-        depdendency.dependency = depdendency.implementations.firstOrNull()?.method
-            ?: dependencyTypeElement
-        depdendency.dependencies = dependencies
-        depdendency.named = named
+        //if (!dependency.isSingleton) uniqueName(dependency)
+        dependency.setterMethod = setterMethod
+        dependency.argumentsConstructor = argumentConstructor
+        dependency.emptyConstructor = noArgsConstructor
 
-        depdendency.isViewModel = isViewModel
-
-        resolveDependencyName(depdendency, isSingleton)
-        depdendency.setterMethod = setterMethod
-        depdendency.argumentsConstructor = argumentConstructor
-        depdendency.emptyConstructor = noArgsConstructor
-
-        return depdendency
-    }
-
-    private fun resolveDependencyName(dependency: DependencyModel, isSingleton: Boolean) {
-        dependency.isSingleton = isSingleton || dependency.implementations.any { it.isSingleton }
-        if (dependency.isSingleton) {
-            dependency.generatedName = dependency.simpleName
-        } else {
-            dependency.generatedName = uniqueName(dependency.name).decapitalize()
-        }
+        return dependency
     }
 
     private fun resolveConstructorArguments(
@@ -153,17 +155,22 @@ class DependencyResolver(
         // TODO generic type
         for (argument in constructorArguments) {
             // TODO !isParentSingleton
-            if (target.isSubtype(argument) && !isParentSingleton) {
+            if (target.isSubtype(argument, argument) && !isParentSingleton) {
+                dependencies.add(targetDependencyModel(argument))
+                continue
+            }
+
+            if (target.isLocalScope(argument, argument) && !isParentSingleton) {
                 dependencies.add(targetDependencyModel(argument))
                 continue
             }
 
             // Ioc not supported primitive types for now
-            if (argument.asType().kind.isPrimitive) return
+            if (argument.isPrimitive()) return
             var element: Element = argument
-            val isProvider = element.isProvideDependency()
-            val isWeakDependency = element.isWeakDependency()
-            val isLazy = element.isLazyDependency()
+            val isProvider = element.isProvider()
+            val isWeakDependency = element.isWeak()
+            val isLazy = element.isLazy()
             if (isProvider || isWeakDependency || isLazy) {
                 element = element.getGenericFirstType()
             }
@@ -176,7 +183,7 @@ class DependencyResolver(
             }
 
             resolveDependency(element, newTarget, named).let {
-                it.isWeakDependency = isWeakDependency
+                it.isWeak = isWeakDependency
                 it.isProvider = isProvider
                 it.isLazy = isLazy
 
@@ -184,7 +191,7 @@ class DependencyResolver(
                     it.named = qualifierFinder.getQualifier(argument)
                 }
 
-                it.originalType = element
+                //it.originalType = element
 
                 dependencies.add(it)
             }

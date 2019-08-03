@@ -31,15 +31,28 @@ class TargetDataObserver(
     }
 }
 
-fun TargetType?.isSubtype(element: Element): Boolean {
+fun TargetType?.isSubtype(
+    dependencyType: Element,
+    originalType: Element): Boolean {
     this ?: return false
-    //return supertypes.contains(element.asType())
-    return asTargetDependencies.contains(element.asType().toString())
+    return asTargetDependencies.contains(dependencyType.asType().toString())
+        || asTargetDependencies.contains(originalType.asType().toString())
 }
 
-fun TargetType?.isLocalScope(element: Element): Boolean {
+fun TargetType?.isLocalScope(
+    dependencyType: Element,
+    originalType: Element): Boolean {
     this ?: return false
-    return localScopeDependencies.containsKey(element.asType().toString())
+    return localScopeDependencies.containsKey(dependencyType.asType().toString())
+        || localScopeDependencies.containsKey(originalType.asType().toString())
+}
+
+fun TargetType?.localScopeName(
+    dependencyType: Element,
+    originalType: Element): CharSequence {
+    this ?: return "unused"
+    return (localScopeDependencies[dependencyType.asType().toString()]
+        ?: localScopeDependencies[originalType.asType().toString()])!!
 }
 
 class TargetType(val element: TypeElement) {

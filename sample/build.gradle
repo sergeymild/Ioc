@@ -72,6 +72,10 @@ android {
 //
 kapt {
     generateStubs = true
+
+    arguments {
+        arg("someKey", "someValue")
+    }
 }
 
 

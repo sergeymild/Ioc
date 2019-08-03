@@ -1,8 +1,6 @@
 package com.ioc
 
-import com.ioc.common.asTypeElement
 import com.ioc.common.iocType
-import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.CodeBlock
 
 /**
@@ -10,14 +8,12 @@ import com.squareup.javapoet.CodeBlock
  */
 
 fun iocGetSingleton(model: DependencyModel): CodeBlock {
-    val singletonName = model.dependency.asTypeElement().qualifiedName.toString()
-    val className = ClassName.bestGuess(singletonName)
+    val className = model.originalClassName
     return CodeBlock.builder().add("\$T.singleton(\$T.class)", iocType, className).build()
 }
 
 fun emptyConstructor(model: DependencyModel): CodeBlock {
-    val singletonName = model.dependency.asTypeElement().qualifiedName.toString()
-    val className = ClassName.bestGuess(singletonName)
+    val className = model.originalClassName
     return CodeBlock.builder().add("new \$T()", className).build()
 }
 
@@ -37,36 +33,39 @@ fun setInTarget(dependency: DependencyModel, codeBlock: CodeBlock): CodeBlock {
 
 fun CodeBlock.Builder.emptyConstructor(model: DependencyModel): CodeBlock {
     return addStatement("\$T \$N = new \$T()",
-        model.originalType.asType(),
+        model.originalClassName,
         model.generatedName,
-        model.className)
+        model.originalClassName)
         .build()
 }
 
 fun applyIsLoadIfNeed(dependencies: List<DependencyModel>, target: TargetType?) {
     for (dependency in dependencies) {
-        val fieldName = target?.localScopeDependencies?.get(dependency.originalTypeString)
-        if (fieldName != null) {
+        if (target.isLocalScope(dependency.dependency, dependency.originalType)) {
             dependency.isLocal = true
-            dependency.fieldName = fieldName
+            dependency.fieldName = target.localScopeName(dependency.dependency, dependency.originalType)
         }
 
-        if (target.isSubtype(dependency.originalType)) {
+        if (target.isSubtype(dependency.dependency, dependency.originalType)) {
             dependency.generatedName = "target"
         }
     }
 }
 
-fun argumentsConstructor(model: DependencyModel, target: TargetType?): CodeBlock {
-
-    val dependencies = DependencyTree.get(model.dependencies, target = target)
+fun argumentsConstructor(
+    model: DependencyModel,
+    metadata: InjectMethodMetadata,
+    target: TargetType?
+): CodeBlock {
+    val dependencies = DependencyTree.get(model.dependencies, metadata, target = target)
     val builder = CodeBlock.builder().add(dependencies)
 
     applyIsLoadIfNeed(model.dependencies, target)
 
+    val names = model.dependencyNames(metadata)
     return builder.addStatement("\$T \$N = new \$T(\$L)",
-        model.originalType.asType(),
+        model.originalClassName,
         model.generatedName,
-        model.className,
-        model.dependencyNames()).build()
+        model.originalClassName,
+        names).build()
 }

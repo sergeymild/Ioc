@@ -365,7 +365,7 @@ class NamedTest : BaseTest {
             "   }",
             "",
             "   private final MainPresenter provideMainPresenter() {",
-            "       DependencyModel dependencyModel = new ReleaseDependency();",
+            "       ReleaseDependency dependencyModel = new ReleaseDependency();",
             "       MainPresenter mainPresenter = new MainPresenter(dependencyModel);",
             "       return mainPresenter;",
             "   }",
@@ -462,7 +462,7 @@ class NamedTest : BaseTest {
             "   }",
             "",
             "   private final MainPresenter provideMainPresenter() {",
-            "       Coffee coffee = new Cappuccino();",
+            "       Cappuccino coffee = new Cappuccino();",
             "       DependencyModel dependencyModel = new DependencyModel(coffee);",
             "       MainPresenter mainPresenter = new MainPresenter(dependencyModel);",
             "       return mainPresenter;",
@@ -470,7 +470,7 @@ class NamedTest : BaseTest {
             "}")
 
         assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, cappuccino, nescafe, presenter, coffee, dependencyFile))
+            .that(listOf(activityFile, cappuccino, nescafe, presenter, coffee, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -583,8 +583,8 @@ class NamedTest : BaseTest {
             "   }",
             "",
             "   private final MainPresenter provideMainPresenter() {",
-            "       Coffee coffee = new Cappuccino();",
-            "       DependencyModel dependencyModel = new ReleaseModel(coffee);",
+            "       Cappuccino coffee = new Cappuccino();",
+            "       ReleaseModel dependencyModel = new ReleaseModel(coffee);",
             "       MainPresenter mainPresenter = new MainPresenter(dependencyModel);",
             "       return mainPresenter;",
             "   }",
@@ -704,15 +704,15 @@ class NamedTest : BaseTest {
             "   }",
             "",
             "   private final MainPresenter provideMainPresenter() {",
-            "       Coffee coffee = new Cappuccino();",
-            "       DependencyModel dependencyModel = new DebugModel(coffee);",
+            "       Cappuccino coffee = new Cappuccino();",
+            "       DebugModel dependencyModel = new DebugModel(coffee);",
             "       MainPresenter mainPresenter = new MainPresenter(dependencyModel);",
             "       return mainPresenter;",
             "   }",
             "}")
 
         assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, cappuccino, nescafe, release, debug, presenter, coffee, dependencyFile))
+            .that(listOf(activityFile, cappuccino, nescafe, release, debug, presenter, coffee, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -825,15 +825,15 @@ class NamedTest : BaseTest {
             "   }",
             "",
             "   private final MainPresenter provideMainPresenter() {",
-            "       Coffee coffee = new Nescafe();",
-            "       DependencyModel dependencyModel = new DebugModel(coffee);",
+            "       Nescafe coffee = new Nescafe();",
+            "       DebugModel dependencyModel = new DebugModel(coffee);",
             "       MainPresenter mainPresenter = new MainPresenter(dependencyModel);",
             "       return mainPresenter;",
             "   }",
             "}")
 
         assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, cappuccino, nescafe, release, debug, presenter, coffee, dependencyFile))
+            .that(listOf(activityFile, cappuccino, nescafe, release, debug, presenter, coffee, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -1054,15 +1054,15 @@ class NamedTest : BaseTest {
             "   }",
             "",
             "   private final MainPresenter provideMainPresenter() {",
-            "       Coffee coffee = new Nescafe();",
-            "       DependencyModel dependencyModel = new DebugModel(coffee);",
+            "       Nescafe coffee = new Nescafe();",
+            "       DebugModel dependencyModel = new DebugModel(coffee);",
             "       MainPresenter mainPresenter = new MainPresenter(dependencyModel);",
             "       return mainPresenter;",
             "   }",
             "}")
 
         assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, debugQualifierFile, viewModelFile, releaseQualifierFile, cappuccinoQualifierFile, nescafeQualifierFile, cappuccino, nescafe, release, debug, presenter, coffee, dependencyFile))
+            .that(listOf(activityFile, debugQualifierFile, viewModelFile, releaseQualifierFile, cappuccinoQualifierFile, nescafeQualifierFile, cappuccino, nescafe, release, debug, presenter, coffee, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -1106,10 +1106,10 @@ class NamedTest : BaseTest {
             "}")
 
         assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, release, debug, dependencyFile))
+            .that(listOf(activityFile, release, debug, dependencyFile))
             .processedWith(IProcessor())
             .failsToCompile()
-            .withErrorContaining("Ambiguous classesWithDependencyAnnotation for type [test.DependencyModel] with qualifiers [@Default]")
+            .withErrorContaining("Found more than one implementation of `test.DependencyModel` with qualifier `@Default` [test.ReleaseModel, test.DebugModel]")
             .`in`(activityFile)
             .onLine(8)
     }
@@ -1162,7 +1162,7 @@ class NamedTest : BaseTest {
             "}")
 
         assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, implementation, dependencyFile))
+            .that(listOf(activityFile, implementation, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -1259,13 +1259,13 @@ class NamedTest : BaseTest {
             "",
             "   private final Presenter providePresenter() {",
             "       ApplicationContextProvider applicationContextProvider = ContextModule.context();",
-            "       StringProvider stringProvider = new AppStringProvider(applicationContextProvider);",
+            "       AppStringProvider stringProvider = new AppStringProvider(applicationContextProvider);",
             "       FirstDependency firstDependency = new FirstDependency(stringProvider);",
             "       ApplicationContextProvider applicationContextProvider2 = ContextModule.context();",
-            "       StringProvider stringProvider2 = new AppStringProvider(applicationContextProvider2);",
+            "       AppStringProvider stringProvider2 = new AppStringProvider(applicationContextProvider2);",
             "       SecondDependency secondDependency = new SecondDependency(stringProvider2);",
             "       ApplicationContextProvider applicationContextProvider3 = ContextModule.context();",
-            "       StringProvider stringProvider3 = new AppStringProvider(applicationContextProvider3);",
+            "       AppStringProvider stringProvider3 = new AppStringProvider(applicationContextProvider3);",
             "       ThirdDependency thirdDependency = new ThirdDependency(stringProvider3);",
             "       Presenter presenter = new Presenter(firstDependency, secondDependency, thirdDependency);",
             "       return presenter;",
@@ -1273,7 +1273,7 @@ class NamedTest : BaseTest {
             "}")
 
         assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, stringProvider, contextModule, applicationContextProvider, appStringProvider, firstDependency, secondDependency, presenter, thirdDependency))
+            .that(listOf(activityFile, stringProvider, contextModule, applicationContextProvider, appStringProvider, firstDependency, secondDependency, presenter, thirdDependency))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)

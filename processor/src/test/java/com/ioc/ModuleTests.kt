@@ -1690,6 +1690,64 @@ class ModuleTests {
 
     @Test
     @Throws(Exception::class)
+    fun simpleAbstractModules() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            "package test;",
+            "",
+            Helpers.importType(Inject::class.java),
+            "",
+            "public class Activity {",
+            "",
+            "   @Inject",
+            "   public CountryService service;",
+            "}")
+
+        val countryServiceFile = JavaFileObjects.forSourceLines("test.CountryService",
+            "package test;",
+            "",
+            "public interface CountryService {",
+            "}")
+
+        val countryServiceImplementation = JavaFileObjects.forSourceLines("test.CountryServiceImplementation",
+            "package test;",
+
+            "public class CountryServiceImplementation implements CountryService {",
+            "}")
+
+        val moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
+            "package test;",
+            "",
+            Helpers.importType(Dependency::class.java),
+            "",
+            "public abstract class ModuleFile {",
+            "   @Dependency",
+            "   public abstract CountryService getService(CountryServiceImplementation implementation);",
+            "}")
+
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+            "package test;",
+            "",
+            "import $keep",
+            "import $nonNull",
+            "",
+            "@Keep",
+            "public final class ActivityInjector {",
+            "",
+            "   @Keep",
+            "   public final void inject(@NonNull final Activity target) {",
+            "       target.service = new CountryServiceImplementation();",
+            "   }",
+            "}")
+
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(activityFile, countryServiceImplementation, countryServiceFile, moduleFile))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile)
+    }
+
+    @Test
+    @Throws(Exception::class)
     fun failNotReturnImplementation() {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
@@ -1868,8 +1926,8 @@ class ModuleTests {
             "   }",
             "",
             "   private final Service provideService() {",
-            "       String string2 = ModuleFile.getServiceName();",
-            "       Service service = new Service(string2);",
+            "       String string = ModuleFile.getServiceName();",
+            "       Service service = new Service(string);",
             "       return service;",
             "   }",
             "}")
@@ -1942,8 +2000,8 @@ class ModuleTests {
             "   }",
             "",
             "   private final Service provideService() {",
-            "       Integer integer2 = ModuleFile.getServiceName();",
-            "       Service service = new Service(integer2);",
+            "       Integer integer = ModuleFile.getServiceName();",
+            "       Service service = new Service(integer);",
             "       return service;",
             "   }",
             "}")

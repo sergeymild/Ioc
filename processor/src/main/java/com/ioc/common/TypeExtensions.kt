@@ -7,6 +7,7 @@ import javax.annotation.processing.ProcessingEnvironment
 import javax.annotation.processing.RoundEnvironment
 import javax.inject.Inject
 import javax.inject.Provider
+import javax.inject.Singleton
 import javax.lang.model.element.*
 import javax.lang.model.type.DeclaredType
 import javax.lang.model.type.TypeKind
@@ -245,6 +246,14 @@ fun Name.capitalize(): String {
     return toString().capitalize()
 }
 
+fun Name.decapitalize(): String {
+    return toString().decapitalize()
+}
+
+fun CharSequence.titleize(): String {
+    return toString().capitalize()
+}
+
 fun Element.isHasArgumentsConstructor(): Boolean =
     ElementFilter.constructorsIn(asTypeElement().enclosedElements)
         .any { it.parameters.isNotEmpty() || it.isHasAnnotation(Inject::class.java) }
@@ -258,16 +267,24 @@ fun Element.injectionFields(): List<Element> =
         .filter { it.isHasAnnotation(Inject::class.java) }
 
 
-fun Element.isWeakDependency(): Boolean {
+fun Element.isSingleton(): Boolean {
+    return isHasAnnotation(Singleton::class.java)
+}
+
+fun Element.isWeak(): Boolean {
     return asType().toString().startsWith(WeakReference::class.java.canonicalName)
 }
 
-fun Element.isLazyDependency(): Boolean {
+fun Element.isLazy(): Boolean {
     return asType().toString().startsWith(Lazy::class.java.canonicalName)
 }
 
-fun Element.isProvideDependency(): Boolean {
+fun Element.isProvider(): Boolean {
     return asType().toString().startsWith(Provider::class.java.canonicalName)
+}
+
+fun Element.isPrimitive(): Boolean {
+    return asType().kind.isPrimitive
 }
 
 fun Element.isViewModel(): Boolean {
@@ -315,6 +332,14 @@ fun Element.isMethod(): Boolean {
 
 fun Element.isInterface(): Boolean {
     return kind == ElementKind.INTERFACE
+}
+
+fun Element.isAbstract(): Boolean {
+    return modifiers.contains(Modifier.ABSTRACT)
+}
+
+fun Element.isStatic(): Boolean {
+    return modifiers.contains(Modifier.STATIC)
 }
 
 fun <T> List<T>.addTo(other: MutableList<T>) {

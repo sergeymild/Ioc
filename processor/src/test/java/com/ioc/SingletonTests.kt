@@ -128,7 +128,7 @@ class SingletonTests : BaseTest {
             "   }",
             "",
             "   protected final ReleaseModel initialize() {",
-            "       Coffee coffee = new Cappuccino();",
+            "       Cappuccino coffee = new Cappuccino();",
             "       return new ReleaseModel(coffee);",
             "   }",
             "}")
@@ -263,7 +263,7 @@ class SingletonTests : BaseTest {
             "",
             "   protected final ReleaseModel initialize() {",
             "       Sugar sugar = new Sugar();",
-            "       Coffee coffee = new Nescafe(sugar);",
+            "       Nescafe coffee = new Nescafe(sugar);",
             "       return new ReleaseModel(coffee);",
             "   }",
             "}")
@@ -406,8 +406,8 @@ class SingletonTests : BaseTest {
             "   }",
             "",
             "   protected final CookieManagerWorker initialize() {",
-            "       PrivacySettings privacySettings = new Settings();",
-            "       ThemeSettings themeSettings = new Settings();",
+            "       Settings privacySettings = new Settings();",
+            "       Settings themeSettings = new Settings();",
             "       return new CookieManagerWorker(privacySettings, themeSettings);",
             "   }",
             "}")
@@ -485,7 +485,7 @@ class SingletonTests : BaseTest {
             "   }",
             "",
             "   protected final WebMusicManager initialize() {",
-            "       PrivacySettings privacySettings = new Settings();",
+            "       Settings privacySettings = new Settings();",
             "       Session session = new Session(privacySettings);",
             "       return new WebMusicManager(session);",
             "   }",

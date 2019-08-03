@@ -15,13 +15,14 @@ fun resetUniqueNames() {
     uniqueNames.clear()
 }
 
-fun uniqueName(base: CharSequence): String {
-    if (base == "target") return base.toString()
-    var name = base.toString().decapitalize()
+fun uniqueName(model: DependencyModel): CharSequence {
+    if (model.generatedName == "target") return model.generatedName
+    var name = model.generatedName.toString().decapitalize()
     var differentiator = 2
     while (!uniqueNames.add(name)) {
-        name = base.toString() + differentiator
+        name = model.generatedName.toString() + differentiator
         differentiator++
     }
+    model.generatedName = name
     return name
 }

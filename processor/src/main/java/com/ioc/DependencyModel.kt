@@ -2,7 +2,6 @@ package com.ioc
 
 import com.ioc.common.*
 import com.squareup.javapoet.ClassName
-import com.squareup.javapoet.CodeBlock
 import com.squareup.javapoet.ParameterizedTypeName
 import com.squareup.javapoet.TypeName
 import javax.lang.model.element.Element
@@ -16,7 +15,7 @@ import javax.lang.model.type.TypeMirror
  */
 
 fun targetDependencyModel(element: Element): DependencyModel {
-    val dependency = DependencyModel(element, element, element.simpleName.toString(), element.asType(), false, false, false)
+    val dependency = DependencyModel(element, element.asTypeElement()/*, element.simpleName*/)
     dependency.generatedName = "target"
     return dependency
 }
@@ -24,7 +23,7 @@ fun targetDependencyModel(element: Element): DependencyModel {
 fun DependencyModel.isAllowEmptyConstructorInjection(): Boolean {
     if (implementations.isNotEmpty() && !implementations.first().isMethod) {
         if (implementations.first().dependencyModels.isEmpty()) {
-            if (!isProvider && !isLazy && !isWeakDependency && !isViewModel) {
+            if (!isProvider && !isLazy && !isWeak && !isViewModel) {
                 return true
             }
         }
@@ -33,7 +32,7 @@ fun DependencyModel.isAllowEmptyConstructorInjection(): Boolean {
         && dependencies.isEmpty()
         && !isProvider
         && !isLazy
-        && !isWeakDependency
+        && !isWeak
         && !isViewModel
 }
 
@@ -43,51 +42,61 @@ fun DependencyModel.isAllowModuleMethodProvide(): Boolean {
         && method.dependencyModels.isEmpty()
         && !isProvider
         && !isLazy
-        && !isWeakDependency
+        && !isWeak
         && !isViewModel
 }
 
 fun DependencyModel.returnType(): TypeName {
     return when {
-        isLazy -> originalType.asLazyType()
-        isProvider -> originalType.asProviderType()
-        isWeakDependency -> originalType.asWeakType()
-        else -> originalClassName()
+        isLazy -> dependency.asLazyType()
+        isProvider -> dependency.asProviderType()
+        isWeak -> dependency.asWeakType()
+        else -> originalClassName
+    }
+}
+
+fun DependencyModel.copy(): DependencyModel {
+    return DependencyModel(
+        dependency,
+        originalType,
+        fieldName,
+        isProvider,
+        isLazy,
+        isWeak,
+        isSingleton,
+        isViewModel,
+        isLocal
+    ).also {
+        it.typeArguments = typeArguments
+        it.implementations = implementations
+        it.argumentsConstructor = argumentsConstructor
+        it.emptyConstructor = emptyConstructor
+        it.sortOrder = sortOrder
+        it.named = named
+        it.setterMethod = setterMethod
+        it.dependencies = dependencies.map { d -> d.copy() }
     }
 }
 
 class DependencyModel constructor(
-    var dependency: Element,
-    var originalType: Element,
-    var fieldName: String,
-    var erasuredType: TypeMirror,
+    override val dependency: Element,
+    override val originalType: TypeElement,
+    var fieldName: CharSequence = "",
     var isProvider: Boolean = false,
     var isLazy: Boolean = false,
-    var isWeakDependency: Boolean = false) : SingletonWrapper {
+    var isWeak: Boolean = false,
+    var isSingleton: Boolean = false,
+    var isViewModel: Boolean = false,
+    var isLocal: Boolean = false) : SingletonWrapper {
 
-    val typeString: String
-        get() = dependency.asType().toString()
+    val typeString by lazy { dependency.asType().toString() }
+    val originalTypeString by lazy { originalType.asType().toString() }
+    val dependencyTypeString by lazy { dependency.asType().toString() }
 
-    val originalTypeString: String
-        get() = originalType.asType().toString()
-    val typeElementString: String
-        get() = typeElement.asType().toString()
-    var argumentsConstructor: ExecutableElement? = null
-    var emptyConstructor: ExecutableElement? = null
-    var isSingleton: Boolean = false
-    var isLocal: Boolean = false
-    var isViewModel: Boolean = false
-    override val typeElement: TypeElement
-        get() = dependency.asType().asTypeElement()
-    override val packageName: String
-        get() = typeElement.getPackage().toString()
-    override var name: String = ""
-        get() = erasuredType.toString().split(".").last().decapitalize()
-        set(value) {
-            field = value
-        }
-    override val className: ClassName
-        get() = ClassName.get(typeElement)
+    override val packageName by lazy { dependency.getPackage().toString() }
+
+    //override val dependencyClassName by lazy { ClassName.get(dependency.asType())!! }
+    //val originalTypeClassName by lazy { ClassName.get(originalType.asType())!! }
     override var dependencies: List<DependencyModel> = emptyList()
         get() {
             return if (implementations.isEmpty()) field
@@ -99,18 +108,20 @@ class DependencyModel constructor(
         return implementations.firstOrNull { it.isMethod }
     }
 
+    var argumentsConstructor: ExecutableElement? = null
+    var emptyConstructor: ExecutableElement? = null
     var sortOrder = Int.MAX_VALUE
     var named: String? = ""
     var setterMethod: ExecutableElement? = null
 
-    var generatedName: String = name
+    var generatedName: CharSequence = dependency.asTypeElement().simpleName.decapitalize()
 
-    override fun originalClassName(): TypeName {
-        if (typeArguments.isEmpty()) return ClassName.get(originalType.asTypeElement())
-        return ParameterizedTypeName.get(ClassName.get(originalType.asTypeElement()), *typeArguments.map { ClassName.get(it) }.toTypedArray())
+    override val originalClassName: TypeName by lazy {
+        if (typeArguments.isEmpty()) return@lazy ClassName.get(originalType.asTypeElement())
+        return@lazy ParameterizedTypeName.get(ClassName.get(originalType.asTypeElement()), *typeArguments.map { ClassName.get(it) }.toTypedArray())
     }
 
-    fun setterName(): String {
+    fun setterName(): CharSequence {
         setterMethod?.let { return it.simpleName.toString() }
         return fieldName
     }
@@ -120,19 +131,10 @@ class DependencyModel constructor(
     }
 
     override fun hashCode(): Int {
-        return className.hashCode()
+        return originalClassName.hashCode()
     }
-
-    fun setDependency(target: String, value: String): CodeBlock {
-        val builder = CodeBlock.builder()
-        if (setterMethod != null) builder.addStatement("$target($value)")
-        else builder.addStatement("$target = $value")
-        return builder.build()
-    }
-
-    val simpleName get() = typeElement.simpleName.toString().decapitalize()
 
     override fun toString(): String {
-        return "type: $typeElementString - originalType: $originalTypeString"
+        return "type: $dependencyTypeString - originalType: $originalTypeString"
     }
 }

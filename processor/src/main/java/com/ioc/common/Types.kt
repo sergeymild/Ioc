@@ -25,3 +25,13 @@ val allowedViewModelParents = listOf(
     "android.support.v4.app.FragmentActivity",
     "androidx.appcompat.app.AppCompatActivity"
 )
+
+val excludedPackages = setOf(
+    "java",
+    "sun",
+    "org.jetbrains",
+    "android.content",
+    "android.util",
+    "android.app",
+    "android.view"
+)

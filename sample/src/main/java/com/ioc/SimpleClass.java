@@ -4,5 +4,4 @@ import androidx.lifecycle.Observer;
 
 public class SimpleClass {
 
-
 }

@@ -94,8 +94,8 @@ class FieldInjectionTest {
             .processedWith(IProcessor())
             .failsToCompile()
             .withErrorContaining("Can't find default constructor or provide method for `test.DependencyModel`")
-            .`in`(dependencyFile)
-            .onLine(3)
+            .`in`(activityFile)
+            .onLine(9)
     }
 
     @Test
@@ -361,13 +361,13 @@ class FieldInjectionTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       target.dependency = provideDependencyInterface();",
+            "       target.dependency = provideDependencyType();",
             "   }",
             "",
-            "   private final IocProvider<DependencyInterface> provideDependencyInterface() {",
+            "   private final IocProvider<DependencyInterface> provideDependencyType() {",
             "       IocProvider<DependencyInterface> providerDependencyInterface = new IocProvider<DependencyInterface>() {",
             "         protected DependencyInterface initialize() {",
-            "           DependencyInterface dependencyInterface = new DependencyType();",
+            "           DependencyType dependencyInterface = new DependencyType();",
             "           return dependencyInterface;",
             "         }",
             "       };",
@@ -419,13 +419,13 @@ class FieldInjectionTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       target.dependency = provideDependencyInterface();",
+            "       target.dependency = provideDependencyType();",
             "   }",
             "",
-            "   private final IocLazy<DependencyInterface> provideDependencyInterface() {",
+            "   private final IocLazy<DependencyInterface> provideDependencyType() {",
             "       IocLazy<DependencyInterface> lazyDependencyInterface = new IocLazy<DependencyInterface>() {",
             "         protected DependencyInterface initialize() {",
-            "           DependencyInterface dependencyInterface = new DependencyType();",
+            "           DependencyType dependencyInterface = new DependencyType();",
             "           return dependencyInterface;",
             "         }",
             "       };",
@@ -484,7 +484,7 @@ class FieldInjectionTest {
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, dependencyFile))
+            .that(listOf(activityFile, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -961,8 +961,6 @@ class FieldInjectionTest {
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "import $inject;",
-            "",
             "class DependencyModel {",
             "}")
 
@@ -981,7 +979,7 @@ class FieldInjectionTest {
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, moduleFile, dependencyFile))
+            .that(listOf(activityFile, moduleFile, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -1348,11 +1346,11 @@ class FieldInjectionTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       target.dependency = provideDependencyModel();",
+            "       target.dependency = provideAppModel();",
             "   }",
             "",
-            "   private final DependencyModel provideDependencyModel() {",
-            "       DependencyModel dependencyModel = new AppModel(Ioc.singleton(Context.class));",
+            "   private final AppModel provideAppModel() {",
+            "       AppModel dependencyModel = new AppModel(Ioc.singleton(Context.class));",
             "       return dependencyModel;",
             "   }",
             "}")
@@ -1846,14 +1844,14 @@ class FieldInjectionTest {
             "   }",
             "",
             "   private final Controller provideController(@NonNull final MyActivity target) {",
-            "       Listener listener = new AutoCompleteListenerImpl(target);",
+            "       AutoCompleteListenerImpl listener = new AutoCompleteListenerImpl(target);",
             "       Controller controller = new Controller(listener);",
             "       return controller;",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, listenerFile, controllerFile, autoCompleteListenerImplFile))
+            .that(listOf(activityFile, listenerFile, controllerFile, autoCompleteListenerImplFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -2741,8 +2739,8 @@ class FieldInjectionTest {
         val contextModule = JavaFileObjects.forSourceLines("test.ContextModule",
             "package test;",
             "",
-            importType(Dependency::class.java),
-            importType(Singleton::class.java),
+            "import $dependency;",
+            "import $singleton;",
             "",
             "public class ContextModule {",
             "",
@@ -2994,12 +2992,12 @@ class FieldInjectionTest {
             "",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       target.context = provideContext();",
+            "       target.context = provideResource();",
             "   }",
             "",
-            "   private final Context provideContext() {",
+            "   private final Resource provideResource() {",
             "       Preferences preferences = new Preferences();",
-            "       Context context = new Resource(preferences);",
+            "       Resource context = new Resource(preferences);",
             "       return context;",
             "   }",
             "}")

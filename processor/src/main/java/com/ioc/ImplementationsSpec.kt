@@ -116,19 +116,17 @@ class ImplementationsSpec constructor(
             return methodBuilder
         }
 
-        fun dependencyInjectionCode(
-            dependency: DependencyModel,
-            target: TargetType): CodeBlock.Builder {
+        fun dependencyInjectionCode(metadata: InjectMethodMetadata): CodeBlock.Builder {
 
-            val packageName = dependency.originalType.asTypeElement().getPackage()
+            val packageName = metadata.model.originalType.asTypeElement().getPackage()
             val isAllowedPackage = excludedPackages.any { packageName.toString().startsWith(it) }
-            if (dependency.provideMethod() == null && isAllowedPackage) {
-                throw ProcessorException("Can't find implementations of `${dependency.dependency.asType()} ${dependency.dependency}` maybe you forgot add correct @Named, @Qualifier or @Scope annotations or add @Dependency on provides method, `${target.element}`").setElement(target.element)
+            if (metadata.model.provideMethod() == null && isAllowedPackage) {
+                throwCantFindImplementations(metadata.model, metadata.target)
             }
 
             val builder = CodeBlock.builder()
 
-            val code = DependencyTree.get(listOf(dependency), skipCheckLocalScope = true, target = target)
+            val code = DependencyTree.get(listOf(metadata.model), metadata, skipCheckLocalScope = true, target = metadata.target)
             builder.add(code)
             return builder
         }
