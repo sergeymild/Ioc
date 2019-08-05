@@ -18,7 +18,7 @@ fun emptyConstructor(model: DependencyModel): CodeBlock {
 }
 
 fun emptyModuleMethodProvide(model: DependencyModel): CodeBlock {
-    val method = model.provideMethod()!!
+    val method = model.methodProvider!!
     var statementString = "\$T.\$N()"
     if (method.isKotlinModule) statementString = "\$T.INSTANCE.\$N()"
     return CodeBlock.of(statementString, method.module, method.name)
@@ -44,7 +44,7 @@ fun applyIsLoadIfNeed(dependencies: List<DependencyModel>, target: TargetType?) 
     }
 }
 
-fun argumentsConstructor(model: DependencyModel, target: TargetType?
+fun constructorCodeBlock(model: DependencyModel, target: TargetType?
 ): CodeBlock {
     val dependencies = DependencyTree.get(model.dependencies, target = target)
     val builder = CodeBlock.builder().add(dependencies)

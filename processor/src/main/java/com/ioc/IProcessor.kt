@@ -268,7 +268,6 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
             val dep = queue.pop()
             allTargetDependencies.add(dep)
             queue.addAll(dep.dependencies)
-            dep.methodProvider?.let { queue.addAll(it.dependencies) }
         }
         return allTargetDependencies
     }

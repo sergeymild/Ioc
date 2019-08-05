@@ -2,6 +2,7 @@ package com.ioc
 
 import com.ioc.common.asClassName
 import com.ioc.common.emptyCodBlock
+import com.ioc.common.message
 import com.squareup.javapoet.CodeBlock
 
 /**
@@ -11,18 +12,15 @@ import com.squareup.javapoet.CodeBlock
 object ProviderMethodBuilder {
     fun build(
         provider: ModuleMethodProvider,
-        dependencyModel: DependencyModel,
+        model: DependencyModel,
         target: TargetType?): CodeBlock {
-        if (provider.isSingleton) return emptyCodBlock
 
         val builder = CodeBlock.builder()
 
-        if (!provider.isSingleton) {
-            DependencyTree.get(provider.dependencies, target = target)
-                .also { builder.add(it) }
-        }
+        DependencyTree.get(model.dependencies, target = target)
+            .also { builder.add(it) }
 
-        builder.add(generateWithDependencies(dependencyModel, provider, target))
+        builder.add(generateWithDependencies(model, provider, target))
 
         return builder.build()
     }
@@ -36,7 +34,7 @@ object ProviderMethodBuilder {
         val builder = CodeBlock.builder()
 
         applyIsLoadIfNeed(model.dependencies, target)
-        val names = method.dependencyNames()
+        val names = model.dependencyNames()
 
         var statementString = "\$T \$N = \$T.\$N(\$L)"
         if (method.isKotlinModule) statementString = "\$T \$N = \$T.INSTANCE.\$N(\$L)"

@@ -31,7 +31,7 @@ fun DependencyModel.isAllowEmptyConstructorInjection(): Boolean {
 }
 
 fun DependencyModel.isAllowModuleMethodProvide(): Boolean {
-    val method = provideMethod()
+    val method = methodProvider
     return method != null
         && method.dependencies.isEmpty()
         && !isProvider
@@ -87,13 +87,8 @@ class DependencyModel constructor(
     val dependencyTypeString by lazy { dependency.asType().toString() }
 
     var dependencies: List<DependencyModel> = emptyList()
-        get() {
-            methodProvider?.let { return it.dependencies }
-            return field
-        }
     var typeArguments = mutableListOf<TypeMirror>()
     var methodProvider: ModuleMethodProvider? = null
-    fun provideMethod() = methodProvider
 
     var constructor: ExecutableElement? = null
     var sortOrder = Int.MAX_VALUE

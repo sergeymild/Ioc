@@ -20,8 +20,8 @@ object DependencyTree {
             if (target.isSubtype(dependency.dependency, dependency.originalType)) continue
             val packageName = dependency.originalType.asTypeElement().getPackage()
             val isAllowedPackage = excludedPackages.any { packageName.toString().startsWith(it) }
-            if (dependency.provideMethod() == null && isAllowedPackage) {
-                throw ProcessorException("Can't find methodProvider of `${dependency.dependency.asType()} ${dependency.dependency}` maybe you forgot add correct @Named, @Qualifier or @Scope annotations or add @Dependency on provides method, `${target?.element}`").setElement(target?.element)
+            if (dependency.methodProvider == null && isAllowedPackage) {
+                throwCantFindImplementations(dependency.dependency, target)
             }
 
             var code = generateCode(dependency, target).toBuilder()
@@ -52,7 +52,7 @@ object DependencyTree {
 
         // if we here it's mean what we have dependency with arguments constructor or empty constructor
         if (dependency.constructor != null) {
-            return argumentsConstructor(dependency, target).add(builder).build()
+            return constructorCodeBlock(dependency, target).add(builder).build()
         }
 
         throw ProcessorException("Can't find default constructor or provide method for `${dependency.dependencyTypeString}`").setElement(dependency.dependency)

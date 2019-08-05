@@ -92,8 +92,8 @@ fun throwMoreThanOneDependencyFoundIfNeed(element: Element, named: String?, mode
         .setElement(element)
 }
 
-fun throwCantFindImplementations(model: Element, target: TargetType) {
-    throw ProcessorException("Can't find methodProvider of `${model.asType()} ${model.enclosingElement}` maybe you forgot add correct @Named, @Qualifier annotations or add @Dependency on provides method, `${target.element}`").setElement(target.element)
+fun throwCantFindImplementations(model: Element, target: TargetType?) {
+    throw ProcessorException("Can't find methodProvider of `${model.asType()} ${model.enclosingElement}` maybe you forgot add correct @Named, @Qualifier annotations or add @Dependency on provides method, `${target?.element}`").setElement(target?.element)
 }
 
 fun throwIfTargetUsedInSingleton(target: TargetType, parentElement: Element, models: List<DependencyModel>) {

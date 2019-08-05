@@ -132,7 +132,7 @@ class DependencyResolver(
 
         dependency.methodProvider = methodProvider
         dependency.typeArguments.addAll(if (isProvider || isWeak || isLazy) emptyList() else element.asType().typeArguments())
-        dependency.dependencies = dependencies
+        dependency.dependencies = methodProvider?.dependencies ?: dependencies
         dependency.named = named
 
         dependency.setterMethod = setterMethod
@@ -141,6 +141,7 @@ class DependencyResolver(
         if (dependency.isSingleton) {
             projectSingletons[dependency.originalTypeString] = dependency
         }
+
         return dependency
     }
 
