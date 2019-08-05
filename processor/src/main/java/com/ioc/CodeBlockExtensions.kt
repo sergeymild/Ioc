@@ -31,14 +31,6 @@ fun setInTarget(dependency: DependencyModel, codeBlock: CodeBlock): CodeBlock {
     return setterCodeBlock.build()
 }
 
-fun CodeBlock.Builder.emptyConstructor(model: DependencyModel): CodeBlock {
-    return addStatement("\$T \$N = new \$T()",
-        model.originalClassName,
-        model.generatedName,
-        model.originalClassName)
-        .build()
-}
-
 fun applyIsLoadIfNeed(dependencies: List<DependencyModel>, target: TargetType?) {
     for (dependency in dependencies) {
         if (target.isLocalScope(dependency.dependency, dependency.originalType)) {

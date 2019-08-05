@@ -69,7 +69,7 @@
 //            typeElement = typeElement.parameters[0].asTypeElement()
 //        }
 //
-//        val argumentConstructor = typeElement.argumentsConstructor()
+//        val argumentConstructor = typeElement.constructor()
 //        val parameters = argumentConstructor?.parameters ?: emptyList()
 //        for (parameter in parameters) {
 //            // Skip all constructors with primitive types

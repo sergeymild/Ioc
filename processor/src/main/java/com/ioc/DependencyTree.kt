@@ -51,12 +51,8 @@ object DependencyTree {
         }
 
         // if we here it's mean what we have dependency with arguments constructor or empty constructor
-        if (dependency.argumentsConstructor != null) {
+        if (dependency.constructor != null) {
             return argumentsConstructor(dependency, target).add(builder).build()
-        }
-
-        if (dependency.emptyConstructor != null) {
-            return CodeBlock.builder().emptyConstructor(dependency).add(builder).build()
         }
 
         throw ProcessorException("Can't find default constructor or provide method for `${dependency.dependencyTypeString}`").setElement(dependency.dependency)

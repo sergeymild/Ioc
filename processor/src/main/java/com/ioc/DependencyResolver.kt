@@ -4,7 +4,6 @@ import com.ioc.common.*
 import javax.inject.Inject
 import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
-import javax.lang.model.element.Modifier
 import javax.lang.model.element.TypeElement
 import javax.lang.model.util.ElementFilter
 import javax.lang.model.util.Types
@@ -101,18 +100,12 @@ class DependencyResolver(
         }
 
         // if we did't find any providers of this type, try to find constructors of concrete type
-        var argumentConstructor = if (methodProvider == null) findArgumentConstructor(dependencyTypeElement) else null
-        var noArgsConstructor = if (methodProvider == null) findEmptyConstructor(dependencyTypeElement) else null
-
-        if (argumentConstructor != null && argumentConstructor.parameters.isEmpty() && noArgsConstructor == null) {
-            noArgsConstructor = argumentConstructor
-            argumentConstructor = null
-        }
+        val dependencyConstructor = if (methodProvider == null) findArgumentConstructor(dependencyTypeElement) else null
 
         var dependencies = IProcessor.singletons.getOrDefault("${dependencyTypeElement.asType()}", emptyList()).map { it.copy() }
 
         if (dependencies.isEmpty()) {
-            argumentConstructor?.let {
+            dependencyConstructor?.let {
                 dependencies = resolveConstructorArguments(dependencyTypeElement, it, target, isSingleton)
                 IProcessor.singletons["${dependencyTypeElement.asType()}"] = dependencies
             }
@@ -134,10 +127,8 @@ class DependencyResolver(
         dependency.dependencies = dependencies.map { it.copy() }
         dependency.named = named
 
-        //if (!dependency.isSingleton) uniqueName(dependency)
         dependency.setterMethod = setterMethod
-        dependency.argumentsConstructor = argumentConstructor
-        dependency.emptyConstructor = noArgsConstructor
+        dependency.constructor = dependencyConstructor
 
         return dependency
     }
@@ -178,23 +169,21 @@ class DependencyResolver(
         val constructors = ElementFilter.constructorsIn(typeElement.enclosedElements)
         var constructor = constructors.firstOrNull { it.isHasAnnotation(Inject::class.java) }
 
-        // then check maybe we have only one constructor with arguments
-        if (constructor == null && constructors.size == 1 && constructors[0].parameters.isNotEmpty()) {
-            constructor = constructors[0]
+        if (constructor != null && constructor.isPrivate()) {
+            throw ProcessorException("${constructor.enclosingElement}.${constructor.simpleName} contains @Inject must be public")
         }
+
+        if (constructor == null && constructors.size == 1) constructor = constructors.firstOrNull()
 
         if (constructor != null && constructor.parameters.any { !it.isSupportedType() }) {
             throw ProcessorException("@Inject annotation placed on constructor in ${constructor.enclosingElement} which have unsupported parameters.").setElement(constructor)
         }
 
-        // else return null
-        return constructor
-    }
+        if (constructor == null) constructor = constructors.firstOrNull { it.parameters.isEmpty() }
+        if (constructor != null && constructor.isPrivate()) {
+            throw ProcessorException("Cant find suitable constructors ${constructor.enclosingElement}").setElement(constructor)
+        }
 
-    private fun findEmptyConstructor(typeElement: TypeElement): ExecutableElement? {
-        ElementFilter.constructorsIn(typeElement.enclosedElements)
-            .firstOrNull { it.parameters.isEmpty() && !it.isHasAnnotation(Inject::class.java) && !it.modifiers.contains(Modifier.PRIVATE) }
-            ?.let { return it }
-        return null
+        return constructor
     }
 }

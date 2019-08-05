@@ -22,7 +22,7 @@ fun targetDependencyModel(element: Element): DependencyModel {
 
 fun DependencyModel.isAllowEmptyConstructorInjection(): Boolean {
     return methodProvider == null
-        && (emptyConstructor != null && !emptyConstructor!!.modifiers.contains(Modifier.PRIVATE))
+        && (constructor != null && !constructor!!.modifiers.contains(Modifier.PRIVATE))
         && dependencies.isEmpty()
         && !isProvider
         && !isLazy
@@ -63,8 +63,7 @@ fun DependencyModel.copy(): DependencyModel {
     ).also {
         it.typeArguments = typeArguments
         it.methodProvider = methodProvider
-        it.argumentsConstructor = argumentsConstructor
-        it.emptyConstructor = emptyConstructor
+        it.constructor = constructor
         it.sortOrder = sortOrder
         it.named = named
         it.setterMethod = setterMethod
@@ -87,8 +86,6 @@ class DependencyModel constructor(
     val originalTypeString by lazy { originalType.asType().toString() }
     val dependencyTypeString by lazy { dependency.asType().toString() }
 
-    val packageName by lazy { dependency.getPackage().toString() }
-
     var dependencies: List<DependencyModel> = emptyList()
         get() {
             methodProvider?.let { return it.dependencyModels }
@@ -98,8 +95,7 @@ class DependencyModel constructor(
     var methodProvider: ModuleMethodProvider? = null
     fun provideMethod() = methodProvider
 
-    var argumentsConstructor: ExecutableElement? = null
-    var emptyConstructor: ExecutableElement? = null
+    var constructor: ExecutableElement? = null
     var sortOrder = Int.MAX_VALUE
     var named: String? = ""
     var setterMethod: ExecutableElement? = null

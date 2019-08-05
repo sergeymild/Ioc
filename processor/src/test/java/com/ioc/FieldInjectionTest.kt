@@ -93,9 +93,7 @@ class FieldInjectionTest {
             .that(listOf(activityFile, dependencyFile))
             .processedWith(IProcessor())
             .failsToCompile()
-            .withErrorContaining("Can't find default constructor or provide method for `test.DependencyModel`")
-            .`in`(activityFile)
-            .onLine(9)
+            .withErrorContaining("Cant find suitable constructors test.DependencyModel")
     }
 
     @Test
@@ -3006,6 +3004,7 @@ class FieldInjectionTest {
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
             .that(listOf(activityFile, presenter, resource, context))
             .processedWith(IProcessor())
+
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
     }
