@@ -1,5 +1,6 @@
 package com.ioc
 
+import com.ioc.IProcessor.Companion.projectSingletons
 import com.ioc.common.*
 import javax.inject.Inject
 import javax.lang.model.element.Element
@@ -13,9 +14,10 @@ import javax.lang.model.util.Types
  */
 
 class DependencyResolver(
-    private val types: Types,
     private val qualifierFinder: QualifierFinder,
     private val dependencyTypesFinder: DependencyTypesFinder) {
+
+    var cachedConstructorArguments = mutableMapOf<String, List<DependencyModel>>()
 
     @Throws(ProcessorException::class)
     fun resolveDependency(
@@ -61,9 +63,9 @@ class DependencyResolver(
         if (isViewModel) validateIsAllowCanHaveViewModel(dependencyElement, target.element)
 
 
-        var isProvider = dependencyElement.isProvider()
-        var isWeak = dependencyElement.isWeak()
-        var isLazy = dependencyElement.isLazy()
+        val isProvider = dependencyElement.isProvider()
+        val isWeak = dependencyElement.isWeak()
+        val isLazy = dependencyElement.isLazy()
         if (isProvider || isWeak || isLazy) {
             dependencyElement = dependencyElement.getGenericFirstType()
         }
@@ -88,10 +90,15 @@ class DependencyResolver(
         }
         possibleImplementation?.let {
             dependencyTypeElement = it.originalType.asTypeElement()
-            isProvider = it.isProvider || isProvider
-            isLazy = it.isLazy || isLazy
-            isWeak = it.isWeak || isWeak
             isSingleton = it.isSingleton || isSingleton
+        }
+
+        // return cached singleton
+        projectSingletons[dependencyTypeElement.asTypeString()]?.let {
+            return it.copy().also { m ->
+                m.fieldName = fieldName
+                m.setterMethod = setterMethod
+            }
         }
 
         var methodProvider: ModuleMethodProvider? = null
@@ -102,12 +109,13 @@ class DependencyResolver(
         // if we did't find any providers of this type, try to find constructors of concrete type
         val dependencyConstructor = if (methodProvider == null) findArgumentConstructor(dependencyTypeElement) else null
 
-        var dependencies = IProcessor.singletons.getOrDefault("${dependencyTypeElement.asType()}", emptyList()).map { it.copy() }
+        var dependencies = cachedConstructorArguments.getOrDefault(dependencyTypeElement.asTypeString(), emptyList())
+            .map { it.copy() }
 
         if (dependencies.isEmpty()) {
             dependencyConstructor?.let {
                 dependencies = resolveConstructorArguments(dependencyTypeElement, it, target, isSingleton)
-                IProcessor.singletons["${dependencyTypeElement.asType()}"] = dependencies
+                cachedConstructorArguments[dependencyTypeElement.asTypeString()] = dependencies
             }
         }
 
@@ -124,12 +132,15 @@ class DependencyResolver(
 
         dependency.methodProvider = methodProvider
         dependency.typeArguments.addAll(if (isProvider || isWeak || isLazy) emptyList() else element.asType().typeArguments())
-        dependency.dependencies = dependencies.map { it.copy() }
+        dependency.dependencies = dependencies
         dependency.named = named
 
         dependency.setterMethod = setterMethod
         dependency.constructor = dependencyConstructor
 
+        if (dependency.isSingleton) {
+            projectSingletons[dependency.originalTypeString] = dependency
+        }
         return dependency
     }
 

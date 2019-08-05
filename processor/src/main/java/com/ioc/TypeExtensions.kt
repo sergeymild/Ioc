@@ -27,6 +27,8 @@ fun postInitializationMethod(element: TypeElement): ExecutableElement? {
     return postInitializationMethod
 }
 
+fun Element.asTypeString(): String = asType().toString()
+
 fun ExecutableElement.firstParameter(): TypeMirror {
     return parameters.first().asType()
 }

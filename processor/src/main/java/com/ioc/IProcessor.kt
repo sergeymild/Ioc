@@ -30,7 +30,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
     companion object {
         val classesWithDependencyAnnotation = mutableListOf<Element>()
         val methodsWithDependencyAnnotation = mutableListOf<ExecutableElement>()
-        var singletons = mutableMapOf<String, List<DependencyModel>>()
+        val projectSingletons = mutableMapOf<String, DependencyModel>()
         var messager: Messager by Delegates.notNull()
         var dependencyFinder: DependencyTypesFinder by Delegates.notNull()
         var processingEnvironment: ProcessingEnvironment by Delegates.notNull()
@@ -118,7 +118,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         libraries.forEach { findLibraryModules(it.getAnnotation(LibraryModules::class.java), alreadyReadModules) }
         alreadyReadModules.clear()
 
-        measure("Process") {
+        measure("Ioc Annotation Processing") {
             try {
                 return newParse(roundEnv)
             } catch (e: ProcessorException) {
@@ -126,7 +126,8 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
             } catch (e: Throwable) {
                 throw RuntimeException(e)
             } finally {
-                singletons.clear()
+                dependencyResolver.cachedConstructorArguments.clear()
+                projectSingletons.clear()
                 resetUniqueNames()
             }
         }
@@ -149,7 +150,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
     @Throws(Throwable::class)
     fun newParse(roundEnv: RoundEnvironment): Boolean {
         dependencyFinder = DependencyTypesFinder(qualifierFinder)
-        dependencyResolver = DependencyResolver(processingEnv.typeUtils, qualifierFinder, dependencyFinder)
+        dependencyResolver = DependencyResolver(qualifierFinder, dependencyFinder)
         dependencyFinder.dependencyResolver = dependencyResolver
 
         roundEnv.rootElementsWithInjectedDependencies()
@@ -160,13 +161,6 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
 
 
         validateSingletonUsage(targetsWithDependencies)
-
-        // generate singleton classesWithDependencyAnnotation
-        val uniqueSingletons = mutableSetOf<String>()
-        val singletons = mutableListOf<DependencyModel>()
-        for (v in targetsWithDependencies.values) {
-            SingletonFilter.findAll(v, singletons, uniqueSingletons)
-        }
 
         for (target in targetsWithDependencies) {
             val dependencies = mutableListOf<DependencyModel>()
@@ -188,7 +182,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         }
 
         applyTargetParents(targetTypes)
-        createSingletons(singletons)
+        createSingletons(projectSingletons.values)
         generateInjectableSpecs(targetsWithDependencies)
 
         return true
@@ -203,7 +197,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         }
     }
 
-    private fun createSingletons(singletons: MutableList<DependencyModel>) {
+    private fun createSingletons(singletons: Collection<DependencyModel>) {
         for (singleton in singletons) {
             generateUniqueNamesForInjectMethodDependencies(null, singleton.dependencies)
             val spec = NewSingletonSpec(singleton)

@@ -66,8 +66,7 @@ inline fun measure(message: String, block: () -> Unit) {
         block()
     } finally {
         val end = System.currentTimeMillis()
-        com.ioc.common.message("$message: [secs: ${TimeUnit.MILLISECONDS.toSeconds(end - start)} original: ${end - start}]")
-//        println("$message: [secs: ${TimeUnit.MILLISECONDS.toSeconds(end - start)} original: ${end - start}]")
+        message("$message: [secs: ${TimeUnit.MILLISECONDS.toSeconds(end - start)}]")
     }
 }
 

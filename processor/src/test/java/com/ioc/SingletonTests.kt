@@ -2,6 +2,7 @@ package com.ioc
 
 import com.google.common.truth.Truth
 import com.google.testing.compile.JavaFileObjects
+import com.google.testing.compile.JavaSourcesSubject
 import com.google.testing.compile.JavaSourcesSubjectFactory
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -11,6 +12,7 @@ import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Provider
 import javax.inject.Singleton
+import javax.tools.JavaFileObject
 
 /**
  * Created by sergeygolishnikov on 14/08/2017.
@@ -655,6 +657,92 @@ class SingletonTests : BaseTest {
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
             .that(listOf(activityFile, singletonDependency, presenter, dependencyFile))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun injectSameSingletonInDifferentConstructors() {
+
+        val eventLogger = JavaFileObjects.forSourceLines("test.EventLogger",
+            "package test;",
+            "public interface EventLogger {",
+            "}")
+
+        val defaultLogger = JavaFileObjects.forSourceLines("test.DefaultLogger",
+            "package test;",
+            "",
+            "import $singleton;",
+            "import $dependency;",
+            "",
+            "@Singleton",
+            "@Dependency",
+            "public class DefaultLogger implements EventLogger {",
+            "}")
+
+
+        val context = JavaFileObjects.forSourceLines("test.Context",
+            "package test;",
+            "",
+            "public class Context {",
+            "   public Context(EventLogger logger) {}",
+            "}")
+
+        val db = JavaFileObjects.forSourceLines("test.Db",
+            "package test;",
+            "",
+            "public class Db {",
+            "",
+            "   public Db(EventLogger logger) {}",
+            "}")
+
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            "package test;",
+            "",
+            "import $inject;",
+            "",
+            "public class Activity {",
+            "",
+            "   @Inject",
+            "   public EventLogger logger;",
+            "   @Inject",
+            "   public Context context;",
+            "   @Inject",
+            "   public Db db;",
+            "}")
+
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+            "package test;",
+            "",
+            "import $keep",
+            "import $nonNull",
+            "import $ioc",
+            "",
+            "@Keep",
+            "public final class ActivityInjector {",
+            "",
+            "   @Keep",
+            "   public final void inject(@NonNull final Activity target) {",
+            "       target.logger = Ioc.singleton(DefaultLogger.class);",
+            "       target.context = provideContext();",
+            "       target.db = provideDb();",
+            "   }",
+            "",
+            "   private final Context provideContext() {",
+            "       Context context = new Context(Ioc.singleton(DefaultLogger.class));",
+            "       return context;",
+            "   }",
+            "",
+            "   private final Db provideDb() {",
+            "       Db db = new Db(Ioc.singleton(DefaultLogger.class));",
+            "       return db;",
+            "   }",
+            "}")
+
+        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(JavaSourcesSubjectFactory.javaSources())
+            .that(listOf(activityFile, eventLogger, defaultLogger, context, db))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)

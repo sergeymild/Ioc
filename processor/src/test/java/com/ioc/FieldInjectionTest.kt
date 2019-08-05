@@ -1440,6 +1440,81 @@ class FieldInjectionTest {
 
     @Test
     @Throws(Exception::class)
+    fun injectInParentClass2() {
+
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            "package test;",
+            "",
+            "import $inject;",
+            "",
+            "public class Activity extends BaseActivity {",
+            "",
+            "   @Inject",
+            "   public ClickedEventLogger clickedEventLogger;",
+            "}")
+
+        val baseActivityFile = JavaFileObjects.forSourceLines("test.BaseActivity",
+            "package test;",
+            "",
+            "import $inject;",
+            "",
+            "public abstract class BaseActivity {",
+            "",
+            "   @Inject",
+            "   public ClosedEventLogger closedEventLogger;",
+            "   @Inject",
+            "   public void setEventLogger(ClosedEventLogger logger) {};",
+            "}")
+
+
+        val superParentFile = JavaFileObjects.forSourceLines("test.ClosedEventLogger",
+            "package test;",
+            "",
+            "interface ClosedEventLogger {",
+            "}")
+
+        val parentFile = JavaFileObjects.forSourceLines("test.ClickedEventLogger",
+            "package test;",
+            "",
+            "interface ClickedEventLogger {",
+            "}")
+
+        val moduleFile = JavaFileObjects.forSourceLines("test.Amplitude",
+            "package test;",
+            "",
+            importType(Dependency::class.java),
+            importType(Singleton::class.java),
+            "",
+            "@Dependency",
+            "@Singleton",
+            "class Amplitude implements ClickedEventLogger, ClosedEventLogger {",
+            "}")
+
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+            "package test;",
+            "",
+            "import $keep",
+            "import $nonNull",
+            "import $ioc",
+            "",
+            "@Keep",
+            "public final class BaseActivityInjector {",
+            "   @Keep",
+            "   public final void inject(@NonNull final BaseActivity target) {",
+            "       target.closedEventLogger = Ioc.singleton(Amplitude.class);",
+            "       target.setEventLogger(Ioc.singleton(Amplitude.class));",
+            "   }",
+            "}")
+
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(activityFile, baseActivityFile, superParentFile, parentFile, moduleFile))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile)
+    }
+
+    @Test
+    @Throws(Exception::class)
     fun injectInParentClass() {
 
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
