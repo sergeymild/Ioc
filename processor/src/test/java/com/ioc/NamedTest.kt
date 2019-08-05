@@ -130,7 +130,7 @@ class NamedTest : BaseTest {
             "}")
 
         assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, dependencyFile, moduleFile))
+            .that(listOf(activityFile, dependencyFile, moduleFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -219,7 +219,7 @@ class NamedTest : BaseTest {
             "}")
 
         assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, parentDependencyFile, debugDependencyFile, releaseDependencyFile, dependencyFile, moduleFile))
+            .that(listOf(activityFile, parentDependencyFile, debugDependencyFile, releaseDependencyFile, dependencyFile, moduleFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -899,7 +899,7 @@ class NamedTest : BaseTest {
             "}")
 
         assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, debugQualifierFile, moduleFile, dependencyFile))
+            .that(listOf(activityFile, debugQualifierFile, moduleFile, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -1277,5 +1277,143 @@ class NamedTest : BaseTest {
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun namedOnSetterMethod() {
+
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            "package test;",
+            "",
+            "import $inject;",
+            "import $named;",
+            "",
+            "public class Activity {",
+            "   @Inject",
+            "   @Named(\"Debug\")",
+            "   public void setDebugFromMethod(DependencyModel dependency) {};",
+            "   @Inject",
+            "   @Named(\"Release\")",
+            "   public void setReleaseFromMethod(DependencyModel dependency) {};",
+            "}")
+
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+            "package test;",
+            "",
+            "interface DependencyModel {",
+            "}")
+
+        val debugDependencyFile = JavaFileObjects.forSourceLines("test.DebugDependency",
+            "package test;",
+            "import $singleton;",
+            "import $named;",
+            "import $dependency;",
+            "@Singleton",
+            "@Dependency",
+            "@Named(\"Debug\")",
+            "class DebugDependency implements DependencyModel {",
+            "   public DebugDependency() {};",
+            "}")
+
+        val releaseDependencyFile = JavaFileObjects.forSourceLines("test.ReleaseDependency",
+            "package test;",
+            "import $singleton;",
+            "import $named;",
+            "import $dependency;",
+            "@Singleton",
+            "@Dependency",
+            "@Named(\"Release\")",
+            "class ReleaseDependency implements DependencyModel {",
+            "   public ReleaseDependency() {};",
+            "}")
+
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+            "package test;",
+            "",
+            "import $keep",
+            "import $nonNull",
+            "import $ioc",
+            "",
+            "@Keep",
+            "public final class ActivityInjector {",
+            "   @Keep",
+            "   public final void inject(@NonNull final Activity target) {",
+            "       target.setDebugFromMethod(Ioc.singleton(DebugDependency.class));",
+            "       target.setReleaseFromMethod(Ioc.singleton(ReleaseDependency.class));",
+            "   }",
+            "}")
+
+        assertAbout(javaSources())
+            .that(listOf(activityFile, debugDependencyFile, releaseDependencyFile, dependencyFile))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile)
+    }
+
+    @Test
+    fun failMethodProviderSingletonReturnsAbstractType() {
+
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            "package test;",
+            "",
+            "import $inject;",
+            "import $named;",
+            "",
+            "public class Activity {",
+            "   @Inject",
+            "   @Named(\"Debug\")",
+            "   public void setDebugFromMethod(DependencyModel dependency) {};",
+            "   @Inject",
+            "   @Named(\"Release\")",
+            "   public void setReleaseFromMethod(DependencyModel dependency) {};",
+            "}")
+
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+            "package test;",
+            "",
+            "interface DependencyModel {",
+            "}")
+
+        val debugDependencyFile = JavaFileObjects.forSourceLines("test.DebugDependency",
+            "package test;",
+            "import $singleton;",
+            "@Singleton",
+            "class DebugDependency implements DependencyModel {",
+            "   public DebugDependency() {};",
+            "}")
+
+        val releaseDependencyFile = JavaFileObjects.forSourceLines("test.ReleaseDependency",
+            "package test;",
+            "import $singleton;",
+            "@Singleton",
+            "class ReleaseDependency implements DependencyModel {",
+            "   public ReleaseDependency() {};",
+            "}")
+
+        val module = JavaFileObjects.forSourceLines("test.Module",
+            "package test;",
+            "",
+            "import $named;",
+            "import $dependency;",
+            "import $singleton;",
+            "class Module {",
+            "   @Named(\"Debug\")",
+            "   @Dependency",
+            "   @Singleton",
+            "   public static DependencyModel debug() { return null; }",
+            "",
+            "   @Named(\"Release\")",
+            "   @Dependency",
+            "   public static DependencyModel release() { return null; }",
+            "}")
+
+        assertAbout(javaSources())
+            .that(listOf(activityFile, debugDependencyFile, module, releaseDependencyFile, dependencyFile))
+            .processedWith(IProcessor())
+            .failsToCompile()
+            .withErrorContaining("`test.Module.debug()` annotated with @Singleton must returns implementation not abstract type")
+            .`in`(module)
+            .onLine(10)
     }
 }

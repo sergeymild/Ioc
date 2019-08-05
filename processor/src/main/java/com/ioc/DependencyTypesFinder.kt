@@ -104,6 +104,7 @@ class DependencyTypesFinder(
             type.name = provider.simpleName
             type.isSingleton = type.isSingleton || provider.isSingleton()
             if (type.isSingleton) throwIfTargetUsedInSingleton(target, provider, type.dependencyModels)
+            if (type.isSingleton && returnType.isAbstract()) throwSingletonMethodAbstractReturnType(provider)
             implementations.add(type)
             throwMoreThanOneDependencyFoundIfNeed(element, named, implementations.map { it.name })
         }

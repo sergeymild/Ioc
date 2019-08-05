@@ -101,3 +101,7 @@ fun throwIfTargetUsedInSingleton(target: TargetType, parentElement: Element, mod
         throw ProcessorException("target can't be user as dependency in Singleton").setElement(parentElement)
     }
 }
+
+fun throwSingletonMethodAbstractReturnType(method: ExecutableElement) {
+    throw ProcessorException("`${method.enclosingElement}.${method.simpleName}()` annotated with @Singleton must returns implementation not abstract type").setElement(method)
+}
