@@ -1789,6 +1789,58 @@ class ModuleTests {
 
     @Test
     @Throws(Exception::class)
+    fun abstractMethodWithReturnImplementation() {
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            "package test;",
+            "",
+            Helpers.importType(Inject::class.java),
+            "",
+            "public class Activity {",
+            "",
+            "   @Inject",
+            "   public CountryService service;",
+            "}")
+
+        val countryServiceFile = JavaFileObjects.forSourceLines("test.CountryService",
+            "package test;",
+            "",
+            "public class CountryService {",
+            "}")
+
+        val moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
+            "package test;",
+            "",
+            "import $dependency;",
+            "",
+            "public interface ModuleFile {",
+            "   @Dependency",
+            "   public CountryService getService();",
+            "}")
+
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+            "package test;",
+            "",
+            "import $keep",
+            "import $nonNull",
+            "",
+            "@Keep",
+            "public final class ActivityInjector {",
+            "",
+            "   @Keep",
+            "   public final void inject(@NonNull final Activity target) {",
+            "       target.service = new CountryService();",
+            "   }",
+            "}")
+
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(activityFile, countryServiceFile, moduleFile))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile)
+    }
+
+    @Test
+    @Throws(Exception::class)
     fun failPassInterfaceAsParameter() {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
