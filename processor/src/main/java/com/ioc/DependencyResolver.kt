@@ -150,14 +150,13 @@ class DependencyResolver(
         val constructorDependencies = mutableListOf<DependencyModel>()
         val constructorArguments = argumentConstructor?.parameters ?: emptyList()
 
+        var newTarget = target
+        if (isParentSingleton) {
+            newTarget = IProcessor.createTarget(typeElement, dependencyTypesFinder)
+        }
+
         // TODO generic type
         for (argument in constructorArguments) {
-            // TODO !isParentSingleton
-            if (target.isSubtype(argument, argument) && !isParentSingleton) {
-                constructorDependencies.add(targetDependencyModel(argument))
-                continue
-            }
-
             if (target.isLocalScope(argument, argument) && !isParentSingleton) {
                 constructorDependencies.add(targetDependencyModel(argument))
                 continue
@@ -167,33 +166,9 @@ class DependencyResolver(
             if (argument.isPrimitive()) {
                 throw ProcessorException("Constructor used primitive type").setElement(argument)
             }
-            var element: Element = argument
-            val isProvider = element.isProvider()
-            val isWeakDependency = element.isWeak()
-            val isLazy = element.isLazy()
-            if (isProvider || isWeakDependency || isLazy) {
-                element = element.getGenericFirstType()
-            }
 
-            val named = qualifierFinder.getQualifier(argument)
-
-            var newTarget = target
-            if (isParentSingleton) {
-                newTarget = IProcessor.createTarget(typeElement, dependencyTypesFinder)
-            }
-
-            val dependency = resolveDependency(element, newTarget, named)//.let {
-                dependency.isWeak = isWeakDependency
-                dependency.isProvider = isProvider
-                dependency.isLazy = isLazy
-                if (dependency.named.isNullOrEmpty()) {
-                    dependency.named = qualifierFinder.getQualifier(argument)
-                }
-
-                //it.originalType = element
-
-                constructorDependencies.add(dependency)
-            //}
+            val dependency = resolveDependency(argument, newTarget)
+            constructorDependencies.add(dependency)
         }
         return constructorDependencies
     }
