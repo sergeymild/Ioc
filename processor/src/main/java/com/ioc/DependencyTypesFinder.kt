@@ -103,8 +103,9 @@ class DependencyTypesFinder(
             type.isKotlinModule = isKotlinModule
             type.name = provider.simpleName
             type.isSingleton = type.isSingleton || provider.isSingleton()
-            if (type.isSingleton) throwIfTargetUsedInSingleton(target, provider, type.dependencyModels)
-            if (type.isSingleton && returnType.isAbstract()) throwSingletonMethodAbstractReturnType(provider)
+            if (type.isSingleton) throwIfTargetUsedInSingleton(target, provider, type.dependencies)
+            if (type.isSingleton && returnType.isAbstract() && qualifierFinder.getQualifier(provider) != null)
+                throwSingletonMethodAbstractReturnType(provider)
             implementations.add(type)
             throwMoreThanOneDependencyFoundIfNeed(element, named, implementations.map { it.name })
         }
@@ -124,7 +125,7 @@ class DependencyTypesFinder(
         if (methodParameters.isEmpty()) return provider
         for (dependency in methodParameters) {
             if (target.isLocalScope(dependency, dependency) || target.isSubtype(dependency, dependency)) {
-                provider.dependencyModels.add(targetDependencyModel(dependency))
+                provider.dependencies.add(targetDependencyModel(dependency))
                 continue
             }
 
@@ -132,7 +133,7 @@ class DependencyTypesFinder(
                 throw ProcessorException("Cyclic graph detected building ${dependency.asType()} cyclic: ${dependency.asType()}").setElement(implementation)
             }
             val resolved = dependencyResolver.resolveDependency(dependency, target = target)
-            provider.dependencyModels.add(resolved)
+            provider.dependencies.add(resolved)
         }
 
         return provider

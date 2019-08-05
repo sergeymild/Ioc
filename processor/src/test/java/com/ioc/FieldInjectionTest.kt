@@ -827,6 +827,8 @@ class FieldInjectionTest {
             "   public ParentDependency parentDependency;",
             "   @Inject",
             "   public DependencyModel dependency;",
+            "   @Inject",
+            "   public ChildDependencyModel child;",
             "}")
 
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
@@ -835,7 +837,15 @@ class FieldInjectionTest {
             "import $inject;",
             "",
             "class DependencyModel {",
-            "   public DependencyModel() {};",
+            "   public DependencyModel(ChildDependencyModel child) {};",
+            "}")
+
+        val childDependencyFile = JavaFileObjects.forSourceLines("test.ChildDependencyModel",
+            "package test;",
+            "",
+            "import $inject;",
+            "",
+            "class ChildDependencyModel {",
             "}")
 
         val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
@@ -857,19 +867,27 @@ class FieldInjectionTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public final void inject(@NonNull final Activity target) {",
-            "       target.dependency = new DependencyModel();",
+            "       target.child = new ChildDependencyModel();",
+            "       target.dependency = provideDependencyModel();",
             "       target.parentDependency = provideParentDependency();",
             "   }",
             "",
+            "   private final DependencyModel provideDependencyModel() {",
+            "       ChildDependencyModel childDependencyModel = new ChildDependencyModel();",
+            "       DependencyModel dependencyModel = new DependencyModel(childDependencyModel);",
+            "       return dependencyModel;",
+            "   }",
+            "",
             "   private final ParentDependency provideParentDependency() {",
-            "       DependencyModel dependencyModel = new DependencyModel();",
+            "       ChildDependencyModel childDependencyModel = new ChildDependencyModel();",
+            "       DependencyModel dependencyModel = new DependencyModel(childDependencyModel);",
             "       ParentDependency parentDependency = new ParentDependency(dependencyModel);",
             "       return parentDependency;",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, dependencyFile, parentDependencyFile))
+            .that(listOf(activityFile, childDependencyFile, dependencyFile, parentDependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)

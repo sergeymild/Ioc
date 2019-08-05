@@ -12,7 +12,8 @@ class Sorting {
     var isLoggerEnabled = false
 
     fun countOrder(appender: String, root: String, models: List<DependencyModel>, depth: Int) {
-//        if (isLoggerEnabled) IProcessor.messager.printMessage(Diagnostic.Kind.WARNING, "depth: $depth -> $root")
+        //if (isLoggerEnabled) IProcessor.messager.printMessage(Diagnostic.Kind.WARNING, "depth: $depth -> $root")
+//        println("depth: $depth -> $root")
 
         orders[root] = orders.getOrDefault(root, 0) + depth
 

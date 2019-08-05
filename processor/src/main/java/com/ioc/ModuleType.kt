@@ -1,7 +1,6 @@
 package com.ioc
 
 import com.squareup.javapoet.CodeBlock
-import com.squareup.javapoet.TypeName
 import javax.lang.model.element.Element
 
 /**
@@ -15,9 +14,9 @@ fun dependencyName(model: DependencyModel) = when {
 }
 
 fun ModuleMethodProvider.dependencyNames(): CodeBlock {
-    val blocks = dependencyModels.map { dependencyName(it) }
+    val blocks = dependencies.map { dependencyName(it) }
     return CodeBlock.join(blocks, ",")
-    //return dependencyModels.joinToString { dependencyName(it) }
+    //return dependencies.joinToString { dependencyName(it) }
 }
 
 fun DependencyModel.dependencyNames(): CodeBlock {
@@ -31,10 +30,9 @@ class ModuleMethodProvider(
     var named: String? = null,
     var isSingleton: Boolean = false,
     var isKotlinModule: Boolean = false) {
-    var dependencyModels: MutableList<DependencyModel> = mutableListOf()
-    var packageName: String = ""
+    var dependencies: MutableList<DependencyModel> = mutableListOf()
 
     override fun toString(): String {
-        return "DependencyProvider(isSingleton=$isSingleton, module=$module, dependencyModels=$dependencyModels, name='$name', named='$named')"
+        return "DependencyProvider(isSingleton=$isSingleton, module=$module, dependencies=$dependencies, name='$name', named='$named')"
     }
 }

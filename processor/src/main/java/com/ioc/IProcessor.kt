@@ -163,12 +163,11 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         validateSingletonUsage(targetsWithDependencies)
 
         for (target in targetsWithDependencies) {
-            val dependencies = mutableListOf<DependencyModel>()
-            collectAllDependencies(target.value, dependencies)
+            val dependencies = collectAllDependencies(target.value)
+            //collectAllDependencies(target.value)
             val sorting = Sorting()
-            sorting.countOrder(" ", target.key.element.asType().toString(), dependencies, 0)
+            sorting.countOrder(" ", target.key.element.asTypeString(), dependencies, 0)
             sorting.sortTargetDependencies(dependencies)
-
             target.key.dependencies = target.value
         }
 
@@ -262,16 +261,15 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         return false
     }
 
-    // TODO remove recursive
-    private fun collectAllDependencies(models: List<DependencyModel>, list: MutableList<DependencyModel>) {
-        for (model in models) {
-            list.add(model)
-            model.methodProvider?.let { collectAllDependencies(it.dependencyModels, list) }
-            for (dependency in model.dependencies) {
-                list.add(dependency)
-                collectAllDependencies(dependency.dependencies, list)
-                dependency.methodProvider?.let { collectAllDependencies(it.dependencyModels, list) }
-            }
+    private fun collectAllDependencies(dependencies: List<DependencyModel>): MutableList<DependencyModel> {
+        val allTargetDependencies = mutableListOf<DependencyModel>()
+        val queue = LinkedList(dependencies)
+        while (queue.isNotEmpty()) {
+            val dep = queue.pop()
+            allTargetDependencies.add(dep)
+            queue.addAll(dep.dependencies)
+            dep.methodProvider?.let { queue.addAll(it.dependencies) }
         }
+        return allTargetDependencies
     }
 }

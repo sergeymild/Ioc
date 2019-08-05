@@ -18,7 +18,7 @@ object ProviderMethodBuilder {
         val builder = CodeBlock.builder()
 
         if (!provider.isSingleton) {
-            DependencyTree.get(provider.dependencyModels, target = target)
+            DependencyTree.get(provider.dependencies, target = target)
                 .also { builder.add(it) }
         }
 

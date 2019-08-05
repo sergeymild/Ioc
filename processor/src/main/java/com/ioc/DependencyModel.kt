@@ -33,7 +33,7 @@ fun DependencyModel.isAllowEmptyConstructorInjection(): Boolean {
 fun DependencyModel.isAllowModuleMethodProvide(): Boolean {
     val method = provideMethod()
     return method != null
-        && method.dependencyModels.isEmpty()
+        && method.dependencies.isEmpty()
         && !isProvider
         && !isLazy
         && !isWeak
@@ -88,7 +88,7 @@ class DependencyModel constructor(
 
     var dependencies: List<DependencyModel> = emptyList()
         get() {
-            methodProvider?.let { return it.dependencyModels }
+            methodProvider?.let { return it.dependencies }
             return field
         }
     var typeArguments = mutableListOf<TypeMirror>()
