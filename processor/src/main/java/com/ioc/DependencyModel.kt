@@ -73,31 +73,29 @@ fun DependencyModel.copy(): DependencyModel {
 }
 
 class DependencyModel constructor(
-    override val dependency: Element,
-    override val originalType: TypeElement,
+    val dependency: Element,
+    val originalType: TypeElement,
     var fieldName: CharSequence = "",
     var isProvider: Boolean = false,
     var isLazy: Boolean = false,
     var isWeak: Boolean = false,
     var isSingleton: Boolean = false,
     var isViewModel: Boolean = false,
-    var isLocal: Boolean = false) : SingletonWrapper {
+    var isLocal: Boolean = false) {
 
     val typeString by lazy { dependency.asType().toString() }
     val originalTypeString by lazy { originalType.asType().toString() }
     val dependencyTypeString by lazy { dependency.asType().toString() }
 
-    override val packageName by lazy { dependency.getPackage().toString() }
+    val packageName by lazy { dependency.getPackage().toString() }
 
-    //override val dependencyClassName by lazy { ClassName.get(dependency.asType())!! }
-    //val originalTypeClassName by lazy { ClassName.get(originalType.asType())!! }
-    override var dependencies: List<DependencyModel> = emptyList()
+    var dependencies: List<DependencyModel> = emptyList()
         get() {
             methodProvider?.let { return it.dependencyModels }
             return field
         }
     var typeArguments = mutableListOf<TypeMirror>()
-    override var methodProvider: ModuleMethodProvider? = null
+    var methodProvider: ModuleMethodProvider? = null
     fun provideMethod() = methodProvider
 
     var argumentsConstructor: ExecutableElement? = null
@@ -108,7 +106,7 @@ class DependencyModel constructor(
 
     var generatedName: CharSequence = dependency.asTypeElement().simpleName.decapitalize()
 
-    override val originalClassName: TypeName by lazy {
+    val originalClassName: TypeName by lazy {
         if (typeArguments.isEmpty()) return@lazy ClassName.get(originalType.asTypeElement())
         return@lazy ParameterizedTypeName.get(ClassName.get(originalType.asTypeElement()), *typeArguments.map { ClassName.get(it) }.toTypedArray())
     }

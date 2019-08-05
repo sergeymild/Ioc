@@ -1,15 +1,14 @@
 package com.ioc.common
 
 import com.ioc.DependencyModel
-import com.ioc.InjectMethodMetadata
 import com.ioc.dependencyNames
 import com.squareup.javapoet.CodeBlock
 
 object ViewModelGeneration {
-    fun wrapInAndroidViewModelIfNeed(model: DependencyModel, metadata: InjectMethodMetadata, body: CodeBlock.Builder): CodeBlock.Builder {
+    fun wrapInAndroidViewModelIfNeed(model: DependencyModel, body: CodeBlock.Builder): CodeBlock.Builder {
         if (!model.isViewModel) return body
         val code = CodeBlock.builder().also { it.add(body.build()) }
-        val names = model.dependencyNames(metadata)
+        val names = model.dependencyNames()
         code.addStatement("return (T) new \$T(\$L)", model.originalClassName, names)
         val originalGeneratedName = model.generatedName
         val factoryName = "factory_${model.generatedName}"

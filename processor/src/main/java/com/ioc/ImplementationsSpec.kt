@@ -116,17 +116,17 @@ class ImplementationsSpec constructor(
             return methodBuilder
         }
 
-        fun dependencyInjectionCode(metadata: InjectMethodMetadata): CodeBlock.Builder {
+        fun dependencyInjectionCode(target: TargetType, model: DependencyModel): CodeBlock.Builder {
 
-            val packageName = metadata.model.originalType.asTypeElement().getPackage()
+            val packageName = model.originalType.asTypeElement().getPackage()
             val isAllowedPackage = excludedPackages.any { packageName.toString().startsWith(it) }
-            if (metadata.model.provideMethod() == null && isAllowedPackage) {
-                throwCantFindImplementations(metadata.model.dependency, metadata.target)
+            if (model.provideMethod() == null && isAllowedPackage) {
+                throwCantFindImplementations(model.dependency, target)
             }
 
             val builder = CodeBlock.builder()
 
-            val code = DependencyTree.get(listOf(metadata.model), metadata, skipCheckLocalScope = true, target = metadata.target)
+            val code = DependencyTree.get(listOf(model), skipCheckLocalScope = true, target = target)
             builder.add(code)
             return builder
         }

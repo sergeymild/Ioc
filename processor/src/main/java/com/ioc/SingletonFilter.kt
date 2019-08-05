@@ -10,7 +10,7 @@ object SingletonFilter {
 
     fun findAll(
         dependencyModel: List<DependencyModel>,
-        singletons: MutableList<SingletonWrapper>,
+        singletons: MutableList<DependencyModel>,
         uniqueSingletons: MutableSet<String>) {
 
         val queue = LinkedList(dependencyModel)

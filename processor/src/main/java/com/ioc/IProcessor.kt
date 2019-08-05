@@ -163,7 +163,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
 
         // generate singleton classesWithDependencyAnnotation
         val uniqueSingletons = mutableSetOf<String>()
-        val singletons = mutableListOf<SingletonWrapper>()
+        val singletons = mutableListOf<DependencyModel>()
         for (v in targetsWithDependencies.values) {
             SingletonFilter.findAll(v, singletons, uniqueSingletons)
         }
@@ -203,7 +203,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         }
     }
 
-    private fun createSingletons(singletons: MutableList<SingletonWrapper>) {
+    private fun createSingletons(singletons: MutableList<DependencyModel>) {
         for (singleton in singletons) {
             generateUniqueNamesForInjectMethodDependencies(null, singleton.dependencies)
             val spec = NewSingletonSpec(singleton)
@@ -226,15 +226,18 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
                     continue
                 }
 
-                if (dependency.isAllowEmptyConstructorInjection() ||
-                    dependency.isAllowModuleMethodProvide()) {
+                if (dependency.isAllowEmptyConstructorInjection()) {
                     emptyConstructorToInject.add(dependency)
                     continue
                 }
 
-                val metadata = InjectMethodMetadata(dependency, target.key)
+                if (dependency.isAllowModuleMethodProvide()) {
+                    emptyModuleMethodToInject.add(dependency)
+                    continue
+                }
+
                 generateUniqueNamesForInjectMethodDependencies(target.key, dependency.dependencies)
-                val code = dependencyInjectionCode(metadata)
+                val code = dependencyInjectionCode(target.key, dependency)
                 // generate base injection code
                 val isTargetUsedAsDependency = isTargetUsedWhileCreateDependency(target.key, dependency)
                 val methodBuilder = provideInjectionMethod(target.key.className, isTargetUsedAsDependency, dependency, code.build())

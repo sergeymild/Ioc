@@ -8,20 +8,20 @@ import javax.lang.model.element.Element
  * Created by sergeygolishnikov on 10/07/2017.
  */
 
-fun dependencyName(model: DependencyModel, metadata: InjectMethodMetadata) = when {
+fun dependencyName(model: DependencyModel) = when {
     model.isSingleton -> iocGetSingleton(model)
     model.isLocal -> CodeBlock.of("target.\$N", model.fieldName)
     else -> CodeBlock.of("\$N", model.generatedName)
 }
 
-fun ModuleMethodProvider.dependencyNames(metadata: InjectMethodMetadata): CodeBlock {
-    val blocks = dependencyModels.map { dependencyName(it, metadata) }
+fun ModuleMethodProvider.dependencyNames(): CodeBlock {
+    val blocks = dependencyModels.map { dependencyName(it) }
     return CodeBlock.join(blocks, ",")
     //return dependencyModels.joinToString { dependencyName(it) }
 }
 
-fun DependencyModel.dependencyNames(metadata: InjectMethodMetadata): CodeBlock {
-    val blocks = dependencies.map { dependencyName(it, metadata) }
+fun DependencyModel.dependencyNames(): CodeBlock {
+    val blocks = dependencies.map { dependencyName(it) }
     return CodeBlock.join(blocks, ",")
 }
 

@@ -52,17 +52,14 @@ fun applyIsLoadIfNeed(dependencies: List<DependencyModel>, target: TargetType?) 
     }
 }
 
-fun argumentsConstructor(
-    model: DependencyModel,
-    metadata: InjectMethodMetadata,
-    target: TargetType?
+fun argumentsConstructor(model: DependencyModel, target: TargetType?
 ): CodeBlock {
-    val dependencies = DependencyTree.get(model.dependencies, metadata, target = target)
+    val dependencies = DependencyTree.get(model.dependencies, target = target)
     val builder = CodeBlock.builder().add(dependencies)
 
     applyIsLoadIfNeed(model.dependencies, target)
 
-    val names = model.dependencyNames(metadata)
+    val names = model.dependencyNames()
     return builder.addStatement("\$T \$N = new \$T(\$L)",
         model.originalClassName,
         model.generatedName,

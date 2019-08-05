@@ -12,18 +12,17 @@ object ProviderMethodBuilder {
     fun build(
         provider: ModuleMethodProvider,
         dependencyModel: DependencyModel,
-        metadata: InjectMethodMetadata,
         target: TargetType?): CodeBlock {
         if (provider.isSingleton) return emptyCodBlock
 
         val builder = CodeBlock.builder()
 
         if (!provider.isSingleton) {
-            DependencyTree.get(provider.dependencyModels, metadata, target = target)
+            DependencyTree.get(provider.dependencyModels, target = target)
                 .also { builder.add(it) }
         }
 
-        builder.add(generateWithDependencies(dependencyModel, provider, metadata, target))
+        builder.add(generateWithDependencies(dependencyModel, provider, target))
 
         return builder.build()
     }
@@ -32,13 +31,12 @@ object ProviderMethodBuilder {
     private fun generateWithDependencies(
         model: DependencyModel,
         method: ModuleMethodProvider,
-        metadata: InjectMethodMetadata,
         target: TargetType?): CodeBlock {
 
         val builder = CodeBlock.builder()
 
         applyIsLoadIfNeed(model.dependencies, target)
-        val names = method.dependencyNames(metadata)
+        val names = method.dependencyNames()
 
         var statementString = "\$T \$N = \$T.\$N(\$L)"
         if (method.isKotlinModule) statementString = "\$T \$N = \$T.INSTANCE.\$N(\$L)"

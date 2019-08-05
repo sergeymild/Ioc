@@ -3,24 +3,17 @@ package com.ioc
 import com.ioc.common.asLazyType
 import com.ioc.common.capitalize
 import com.ioc.common.keepAnnotation
-import com.squareup.javapoet.*
-import javax.lang.model.element.Element
+import com.squareup.javapoet.ClassName
+import com.squareup.javapoet.FieldSpec
+import com.squareup.javapoet.MethodSpec
+import com.squareup.javapoet.TypeSpec
 import javax.lang.model.element.Modifier
-import javax.lang.model.element.TypeElement
 
 /**
  * Created by sergeygolishnikov on 28/11/2017.
  */
-interface SingletonWrapper {
-    val dependency: Element
-    val originalType: TypeElement
-    val packageName: String
-    var dependencies: List<DependencyModel>
-    var methodProvider: ModuleMethodProvider?
-    val originalClassName: TypeName
-}
 
-class NewSingletonSpec(private val dependency: SingletonWrapper) {
+class NewSingletonSpec(private val dependency: DependencyModel) {
 
     @Throws(Throwable::class)
     fun inject(): TypeSpec {
@@ -50,12 +43,11 @@ class NewSingletonSpec(private val dependency: SingletonWrapper) {
             .addModifiers(Modifier.PROTECTED, Modifier.FINAL)
             .returns(dependency.originalClassName)
 
-        val metadata = InjectMethodMetadata(dependency as DependencyModel, TargetType(dependency.originalType))
-        val code = DependencyTree.get(dependency.dependencies, metadata)
+        val code = DependencyTree.get(dependency.dependencies)
         builder.addCode(code)
 
         applyIsLoadIfNeed(dependency.dependencies, null)
-        val names = dependency.dependencyNames(metadata)
+        val names = dependency.dependencyNames()
 
         dependency.methodProvider?.let {
             return builder.addStatement("return \$T.\$N(\$L)", it.module, it.name, names).build()
