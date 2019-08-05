@@ -171,9 +171,11 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
             target.key.dependencies = target.value
         }
 
-        // set for every parent its own classesWithDependencyAnnotation
+
+        // find for each target first it's parent target with dependencies and apply dependencies
         for (target in targetsWithDependencies) {
             for (possibleParent in targetsWithDependencies) {
+                if (possibleParent.key.dependencies.isEmpty()) continue
                 target.key.findParent(possibleParent.key.element.asType())?.let {
                     it.dependencies = possibleParent.key.dependencies
                 }

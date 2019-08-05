@@ -83,9 +83,7 @@ class TargetType(val element: TypeElement) {
     fun findParent(superType: TypeMirror): TargetType? {
         var parent = parentTarget
         while (parent != null) {
-            if (parent.element.isEqualTo(superType)) {
-                return parent
-            }
+            if (parent.element.isEqualTo(superType)) return parent
             parent = parent.parentTarget
         }
         return null
