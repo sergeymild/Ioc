@@ -2,9 +2,9 @@ package com.ioc
 
 import com.ioc.IProcessor.Companion.qualifierFinder
 import com.ioc.common.*
+import java.util.*
 import javax.lang.model.element.Element
 import javax.lang.model.element.TypeElement
-import javax.lang.model.type.TypeKind
 import javax.lang.model.type.TypeMirror
 
 /**
@@ -140,23 +140,24 @@ class DependencyTypesFinder(
     }
 
 
-    fun collectSuperTypes(typeElement: TypeElement?, returnTypes: MutableSet<TypeMirror>) {
-        typeElement ?: return
+    fun collectSuperTypes(typeElement: TypeElement?): Set<TypeMirror> {
+        typeElement ?: return emptySet()
 
-        // first check and collect super interfaces recursively
-        for (typeInterface in typeElement.interfaces) {
-            returnTypes.add(typeInterface)
-            collectSuperTypes(typeInterface.asTypeElement(), returnTypes)
+        val supertypes = mutableSetOf<TypeMirror>()
+        val queue = LinkedList<TypeMirror>()
+        queue.addAll(typeElement.interfaces)
+        queue.add(typeElement.superclass)
+
+        while (queue.isNotEmpty()) {
+            val supertype = queue.pop()
+            if (supertype.isNotValid()) continue
+            supertypes.add(supertype)
+            val superclass = supertype.asTypeElement()
+            queue.addAll(superclass.interfaces)
+            queue.add(superclass.superclass)
         }
-        // if super class is Object or is not present return
-        if (typeElement.superclass.isNotValid()) return
-        // else put superclass
-        returnTypes.add(typeElement.superclass)
-        // collect all superclass's superclasses
-        val superclass = typeElement.superclass ?: return
-        if (superclass.kind != TypeKind.NONE) {
-            collectSuperTypes(superclass.asTypeElement(), returnTypes)
-        }
+
+        return supertypes
     }
 
     companion object {

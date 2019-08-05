@@ -58,7 +58,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
 
             type.postInitialization = postInitializationMethod(element)
             type.dataObservers = findDataObservers(element)
-            dependencyFinder.collectSuperTypes(type.element, type.supertypes)
+            type.supertypes.addAll(dependencyFinder.collectSuperTypes(type.element))
 
             type.asTargetDependencies.add(element.asType().toString())
             for (supertype in type.supertypes) {
