@@ -347,4 +347,67 @@ class ConstructorTests : BaseTest {
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
     }
+
+    @Test
+    @Throws(Exception::class)
+    fun constructorString() {
+
+
+        val managerFile = JavaFileObjects.forSourceLines("test.Manager",
+            "package test;",
+            "import $named;",
+            "class Manager {",
+            "   public Manager(@Named(\"apiVersion\") String string) {}",
+            "}")
+
+        val moduleFile = JavaFileObjects.forSourceLines("test.Module",
+            "package test;",
+            "import $dependency;",
+            "import $named;",
+            "class Module {",
+            "   @Dependency",
+            "   @Named(\"apiVersion\")",
+            "   public static String getVersion() { return null; }",
+            "}")
+
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            "package test;",
+            "",
+            Inject::class.java.import(),
+            PostInitialization::class.java.import(),
+            "",
+            "public class Activity {",
+            "",
+            "   @Inject",
+            "   public Manager manager;",
+            "}")
+
+        val injectedFile = JavaFileObjects.forSourceLines("test.ManagerSingleton",
+            "package test;",
+            "",
+            "import $keep",
+            "import $nonNull",
+            "import java.lang.String;",
+            "",
+            "@Keep",
+            "public final class ActivityInjector {",
+            "",
+            "   @Keep",
+            "   public final void inject(@NonNull final Activity target) {",
+            "       target.manager = provideManager();",
+            "   }",
+            "",
+            "   private final Manager provideManager() {",
+            "       String string = Module.getVersion();",
+            "       Manager manager = new Manager(string);",
+            "       return manager;",
+            "   }",
+            "}")
+
+        Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
+            .that(listOf(moduleFile, managerFile, activityFile))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile)
+    }
 }
