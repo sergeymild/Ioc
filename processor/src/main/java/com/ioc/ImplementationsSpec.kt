@@ -12,7 +12,7 @@ class InjectMethod(
     val methodSpec: MethodSpec,
     val isTargetUsedAsDependency: Boolean,
     var returnTypeDependencyModel: DependencyModel?,
-    val methodClassTypeName: TypeName)g
+    val methodClassTypeName: TypeName)
 
 internal fun targetParameter(className: ClassName): ParameterSpec {
     return ParameterSpec.builder(className, "target", Modifier.FINAL)
