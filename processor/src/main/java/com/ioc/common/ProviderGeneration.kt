@@ -21,6 +21,20 @@ object ProviderGeneration {
     }
 
 
+    fun wrapProvideMethod(model: DependencyModel, body: CodeBlock): CodeBlock {
+        if (!model.isProvider) return body
+        return CodeBlock.builder()
+            .add("\$L", TypeSpec.anonymousClassBuilder("")
+                .superclass(model.dependency.asProviderType())
+                .addMethod(MethodSpec.methodBuilder("initialize")
+                    .addModifiers(Modifier.PROTECTED)
+                    .returns(model.dependency.asTypeName())
+                    .addStatement("return \$L", body)
+                    .build())
+                .build())
+            .build()
+    }
+
 
     private fun providerMethod(type: Element, name: CharSequence, body: CodeBlock): MethodSpec {
         return MethodSpec.methodBuilder("initialize")

@@ -17,4 +17,13 @@ object WeakGeneration {
         body.add(wrappedCode.build())
         return body
     }
+
+    fun wrapProvideMethod(model: DependencyModel, body: CodeBlock): CodeBlock {
+        if (!model.isWeak) return body
+
+        return CodeBlock.builder()
+            .add("new \$T<>(\$L)", weakReferenceType, body)
+            .build()
+    }
+
 }

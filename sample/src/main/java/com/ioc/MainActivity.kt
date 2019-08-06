@@ -5,22 +5,16 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.ios.injector.R
 import javax.inject.Inject
-import javax.inject.Singleton
 
 class BrowserUi
 
-class AutoCompleteListenerImpl(val browserUi: BrowserUi)
 
-class D {
-    @Inject
-    lateinit var autoCompleteListener: AutoCompleteListenerImpl
-}
 
 //@InjectParentDependencies
 class MainActivity : AppCompatActivity() {
 
     @Inject
-    lateinit var autoCompleteListener: AutoCompleteListenerImpl
+    lateinit var browserUi: Lazy<BrowserUi>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

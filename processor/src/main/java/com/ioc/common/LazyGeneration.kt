@@ -20,6 +20,20 @@ object LazyGeneration {
                 anonymousClass(model.dependency, originalName, body.build()))
     }
 
+    fun wrapProvideMethod(model: DependencyModel, body: CodeBlock): CodeBlock {
+        if (!model.isLazy) return body
+        return CodeBlock.builder()
+            .add("\$L", TypeSpec.anonymousClassBuilder("")
+                .superclass(model.dependency.asLazyType())
+                .addMethod(MethodSpec.methodBuilder("initialize")
+                    .addModifiers(Modifier.PROTECTED)
+                    .returns(model.dependency.asTypeName())
+                    .addStatement("return \$L", body)
+                    .build())
+                .build())
+            .build()
+    }
+
 
 
     private fun lazyMethodGet(type: Element, name: CharSequence, body: CodeBlock): MethodSpec {

@@ -259,8 +259,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
                             .addAnnotation(keepAnnotation)
                             .addCode(methodCode)
                             .build(), isTargetUsedAsDependency, dependency, cache.classTypeName))
-                    }
-                    else if (!isTargetUsedAsDependency && dependency.isNotGeneric()) {
+                    } else {
                         fromDifferentModuleInject.add(InjectMethod(cache.methodSpec, isTargetUsedAsDependency, dependency, cache.classTypeName))
                     }
                     continue

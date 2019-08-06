@@ -17,6 +17,7 @@ val viewModelProvidersType = ClassName.bestGuess("$lifecyclePackage.ViewModelPro
 val viewModelType = ClassName.bestGuess("$lifecyclePackage.ViewModel")
 val androidLiveDataObserver = ClassName.bestGuess("$lifecyclePackage.Observer")
 val hashMapType = ClassName.get(HashMap::class.java)
+val weakReferenceType = ClassName.get(WeakReference::class.java)
 
 val viewModelPackages = listOf("android.arch.lifecycle.ViewModel", "androidx.lifecycle.ViewModel")
 val liveDataPackages = listOf("androidx.lifecycle.MutableLiveData", "androidx.lifecycle.LiveData")

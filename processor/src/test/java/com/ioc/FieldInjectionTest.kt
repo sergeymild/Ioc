@@ -3983,4 +3983,85 @@ class FieldInjectionTest {
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
     }
+
+    @Test
+    @Throws(Exception::class)
+    fun injectFromDifferentModuleLazy() {
+
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            "package test;",
+            "",
+            "import $inject;",
+            "",
+            "public class Activity {",
+            "",
+            "   @Inject",
+            "   public ClickedEventLogger clickedEventLogger;",
+            "}")
+
+        val baseActivityFile = JavaFileObjects.forSourceLines("test.BaseActivity",
+            "package test;",
+            "",
+            "import $inject;",
+            "import $lazyType;",
+            "import $providerType;",
+            "import $weakReferenceType;",
+            "",
+            "public class BaseActivity {",
+            "",
+            "   @Inject",
+            "   public Lazy<ClickedEventLogger> lazyEventLogger;",
+            "   @Inject",
+            "   public Provider<ClickedEventLogger> providerEventLogger;",
+            "   @Inject",
+            "   public WeakReference<ClickedEventLogger> weakEventLogger;",
+            "}")
+
+        val parentFile = JavaFileObjects.forSourceLines("test.ClickedEventLogger",
+            "package test;",
+            "",
+            "public class ClickedEventLogger {",
+            "   public ClickedEventLogger(SimpleDependency simple) {}",
+            "}")
+
+        val simpleDependency = JavaFileObjects.forSourceLines("test.SimpleDependency",
+            "package test;",
+            "",
+            "public class SimpleDependency {",
+            "}")
+
+
+        val injectedFile = JavaFileObjects.forSourceLines("test.BaseActivityInjector",
+            "package test;",
+            "",
+            "import $keep",
+            "import $nonNull",
+            "import $iocLazy",
+            "import $iosProvider",
+            "import $weakReferenceType",
+            "",
+            "@Keep",
+            "public final class BaseActivityInjector {",
+            "   @Keep",
+            "   public static final void inject(@NonNull final BaseActivity target) {",
+            "       target.lazyEventLogger = new IocLazy<ClickedEventLogger>() {",
+            "           protected ClickedEventLogger initialize() {",
+            "               return ActivityInjector.provideClickedEventLogger();",
+            "           }",
+            "       }",
+            "       target.providerEventLogger = new IocProvider<ClickedEventLogger>() {",
+            "           protected ClickedEventLogger initialize() {",
+            "               return ActivityInjector.provideClickedEventLogger();",
+            "           }",
+            "       }",
+            "       target.weakEventLogger = new WeakReference<>(ActivityInjector.provideClickedEventLogger());",
+            "   }",
+            "}")
+
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(activityFile, baseActivityFile, simpleDependency, parentFile))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile)
+    }
 }

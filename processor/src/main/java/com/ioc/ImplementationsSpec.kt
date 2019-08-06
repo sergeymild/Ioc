@@ -85,8 +85,12 @@ class ImplementationsSpec constructor(
         }
 
         for (injectMethod in fromDifferentModuleInject) {
-            builder.addCode(setInTarget(injectMethod.returnTypeDependencyModel!!, CodeBlock.builder()
-                .add("\$T.\$N()", injectMethod.methodClassTypeName, injectMethod.methodSpec.name).build()))
+            val callMethodCode = CodeBlock.builder()
+                .add("\$T.\$N()", injectMethod.methodClassTypeName, injectMethod.methodSpec.name).build()
+            var newCode = LazyGeneration.wrapProvideMethod(injectMethod.returnTypeDependencyModel!!, callMethodCode)
+            newCode = ProviderGeneration.wrapProvideMethod(injectMethod.returnTypeDependencyModel!!, newCode)
+            newCode = WeakGeneration.wrapProvideMethod(injectMethod.returnTypeDependencyModel!!, newCode)
+            builder.addCode(setInTarget(injectMethod.returnTypeDependencyModel!!, newCode))
         }
 
         for (method in this.methods) {
