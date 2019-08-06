@@ -13,7 +13,7 @@ class BrowserUi: LifecycleOwner {
     }
 
     @Inject
-    @ViewModelDependency
+    @ViewModel
     lateinit var vm: VM
 
     @DataObserver

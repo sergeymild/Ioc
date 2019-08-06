@@ -286,7 +286,7 @@ fun Element.isPrimitive(): Boolean {
 
 fun Element.isViewModel(): Boolean {
     if (asType().kind.isPrimitive) return false
-    return isHasAnnotation(ViewModelDependency::class.java)
+    return isHasAnnotation(ViewModel::class.java)
 }
 
 fun Element.isAndroidViewModel(): Boolean {
