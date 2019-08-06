@@ -76,7 +76,7 @@ class SingletonsFactoryTest {
             "import test.SingletonClassSingleton;",
             "",
             "@Keep",
-            "final class SingletonsFactoryImplementation extends SingletonFactory {",
+            "final class SingletonsFactoryImplementation extends SingletonStorage {",
             "   static {",
             "       map = new HashMap<>(6);",
             "       cachedSingletons = new HashMap<>(2);",

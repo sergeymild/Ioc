@@ -16,7 +16,7 @@ object SingletonFactorySpec {
     fun createSpec(singletons: Collection<DependencyModel>): TypeSpec {
         val typeSpec = TypeSpec.classBuilder("SingletonsFactoryImplementation")
             .addModifiers(Modifier.FINAL)
-            .superclass(ClassName.get(SingletonFactory::class.java))
+            .superclass(ClassName.get(SingletonStorage::class.java))
             .addAnnotation(keepAnnotation)
 
         val staticBlock = CodeBlock.builder()

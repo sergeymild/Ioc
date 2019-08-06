@@ -161,7 +161,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
             var element = singletonElement
             if (singletonElement.isMethod()) element = singletonElement.asMethod().returnType.asElement()
             if (projectSingletons.containsKey(element.asTypeString())) continue
-            val t = processingEnvironment.elementUtils.getTypeElement(SingletonFactory::class.java.canonicalName)
+            val t = processingEnvironment.elementUtils.getTypeElement(SingletonStorage::class.java.canonicalName)
             dependencyResolver.resolveDependency(element, TargetType(t))
         }
 

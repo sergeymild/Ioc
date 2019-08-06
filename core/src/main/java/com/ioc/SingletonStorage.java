@@ -5,7 +5,7 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
-abstract class SingletonFactory {
+abstract class SingletonStorage {
     private static final String GENERATED_CLASS = "com.ioc.SingletonsFactoryImplementation";
     static Map<Class<?>, Class<?>> map;
     static HashMap<Class<?>, Lazy<?>> cachedSingletons;

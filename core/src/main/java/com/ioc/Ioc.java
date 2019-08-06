@@ -6,7 +6,7 @@ package com.ioc;
 
 public class Ioc {
     public static <T> T singleton(Class<T> clazz) {
-        return SingletonFactory.provide(clazz);
+        return SingletonStorage.provide(clazz);
     }
 
     public static <T> void inject(T target) {
