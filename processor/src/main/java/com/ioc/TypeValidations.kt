@@ -81,6 +81,20 @@ fun validateSingletonMethod(element: Element) {
     }
 }
 
+fun validatePostInitializationMethod(method: ExecutableElement) {
+    if (method.isPrivate()) {
+        throw ProcessorException("@PostInitialization placed on `${method.simpleName}` in ${method.enclosingElement} with private access").setElement(method)
+    }
+
+    if (method.parameters.isNotEmpty()) {
+        throw ProcessorException("@PostInitialization placed on `${method.simpleName}` in ${method.enclosingElement} must not have parameters").setElement(method)
+    }
+
+    if (method.returnType.kind != TypeKind.VOID) {
+        throw ProcessorException("@PostInitialization placed on `${method.simpleName}` in ${method.enclosingElement} must not have return type").setElement(method)
+    }
+}
+
 
 fun namedStringForError(named: String?): String {
     return if (named.isNullOrBlank()) "@Default" else "@$named"

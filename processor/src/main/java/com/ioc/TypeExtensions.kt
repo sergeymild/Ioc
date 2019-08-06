@@ -5,12 +5,10 @@ import com.ioc.common.*
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.ParameterizedTypeName
 import com.squareup.javapoet.TypeName
-
 import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.TypeElement
 import javax.lang.model.element.VariableElement
-import javax.lang.model.type.TypeKind
 import javax.lang.model.type.TypeMirror
 import javax.lang.model.util.ElementFilter
 
@@ -31,18 +29,8 @@ fun Element.asWeakType(): TypeName {
 }
 
 fun postInitializationMethod(element: TypeElement): ExecutableElement? {
-    val postInitializationMethod = element.methods { it.isHasAnnotation(PostInitialization::class.java) }.firstOrNull()
-    if (postInitializationMethod != null && postInitializationMethod.isPrivate()) {
-        throw ProcessorException("@PostInitialization placed on `${postInitializationMethod.simpleName}` in ${postInitializationMethod.enclosingElement} with private access").setElement(postInitializationMethod)
-    }
-
-    if (postInitializationMethod != null && postInitializationMethod.parameters.isNotEmpty()) {
-        throw ProcessorException("@PostInitialization placed on `${postInitializationMethod.simpleName}` in ${postInitializationMethod.enclosingElement} must not have parameters").setElement(postInitializationMethod)
-    }
-
-    if (postInitializationMethod != null && postInitializationMethod.returnType.kind != TypeKind.VOID) {
-        throw ProcessorException("@PostInitialization placed on `${postInitializationMethod.simpleName}` in ${postInitializationMethod.enclosingElement} must not have return type").setElement(postInitializationMethod)
-    }
+    val postInitializationMethod = element.methods { it.isHasAnnotation(PostInitialization::class.java) }.firstOrNull() ?: return null
+    validatePostInitializationMethod(postInitializationMethod)
     return postInitializationMethod
 }
 
