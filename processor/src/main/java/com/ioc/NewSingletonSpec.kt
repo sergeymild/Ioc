@@ -55,5 +55,4 @@ class NewSingletonSpec(private val dependency: DependencyModel) {
         builder.addStatement("return new \$T(\$L)", dependency.originalClassName, names)
         return builder.build()
     }
-
 }

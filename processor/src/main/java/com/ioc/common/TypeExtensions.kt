@@ -215,7 +215,11 @@ fun TypeMirror.asElement(): Element {
 }
 
 fun Element.asClassName(): TypeName {
-    return ClassName.get(asType())
+    return asType().asClassName()
+}
+
+fun TypeMirror.asClassName(): TypeName {
+    return ClassName.get(this)
 }
 
 fun TypeMirror.asTypeElement(): TypeElement {

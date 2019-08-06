@@ -5,48 +5,38 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.ios.injector.R
 import javax.inject.Inject
+import javax.inject.Singleton
 
 class BrowserUi
 
-interface AutoCompleteListener
+interface Au3
+interface Au2
 
+interface AuI: Au3
+
+@Singleton
 @Dependency
-class AutoCompleteListenerImpl(val browserUi: BrowserUi): AutoCompleteListener
+class AutoCompleteListener: AuI, Au2
 
-open class HistorySearch
+@Singleton
+class AutoCompleteListenerImpl
 
-class AutocompleteController constructor(
-    private var autoCompleteListener: AutoCompleteListener,
-    private val historySearch: HistorySearch)
-
-object Module {
-    @Dependency
-    fun autocompleteController(
-        browserUi: BrowserUi,
-        listener: AutoCompleteListener,
-        historySearch: HistorySearch
-    ): AutocompleteController = AutocompleteController(listener, historySearch)
-
-    @Dependency
-    fun historySearch(): HistorySearch {
-        return object : HistorySearch() {}
-    }
-}
-
-class AddressBarListenerImpl(@LocalScope val browserUi: BrowserUi) {
-    @Inject
-    lateinit var autocompleteController: AutocompleteController
-}
+class D
 
 //@InjectParentDependencies
 class MainActivity : AppCompatActivity() {
 
+    @Inject
+    lateinit var d: D
 
+    @Inject
+    lateinit var autoCompleteListener: AutoCompleteListenerImpl
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        SingletonsFactory.provide(AuI::class.java)
 
 
 //        try {

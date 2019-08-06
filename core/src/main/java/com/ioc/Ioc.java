@@ -2,7 +2,6 @@ package com.ioc;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
 
 /**
  * Created by sergeygolishnikov on 11/07/2017.
@@ -14,7 +13,7 @@ public class Ioc {
 
 
     public static <T> T singleton(Class<T> clazz) {
-        return SingletonManager.singleton(clazz);
+        return SingletonsFactory.provide(clazz);
     }
 
     public static <T> void inject(T target) {

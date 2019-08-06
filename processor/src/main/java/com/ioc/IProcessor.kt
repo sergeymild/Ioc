@@ -4,18 +4,20 @@ import com.ioc.ImplementationsSpec.Companion.addDataObservers
 import com.ioc.ImplementationsSpec.Companion.dependencyInjectionCode
 import com.ioc.ImplementationsSpec.Companion.provideInjectionMethod
 import com.ioc.common.*
-import com.squareup.javapoet.JavaFile
-import com.squareup.javapoet.TypeSpec
+import com.squareup.javapoet.*
 import java.util.*
 import javax.annotation.processing.*
 import javax.lang.model.SourceVersion
-import javax.lang.model.element.Element
-import javax.lang.model.element.ElementKind
-import javax.lang.model.element.ExecutableElement
-import javax.lang.model.element.TypeElement
+import javax.lang.model.element.*
 import javax.lang.model.util.Types
 import javax.tools.Diagnostic
 import kotlin.properties.Delegates
+import com.squareup.javapoet.ParameterizedTypeName
+import com.squareup.javapoet.ClassName
+import javax.inject.Singleton
+import javax.lang.model.type.TypeMirror
+import kotlin.collections.HashMap
+
 
 interface ErrorThrowable {
     @Throws(Throwable::class)
@@ -156,6 +158,13 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         roundEnv.rootElementsWithInjectedDependencies()
         roundEnv.findDependenciesInParents(processingEnv)
 
+        val singletonElements = roundEnv.getElementsAnnotatedWith(Singleton::class.java)
+        for (singletonElement in singletonElements) {
+            if (projectSingletons.containsKey(singletonElement.asTypeString())) continue
+            val t = processingEnvironment.elementUtils.getTypeElement(SingletonsFactory::class.java.canonicalName)
+            dependencyResolver.resolveDependency(singletonElement, TargetType(t))
+        }
+
         val targetsWithDependencies = mapToTargetWithDependencies(dependencyResolver)
         val targetTypes = targetsWithDependencies.keys
 
@@ -204,6 +213,48 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
             val spec = NewSingletonSpec(singleton)
             writeClassFile(singleton.originalType.getPackage().toString(), spec.inject())
         }
+
+        if (singletons.isEmpty()) return
+        writeClassFile("com.ioc", createSingletonsFactory(singletons))
+    }
+
+    private fun createSingletonsFactory(singletons: Collection<DependencyModel>): TypeSpec {
+        val typeSpec = TypeSpec.classBuilder("SingletonsFactoryImplementation")
+            .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+            .superclass(ClassName.get(SingletonsFactory::class.java))
+            .addAnnotation(keepAnnotation)
+
+        val staticBlock = CodeBlock.builder()
+        val queue = LinkedList<TypeMirror>()
+        var count = 0
+        for (singleton in singletons) {
+            queue.add(singleton.originalType.asType())
+            while (queue.isNotEmpty()) {
+                val type = queue.pop()
+                if (type.isNotValid()) continue
+
+                count += 1
+                val typeElement = type.asTypeElement()
+                staticBlock.addStatement("map.put(\$T.class, \$T.class)",
+                    type, singleton.originalType)
+
+                queue.addAll(typeElement.interfaces)
+                queue.add(typeElement.superclass)
+            }
+
+            queue.clear()
+
+        }
+
+
+        typeSpec.addStaticBlock(CodeBlock.builder()
+            .addStatement("map = new \$T<>(\$L)", ClassName.get(HashMap::class.java), count)
+            .addStatement("cachedSingletons = new \$T<>(\$L)", ClassName.get(HashMap::class.java), singletons.size)
+            .addStatement("instance = new \$T()", ClassName.bestGuess("com.ioc.SingletonsFactoryImplementation"))
+            .add(staticBlock.build())
+            .build())
+
+        return typeSpec.build()
     }
 
     private fun generateInjectableSpecs(targets: Map<TargetType, MutableList<DependencyModel>>) {
