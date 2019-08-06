@@ -1,7 +1,6 @@
 package com.ioc
 
 import com.ioc.common.*
-import java.util.*
 import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.Modifier
@@ -61,23 +60,20 @@ fun validateIsAllowCanHaveViewModel(viewModel: Element, targetElement: TypeEleme
     throw ProcessorException("@Inject annotation is placed on `${viewModel.asType()}` class which declared not in either FragmentActivity or Fragment").setElement(viewModel)
 }
 
-fun validateSingletonUsage(targetsWithDependencies: Map<TargetType, MutableList<DependencyModel>>) {
-    // check how ofter used singletons
-    val counter = mutableMapOf<String, Int>()
-    for (target in targetsWithDependencies) {
-        val queue = LinkedList(target.value)
-        while (queue.isNotEmpty()) {
-            val dep = queue.pop()
-            if (dep.isSingleton) {
-                val count = counter.getOrPut(dep.dependencyTypeString) { 0 }
-                counter[dep.dependencyTypeString] = count + 1
-            }
-            queue.addAll(dep.dependencies)
-        }
+fun validateSingletonClass(element: Element) {
+    if (element.isClass() && !element.isPublic()) {
+        throw ProcessorException("${element.asTypeString()} annotated with @Singleton must be public").setElement(element)
+    }
+}
+
+fun validateSingletonMethod(element: Element) {
+    if (!element.isMethod()) return
+    if (element.asMethod().returnType.kind == TypeKind.VOID) {
+        throw ProcessorException("${element.enclosingElement.asTypeString()}.${element.simpleName}() annotated with @Singleton must return type").setElement(element)
     }
 
-    for (entry in counter) {
-        if (entry.value == 1) message("@Singleton is redundant for dependency: ${entry.key}")
+    if (element.asMethod().returnType.isNotValid()) {
+        throw ProcessorException("${element.enclosingElement.asTypeString()}.${element.simpleName}() annotated with @Singleton return type is not valid.").setElement(element)
     }
 }
 

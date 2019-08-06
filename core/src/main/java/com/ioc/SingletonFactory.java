@@ -5,24 +5,25 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class SingletonsFactory {
+abstract class SingletonFactory {
     private static final String GENERATED_CLASS = "com.ioc.SingletonsFactoryImplementation";
     static Map<Class<?>, Class<?>> map;
     static HashMap<Class<?>, Lazy<?>> cachedSingletons;
 
-    protected static SingletonsFactory instance;
+    private static boolean isLoaded;
 
-    public static SingletonsFactory getInstance() {
-        if (instance != null) return instance;
+    private static void load() {
+        if (isLoaded) return;
         try {
             Class.forName(GENERATED_CLASS);
+            isLoaded = true;
         } catch (ClassNotFoundException e) {
             throw new IocException("Can't load class SingletonsFactoryImplementation");
         }
-        return instance;
     }
 
-    public static <T> T provide(final Class<T> tClass) {
+    static <T> T provide(final Class<T> tClass) {
+        load();
         try {
             Class<?> singleton = map.get(tClass);
             if (singleton == null) {

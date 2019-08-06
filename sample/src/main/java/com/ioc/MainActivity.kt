@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        SingletonsFactory.provide(AuI::class.java)
+        SingletonFactory.provide(AuI::class.java)
 
 
 //        try {

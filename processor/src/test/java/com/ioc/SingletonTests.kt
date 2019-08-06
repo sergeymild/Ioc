@@ -41,7 +41,7 @@ class SingletonTests : BaseTest {
             Inject::class.java.import(),
             Named::class.java.import(),
             "",
-            "class MainPresenter {",
+            "public class MainPresenter {",
             "   @Inject",
             "   MainPresenter(@Named(\"release\") DependencyModel dependency) {}",
             "}")
@@ -49,7 +49,7 @@ class SingletonTests : BaseTest {
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "interface DependencyModel {",
+            "public interface DependencyModel {",
             "}")
 
         val release = JavaFileObjects.forSourceLines("test.ReleaseModel",
@@ -63,7 +63,7 @@ class SingletonTests : BaseTest {
             "@Named(\"release\")",
             "@Singleton",
             "@Dependency",
-            "class ReleaseModel implements DependencyModel {",
+            "public class ReleaseModel implements DependencyModel {",
             "   @Inject",
             "   ReleaseModel(@Named(\"cappuccino\") Coffee coffee) {}",
             "}")
@@ -77,7 +77,7 @@ class SingletonTests : BaseTest {
             "",
             "@Named(\"debug\")",
             "@Dependency",
-            "class DebugModel implements DependencyModel {",
+            "public class DebugModel implements DependencyModel {",
             "   @Inject",
             "   DebugModel(@Named(\"nescafe\") Coffee coffee) {}",
             "}")
@@ -87,7 +87,7 @@ class SingletonTests : BaseTest {
             "",
             Inject::class.java.import(),
             "",
-            "interface Coffee {",
+            "public interface Coffee {",
             "}")
 
         val cappuccino = JavaFileObjects.forSourceLines("test.Cappuccino",
@@ -98,7 +98,7 @@ class SingletonTests : BaseTest {
             "",
             "@Named(\"cappuccino\")",
             "@Dependency",
-            "class Cappuccino implements Coffee {",
+            "public class Cappuccino implements Coffee {",
             "   public Cappuccino() {};",
             "}")
 
@@ -110,7 +110,7 @@ class SingletonTests : BaseTest {
             "",
             "@Named(\"nescafe\")",
             "@Dependency",
-            "class Nescafe implements Coffee {",
+            "public class Nescafe implements Coffee {",
             "   public Nescafe() {};",
             "}")
 
@@ -164,7 +164,7 @@ class SingletonTests : BaseTest {
             Inject::class.java.import(),
             Named::class.java.import(),
             "",
-            "class MainPresenter {",
+            "public class MainPresenter {",
             "   @Inject",
             "   MainPresenter(@Named(\"release\") DependencyModel dependency) {}",
             "}")
@@ -172,7 +172,7 @@ class SingletonTests : BaseTest {
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "interface DependencyModel {",
+            "public interface DependencyModel {",
             "}")
 
         val release = JavaFileObjects.forSourceLines("test.ReleaseModel",
@@ -186,7 +186,7 @@ class SingletonTests : BaseTest {
             "@Named(\"release\")",
             "@Singleton",
             "@Dependency",
-            "class ReleaseModel implements DependencyModel {",
+            "public class ReleaseModel implements DependencyModel {",
             "   @Inject",
             "   ReleaseModel(@Named(\"nescafe\") Coffee coffee) {}",
             "}")
@@ -200,7 +200,7 @@ class SingletonTests : BaseTest {
             "",
             "@Named(\"debug\")",
             "@Dependency",
-            "class DebugModel implements DependencyModel {",
+            "public class DebugModel implements DependencyModel {",
             "   @Inject",
             "   DebugModel(@Named(\"cappuccino\") Coffee coffee) {}",
             "}")
@@ -210,7 +210,7 @@ class SingletonTests : BaseTest {
             "",
             Inject::class.java.import(),
             "",
-            "interface Coffee {",
+            "public interface Coffee {",
             "}")
 
         val cappuccino = JavaFileObjects.forSourceLines("test.Cappuccino",
@@ -221,7 +221,7 @@ class SingletonTests : BaseTest {
             "",
             "@Named(\"cappuccino\")",
             "@Dependency",
-            "class Cappuccino implements Coffee {",
+            "public class Cappuccino implements Coffee {",
             "   public Cappuccino() {};",
             "}")
 
@@ -234,7 +234,7 @@ class SingletonTests : BaseTest {
             "",
             "@Named(\"nescafe\")",
             "@Dependency",
-            "class Nescafe implements Coffee {",
+            "public class Nescafe implements Coffee {",
             "   @Inject",
             "   public Nescafe(Sugar sugar) {};",
             "}")
@@ -244,7 +244,7 @@ class SingletonTests : BaseTest {
             "",
             Named::class.java.import(),
             "",
-            "class Sugar {",
+            "public class Sugar {",
             "   public Sugar() {};",
             "}")
 
@@ -298,17 +298,17 @@ class SingletonTests : BaseTest {
             "import $singleton;",
             "",
             "@Singleton",
-            "class MainPresenter {",
+            "public class MainPresenter {",
             "   MainPresenter(DependencyModel dependency) {}",
             "}")
 
-        val release = JavaFileObjects.forSourceLines("test.ReleaseModel",
+        val release = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
             "import $singleton;",
             "",
             "@Singleton",
-            "class DependencyModel {",
+            "public class DependencyModel {",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.MainPresenterSingleton",
@@ -369,27 +369,27 @@ class SingletonTests : BaseTest {
             Singleton::class.java.import(),
             "",
             "@Singleton",
-            "class CookieManagerWorker {",
+            "public class CookieManagerWorker {",
             "   CookieManagerWorker(PrivacySettings privacySettings, ThemeSettings themeSettings) {}",
             "}")
 
         val privacySettings = JavaFileObjects.forSourceLines("test.PrivacySettings",
             "package test;",
             "",
-            "interface PrivacySettings {",
+            "public interface PrivacySettings {",
             "}")
 
         val themeSettings = JavaFileObjects.forSourceLines("test.ThemeSettings",
             "package test;",
             "",
-            "interface ThemeSettings {",
+            "public interface ThemeSettings {",
             "}")
 
         val settings = JavaFileObjects.forSourceLines("test.Settings",
             "package test;",
             Dependency::class.java.import(),
             "@Dependency",
-            "class Settings implements PrivacySettings, ThemeSettings {",
+            "public class Settings implements PrivacySettings, ThemeSettings {",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.CookieManagerWorkerSingleton",
@@ -441,34 +441,34 @@ class SingletonTests : BaseTest {
             "   public PrivacySettings getPrivacySettings() {return null;}",
             "}")
 
-        val cookieManager = JavaFileObjects.forSourceLines("test.CookieManagerWorker",
+        val cookieManager = JavaFileObjects.forSourceLines("test.WebMusicManager",
             "package test;",
             "",
             Singleton::class.java.import(),
             "",
             "@Singleton",
-            "class WebMusicManager {",
+            "public class WebMusicManager {",
             "   WebMusicManager(Session session) {}",
             "}")
 
-        val privacySettings = JavaFileObjects.forSourceLines("test.PrivacySettings",
+        val privacySettings = JavaFileObjects.forSourceLines("test.Session",
             "package test;",
             "",
-            "class Session {",
+            "public class Session {",
             "   Session(PrivacySettings privacySettings) {}",
             "}")
 
         val themeSettings = JavaFileObjects.forSourceLines("test.PrivacySettings",
             "package test;",
             "",
-            "interface PrivacySettings {",
+            "public interface PrivacySettings {",
             "}")
 
         val settings = JavaFileObjects.forSourceLines("test.Settings",
             "package test;",
             Dependency::class.java.import(),
             "@Dependency",
-            "class Settings implements PrivacySettings {",
+            "public class Settings implements PrivacySettings {",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.WebMusicManagerSingleton",
@@ -522,7 +522,7 @@ class SingletonTests : BaseTest {
             Inject::class.java.import(),
             Lazy::class.java.import(),
             "",
-            "class MainPresenter {",
+            "public class MainPresenter {",
             "   @Inject",
             "   MainPresenter(Lazy<DependencyModel> lazyDependency, SingletonDependency singletonDependency) {}",
             "}")
@@ -533,7 +533,7 @@ class SingletonTests : BaseTest {
             Singleton::class.java.import(),
             "",
             "@Singleton",
-            "class SingletonDependency {",
+            "public class SingletonDependency {",
             "}")
 
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
@@ -541,7 +541,7 @@ class SingletonTests : BaseTest {
             "",
             Inject::class.java.import(),
             "",
-            "class DependencyModel {",
+            "public class DependencyModel {",
             "   @Inject",
             "   DependencyModel(SingletonDependency singletonDependency) {}",
             "}")
@@ -603,7 +603,7 @@ class SingletonTests : BaseTest {
             Inject::class.java.import(),
             Provider::class.java.import(),
             "",
-            "class MainPresenter {",
+            "public class MainPresenter {",
             "   @Inject",
             "   MainPresenter(Provider<DependencyModel> providerDependency, SingletonDependency singletonDependency) {}",
             "}")
@@ -614,7 +614,7 @@ class SingletonTests : BaseTest {
             Singleton::class.java.import(),
             "",
             "@Singleton",
-            "class SingletonDependency {",
+            "public class SingletonDependency {",
             "}")
 
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
@@ -622,7 +622,7 @@ class SingletonTests : BaseTest {
             "",
             Inject::class.java.import(),
             "",
-            "class DependencyModel {",
+            "public class DependencyModel {",
             "   @Inject",
             "   DependencyModel(SingletonDependency singletonDependency) {}",
             "}")

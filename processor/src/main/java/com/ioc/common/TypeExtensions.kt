@@ -32,6 +32,9 @@ fun Element.asTypeElement(): TypeElement {
     }
 }
 
+fun Element.asMethod(): ExecutableElement {
+    return this as ExecutableElement
+}
 
 fun Element.isPrivate(): Boolean {
     return modifiers.contains(Modifier.PRIVATE)
@@ -331,6 +334,10 @@ fun Element.isCanHaveViewModel(): Boolean {
 
 fun Element.isMethod(): Boolean {
     return kind == ElementKind.METHOD
+}
+
+fun Element.isClass(): Boolean {
+    return kind == ElementKind.CLASS
 }
 
 fun Element.isInterface(): Boolean {

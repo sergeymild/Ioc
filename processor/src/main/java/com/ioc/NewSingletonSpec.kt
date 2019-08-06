@@ -3,6 +3,7 @@ package com.ioc
 import com.ioc.common.asLazyType
 import com.ioc.common.capitalize
 import com.ioc.common.keepAnnotation
+import com.ioc.common.singletonClassName
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.FieldSpec
 import com.squareup.javapoet.MethodSpec
@@ -16,9 +17,9 @@ import javax.lang.model.element.Modifier
 class NewSingletonSpec(private val dependency: DependencyModel) {
 
     @Throws(Throwable::class)
-    fun inject(): TypeSpec {
+    fun createSpec(): TypeSpec {
 
-        val singletonName = "${dependency.originalType.simpleName.capitalize()}Singleton"
+        val singletonName = singletonClassName(dependency)
         return TypeSpec.classBuilder(singletonName)
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
             .superclass(dependency.originalType.asLazyType())

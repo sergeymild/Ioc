@@ -301,7 +301,7 @@ class ConstructorTests : BaseTest {
             Singleton::class.java.import(),
             "",
             "@Singleton",
-            "class Manager {",
+            "public class Manager {",
             "   @Inject",
             "   public Manager(DbMapper mapper, DbRepository repository) {}",
             "}")

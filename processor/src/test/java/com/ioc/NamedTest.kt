@@ -50,7 +50,7 @@ class NamedTest : BaseTest {
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "class DependencyModel {",
+            "public class DependencyModel {",
             "   public DependencyModel() {};",
             "}")
 
@@ -97,7 +97,7 @@ class NamedTest : BaseTest {
             Named::class.java.import(),
             "",
             "@Named(\"debug\")",
-            "class DependencyModel {",
+            "public class DependencyModel {",
             "   public DependencyModel() {};",
             "}")
 
@@ -157,7 +157,7 @@ class NamedTest : BaseTest {
             Named::class.java.import(),
             Inject::class.java.import(),
             "",
-            "class ParentDependency {",
+            "public class ParentDependency {",
             "   @Inject",
             "   public ParentDependency(@Named(\"release\") DependencyModel dependency) {};",
             "}")
@@ -165,20 +165,20 @@ class NamedTest : BaseTest {
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "interface DependencyModel {",
+            "public interface DependencyModel {",
             "}")
 
         val debugDependencyFile = JavaFileObjects.forSourceLines("test.DebugDependency",
             "package test;",
             "",
-            "class DebugDependency implements DependencyModel {",
+            "public class DebugDependency implements DependencyModel {",
             "   public DebugDependency() {};",
             "}")
 
         val releaseDependencyFile = JavaFileObjects.forSourceLines("test.ReleaseDependency",
             "package test;",
             "",
-            "class ReleaseDependency implements DependencyModel {",
+            "public class ReleaseDependency implements DependencyModel {",
             "   public ReleaseDependency() {};",
             "}")
 
@@ -246,7 +246,7 @@ class NamedTest : BaseTest {
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "interface DependencyModel {",
+            "public interface DependencyModel {",
             "}")
 
         val debugDependencyFile = JavaFileObjects.forSourceLines("test.DebugDependency",
@@ -257,7 +257,7 @@ class NamedTest : BaseTest {
             "",
             "@Dependency",
             "@Named(\"debug\")",
-            "class DebugDependency implements DependencyModel {",
+            "public class DebugDependency implements DependencyModel {",
             "   public DebugDependency() {};",
             "}")
 
@@ -269,7 +269,7 @@ class NamedTest : BaseTest {
             "",
             "@Dependency",
             "@Named(\"release\")",
-            "class ReleaseDependency implements DependencyModel {",
+            "public class ReleaseDependency implements DependencyModel {",
             "   public ReleaseDependency() {};",
             "}")
 
@@ -316,7 +316,7 @@ class NamedTest : BaseTest {
             Inject::class.java.import(),
             Named::class.java.import(),
             "",
-            "class MainPresenter {",
+            "public class MainPresenter {",
             "   @Inject",
             "   MainPresenter(@Named(\"release\") DependencyModel dependency) {}",
             "}")
@@ -324,7 +324,7 @@ class NamedTest : BaseTest {
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "interface DependencyModel {",
+            "public interface DependencyModel {",
             "}")
 
         val debugDependencyFile = JavaFileObjects.forSourceLines("test.DebugDependency",
@@ -335,7 +335,7 @@ class NamedTest : BaseTest {
             "",
             "@Dependency",
             "@Named(\"debug\")",
-            "class DebugDependency implements DependencyModel {",
+            "public class DebugDependency implements DependencyModel {",
             "   public DebugDependency() {};",
             "}")
 
@@ -347,7 +347,7 @@ class NamedTest : BaseTest {
             "",
             "@Dependency",
             "@Named(\"release\")",
-            "class ReleaseDependency implements DependencyModel {",
+            "public class ReleaseDependency implements DependencyModel {",
             "   public ReleaseDependency() {};",
             "}")
 
@@ -400,7 +400,7 @@ class NamedTest : BaseTest {
             Inject::class.java.import(),
             Named::class.java.import(),
             "",
-            "class MainPresenter {",
+            "public class MainPresenter {",
             "   @Inject",
             "   MainPresenter(DependencyModel dependency) {}",
             "}")
@@ -411,7 +411,7 @@ class NamedTest : BaseTest {
             Inject::class.java.import(),
             Named::class.java.import(),
             "",
-            "class DependencyModel {",
+            "public class DependencyModel {",
             "   @Inject",
             "   DependencyModel(@Named(\"cappuccino\") Coffee coffee) {}",
             "}")
@@ -421,7 +421,7 @@ class NamedTest : BaseTest {
             "",
             Inject::class.java.import(),
             "",
-            "interface Coffee {",
+            "public interface Coffee {",
             "}")
 
         val cappuccino = JavaFileObjects.forSourceLines("test.Cappuccino",
@@ -432,7 +432,7 @@ class NamedTest : BaseTest {
             "",
             "@Dependency",
             "@Named(\"cappuccino\")",
-            "class Cappuccino implements Coffee {",
+            "public class Cappuccino implements Coffee {",
             "   public Cappuccino() {};",
             "}")
 
@@ -444,7 +444,7 @@ class NamedTest : BaseTest {
             "",
             "@Dependency",
             "@Named(\"nescafe\")",
-            "class Nescafe implements Coffee {",
+            "public class Nescafe implements Coffee {",
             "   public Nescafe() {};",
             "}")
 
@@ -498,7 +498,7 @@ class NamedTest : BaseTest {
             Inject::class.java.import(),
             Named::class.java.import(),
             "",
-            "class MainPresenter {",
+            "public class MainPresenter {",
             "   @Inject",
             "   MainPresenter(@Named(\"release\") DependencyModel dependency) {}",
             "}")
@@ -506,7 +506,7 @@ class NamedTest : BaseTest {
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "interface DependencyModel {",
+            "public interface DependencyModel {",
             "}")
 
         val release = JavaFileObjects.forSourceLines("test.ReleaseModel",
@@ -518,7 +518,7 @@ class NamedTest : BaseTest {
             "",
             "@Dependency",
             "@Named(\"release\")",
-            "class ReleaseModel implements DependencyModel {",
+            "public class ReleaseModel implements DependencyModel {",
             "   @Inject",
             "   ReleaseModel(@Named(\"cappuccino\") Coffee coffee) {}",
             "}")
@@ -532,7 +532,7 @@ class NamedTest : BaseTest {
             "",
             "@Dependency",
             "@Named(\"debug\")",
-            "class DebugModel implements DependencyModel {",
+            "public class DebugModel implements DependencyModel {",
             "   @Inject",
             "   DebugModel(@Named(\"debug\") Coffee coffee) {}",
             "}")
@@ -542,7 +542,7 @@ class NamedTest : BaseTest {
             "",
             Inject::class.java.import(),
             "",
-            "interface Coffee {",
+            "public interface Coffee {",
             "}")
 
         val cappuccino = JavaFileObjects.forSourceLines("test.Cappuccino",
@@ -553,7 +553,7 @@ class NamedTest : BaseTest {
             "",
             "@Dependency",
             "@Named(\"cappuccino\")",
-            "class Cappuccino implements Coffee {",
+            "public class Cappuccino implements Coffee {",
             "   public Cappuccino() {};",
             "}")
 
@@ -565,7 +565,7 @@ class NamedTest : BaseTest {
             "",
             "@Dependency",
             "@Named(\"nescafe\")",
-            "class Nescafe implements Coffee {",
+            "public class Nescafe implements Coffee {",
             "   public Nescafe() {};",
             "}")
 
@@ -619,7 +619,7 @@ class NamedTest : BaseTest {
             Inject::class.java.import(),
             Named::class.java.import(),
             "",
-            "class MainPresenter {",
+            "public class MainPresenter {",
             "   @Inject",
             "   MainPresenter(@Named(\"debug\") DependencyModel dependency) {}",
             "}")
@@ -627,7 +627,7 @@ class NamedTest : BaseTest {
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "interface DependencyModel {",
+            "public interface DependencyModel {",
             "}")
 
         val release = JavaFileObjects.forSourceLines("test.ReleaseModel",
@@ -639,7 +639,7 @@ class NamedTest : BaseTest {
             "",
             "@Dependency",
             "@Named(\"release\")",
-            "class ReleaseModel implements DependencyModel {",
+            "public class ReleaseModel implements DependencyModel {",
             "   @Inject",
             "   ReleaseModel(@Named(\"cappuccino\") Coffee coffee) {}",
             "}")
@@ -653,7 +653,7 @@ class NamedTest : BaseTest {
             "",
             "@Dependency",
             "@Named(\"debug\")",
-            "class DebugModel implements DependencyModel {",
+            "public class DebugModel implements DependencyModel {",
             "   @Inject",
             "   DebugModel(@Named(\"cappuccino\") Coffee coffee) {}",
             "}")
@@ -663,7 +663,7 @@ class NamedTest : BaseTest {
             "",
             Inject::class.java.import(),
             "",
-            "interface Coffee {",
+            "public interface Coffee {",
             "}")
 
         val cappuccino = JavaFileObjects.forSourceLines("test.Cappuccino",
@@ -674,7 +674,7 @@ class NamedTest : BaseTest {
             "",
             "@Dependency",
             "@Named(\"cappuccino\")",
-            "class Cappuccino implements Coffee {",
+            "public class Cappuccino implements Coffee {",
             "   public Cappuccino() {};",
             "}")
 
@@ -686,7 +686,7 @@ class NamedTest : BaseTest {
             "",
             "@Dependency",
             "@Named(\"nescafe\")",
-            "class Nescafe implements Coffee {",
+            "public class Nescafe implements Coffee {",
             "   public Nescafe() {};",
             "}")
 
@@ -740,7 +740,7 @@ class NamedTest : BaseTest {
             Inject::class.java.import(),
             Named::class.java.import(),
             "",
-            "class MainPresenter {",
+            "public class MainPresenter {",
             "   @Inject",
             "   MainPresenter(@Named(\"debug\") DependencyModel dependency) {}",
             "}")
@@ -748,7 +748,7 @@ class NamedTest : BaseTest {
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "interface DependencyModel {",
+            "public interface DependencyModel {",
             "}")
 
         val release = JavaFileObjects.forSourceLines("test.ReleaseModel",
@@ -760,7 +760,7 @@ class NamedTest : BaseTest {
             "",
             "@Dependency",
             "@Named(\"release\")",
-            "class ReleaseModel implements DependencyModel {",
+            "public class ReleaseModel implements DependencyModel {",
             "   @Inject",
             "   ReleaseModel(@Named(\"cappuccino\") Coffee coffee) {}",
             "}")
@@ -774,7 +774,7 @@ class NamedTest : BaseTest {
             "",
             "@Dependency",
             "@Named(\"debug\")",
-            "class DebugModel implements DependencyModel {",
+            "public class DebugModel implements DependencyModel {",
             "   @Inject",
             "   DebugModel(@Named(\"nescafe\") Coffee coffee) {}",
             "}")
@@ -784,7 +784,7 @@ class NamedTest : BaseTest {
             "",
             Inject::class.java.import(),
             "",
-            "interface Coffee {",
+            "public interface Coffee {",
             "}")
 
         val cappuccino = JavaFileObjects.forSourceLines("test.Cappuccino",
@@ -795,7 +795,7 @@ class NamedTest : BaseTest {
             "",
             "@Dependency",
             "@Named(\"cappuccino\")",
-            "class Cappuccino implements Coffee {",
+            "public class Cappuccino implements Coffee {",
             "   public Cappuccino() {};",
             "}")
 
@@ -807,7 +807,7 @@ class NamedTest : BaseTest {
             "",
             "@Dependency",
             "@Named(\"nescafe\")",
-            "class Nescafe implements Coffee {",
+            "public class Nescafe implements Coffee {",
             "   public Nescafe() {};",
             "}")
 
@@ -880,7 +880,7 @@ class NamedTest : BaseTest {
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "class DependencyModel {",
+            "public class DependencyModel {",
             "   public DependencyModel() {};",
             "}")
 
@@ -969,7 +969,7 @@ class NamedTest : BaseTest {
             "",
             Inject::class.java.import(),
             "",
-            "class MainPresenter {",
+            "public class MainPresenter {",
             "   @Inject",
             "   MainPresenter(@DebugQualifier DependencyModel dependency) {}",
             "}")
@@ -977,7 +977,7 @@ class NamedTest : BaseTest {
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "interface DependencyModel {",
+            "public interface DependencyModel {",
             "}")
 
         val release = JavaFileObjects.forSourceLines("test.ReleaseModel",
@@ -988,7 +988,7 @@ class NamedTest : BaseTest {
             "",
             "@Dependency",
             "@ReleaseQualifier",
-            "class ReleaseModel implements DependencyModel {",
+            "public class ReleaseModel implements DependencyModel {",
             "   @Inject",
             "   ReleaseModel(@CappuccinoQualifier Coffee coffee) {}",
             "}")
@@ -1002,7 +1002,7 @@ class NamedTest : BaseTest {
             "",
             "@Dependency",
             "@DebugQualifier",
-            "class DebugModel implements DependencyModel {",
+            "public class DebugModel implements DependencyModel {",
             "   @Inject",
             "   DebugModel(@NescafeQualifier Coffee coffee) {}",
             "}")
@@ -1012,7 +1012,7 @@ class NamedTest : BaseTest {
             "",
             Inject::class.java.import(),
             "",
-            "interface Coffee {",
+            "public interface Coffee {",
             "}")
 
         val cappuccino = JavaFileObjects.forSourceLines("test.Cappuccino",
@@ -1023,7 +1023,7 @@ class NamedTest : BaseTest {
             "",
             "@Dependency",
             "@CappuccinoQualifier",
-            "class Cappuccino implements Coffee {",
+            "public class Cappuccino implements Coffee {",
             "   public Cappuccino() {};",
             "}")
 
@@ -1035,7 +1035,7 @@ class NamedTest : BaseTest {
             "",
             "@Dependency",
             "@NescafeQualifier",
-            "class Nescafe implements Coffee {",
+            "public class Nescafe implements Coffee {",
             "   public Nescafe() {};",
             "}")
 
@@ -1086,7 +1086,7 @@ class NamedTest : BaseTest {
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "interface DependencyModel {",
+            "public interface DependencyModel {",
             "}")
 
         val release = JavaFileObjects.forSourceLines("test.ReleaseModel",
@@ -1094,7 +1094,7 @@ class NamedTest : BaseTest {
             Dependency::class.java.import(),
             "",
             "@Dependency",
-            "class ReleaseModel implements DependencyModel {",
+            "public class ReleaseModel implements DependencyModel {",
             "}")
 
         val debug = JavaFileObjects.forSourceLines("test.DebugModel",
@@ -1102,7 +1102,7 @@ class NamedTest : BaseTest {
             Dependency::class.java.import(),
             "",
             "@Dependency",
-            "class DebugModel implements DependencyModel {",
+            "public class DebugModel implements DependencyModel {",
             "}")
 
         assertAbout(javaSources())
@@ -1144,7 +1144,7 @@ class NamedTest : BaseTest {
             Dependency::class.java.import(),
             "",
             "@Dependency",
-            "class DependencyImpl extends DependencyModel {",
+            "public class DependencyImpl extends DependencyModel {",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
@@ -1187,13 +1187,13 @@ class NamedTest : BaseTest {
         val stringProvider = JavaFileObjects.forSourceLines("test.StringProvider",
             "package test;",
             "",
-            "interface StringProvider {",
+            "public interface StringProvider {",
             "}")
 
         val applicationContextProvider = JavaFileObjects.forSourceLines("test.ApplicationContextProvider",
             "package test;",
             Context::class.java.import(),
-            "interface ApplicationContextProvider {",
+            "public interface ApplicationContextProvider {",
             "   public Context context();",
             "}")
 
@@ -1202,7 +1202,7 @@ class NamedTest : BaseTest {
             Context::class.java.import(),
             Dependency::class.java.import(),
             "@Dependency",
-            "class AppStringProvider implements StringProvider {",
+            "public class AppStringProvider implements StringProvider {",
             "   AppStringProvider(ApplicationContextProvider context) {}",
             "}")
 
@@ -1211,7 +1211,7 @@ class NamedTest : BaseTest {
             Context::class.java.import(),
             Dependency::class.java.import(),
 
-            "class ContextModule {",
+            "public class ContextModule {",
             "   @Dependency",
             "   public static ApplicationContextProvider context() { return null; }",
             "}")
@@ -1219,28 +1219,28 @@ class NamedTest : BaseTest {
         val firstDependency = JavaFileObjects.forSourceLines("test.FirstDependency",
             "package test;",
 
-            "class FirstDependency {",
+            "public class FirstDependency {",
             "   FirstDependency(StringProvider stringProvider) {}",
             "}")
 
         val secondDependency = JavaFileObjects.forSourceLines("test.SecondDependency",
             "package test;",
 
-            "class SecondDependency {",
+            "public class SecondDependency {",
             "   SecondDependency(StringProvider stringProvider) {}",
             "}")
 
         val thirdDependency = JavaFileObjects.forSourceLines("test.ThirdDependency",
             "package test;",
 
-            "class ThirdDependency {",
+            "public class ThirdDependency {",
             "   ThirdDependency(StringProvider stringProvider) {}",
             "}")
 
         val presenter = JavaFileObjects.forSourceLines("test.Presenter",
             "package test;",
 
-            "class Presenter {",
+            "public class Presenter {",
             "   Presenter(FirstDependency firstDependency, SecondDependency secondDependency, ThirdDependency thirdDependency) {}",
             "}")
 
@@ -1301,7 +1301,7 @@ class NamedTest : BaseTest {
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "interface DependencyModel {",
+            "public interface DependencyModel {",
             "}")
 
         val debugDependencyFile = JavaFileObjects.forSourceLines("test.DebugDependency",
@@ -1312,7 +1312,7 @@ class NamedTest : BaseTest {
             "@Singleton",
             "@Dependency",
             "@Named(\"Debug\")",
-            "class DebugDependency implements DependencyModel {",
+            "public class DebugDependency implements DependencyModel {",
             "   public DebugDependency() {};",
             "}")
 
@@ -1324,7 +1324,7 @@ class NamedTest : BaseTest {
             "@Singleton",
             "@Dependency",
             "@Named(\"Release\")",
-            "class ReleaseDependency implements DependencyModel {",
+            "public class ReleaseDependency implements DependencyModel {",
             "   public ReleaseDependency() {};",
             "}")
 
@@ -1372,14 +1372,14 @@ class NamedTest : BaseTest {
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "interface DependencyModel {",
+            "public interface DependencyModel {",
             "}")
 
         val debugDependencyFile = JavaFileObjects.forSourceLines("test.DebugDependency",
             "package test;",
             "import $singleton;",
             "@Singleton",
-            "class DebugDependency implements DependencyModel {",
+            "public class DebugDependency implements DependencyModel {",
             "   public DebugDependency() {};",
             "}")
 
@@ -1387,7 +1387,7 @@ class NamedTest : BaseTest {
             "package test;",
             "import $singleton;",
             "@Singleton",
-            "class ReleaseDependency implements DependencyModel {",
+            "public class ReleaseDependency implements DependencyModel {",
             "   public ReleaseDependency() {};",
             "}")
 
@@ -1397,7 +1397,7 @@ class NamedTest : BaseTest {
             "import $named;",
             "import $dependency;",
             "import $singleton;",
-            "class Module {",
+            "public class Module {",
             "   @Named(\"Debug\")",
             "   @Dependency",
             "   @Singleton",

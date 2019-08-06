@@ -340,13 +340,13 @@ class FieldInjectionTest {
         val dependencyInterface = JavaFileObjects.forSourceLines("test.DependencyInterface",
             "package test;",
             "",
-            "interface DependencyInterface {}")
+            "public interface DependencyInterface {}")
 
         val dependencyType = JavaFileObjects.forSourceLines("test.DependencyType",
             "package test;",
             importType(Dependency::class.java),
             "@Dependency",
-            "class DependencyType implements DependencyInterface {}")
+            "public class DependencyType implements DependencyInterface {}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
@@ -398,13 +398,13 @@ class FieldInjectionTest {
         val dependencyInterface = JavaFileObjects.forSourceLines("test.DependencyInterface",
             "package test;",
             "",
-            "interface DependencyInterface {}")
+            "public interface DependencyInterface {}")
 
         val dependencyType = JavaFileObjects.forSourceLines("test.DependencyType",
             "package test;",
             importType(Dependency::class.java),
             "@Dependency",
-            "class DependencyType implements DependencyInterface {}")
+            "public class DependencyType implements DependencyInterface {}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
@@ -696,7 +696,7 @@ class FieldInjectionTest {
             "",
             "import $inject;",
             "",
-            "class DependencyModel {",
+            "public class DependencyModel {",
             "",
             "   @Inject",
             "   public DependencyModel() {};",
@@ -768,7 +768,7 @@ class FieldInjectionTest {
             "",
             "import $inject;",
             "",
-            "class DependencyModel {",
+            "public class DependencyModel {",
             "",
             "   @Inject",
             "   public DependencyModel() {};",
@@ -836,7 +836,7 @@ class FieldInjectionTest {
             "",
             "import $inject;",
             "",
-            "class DependencyModel {",
+            "public class DependencyModel {",
             "   public DependencyModel(ChildDependencyModel child) {};",
             "}")
 
@@ -845,7 +845,7 @@ class FieldInjectionTest {
             "",
             "import $inject;",
             "",
-            "class ChildDependencyModel {",
+            "public class ChildDependencyModel {",
             "}")
 
         val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
@@ -924,7 +924,7 @@ class FieldInjectionTest {
             "",
             "import $inject;",
             "",
-            "interface DependencyModel {",
+            "public interface DependencyModel {",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
@@ -977,7 +977,7 @@ class FieldInjectionTest {
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "class DependencyModel {",
+            "public class DependencyModel {",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
@@ -1035,7 +1035,7 @@ class FieldInjectionTest {
             importType(com.ioc.Dependency::class.java),
             "",
             "@Dependency",
-            "class Context {",
+            "public class Context {",
             "}")
 
         val resourceFile = JavaFileObjects.forSourceLines("test.Resource",
@@ -1045,7 +1045,7 @@ class FieldInjectionTest {
             "import $inject;",
             "",
             "@Dependency",
-            "class Resource {",
+            "public class Resource {",
             "",
             "   @Inject",
             "   Resource(Context context) {}",
@@ -1111,7 +1111,7 @@ class FieldInjectionTest {
         val contextFile = JavaFileObjects.forSourceLines("test.Context",
             "package test;",
             "",
-            "class Context {",
+            "public class Context {",
             "}")
 
         val contextModuleFile = JavaFileObjects.forSourceLines("test.ContextModule",
@@ -1119,7 +1119,7 @@ class FieldInjectionTest {
             "",
             importType(com.ioc.Dependency::class.java),
             "",
-            "class ContextModule {",
+            "public class ContextModule {",
             "  @Dependency",
             "  public static Context context() { return new Context(); }",
             "}")
@@ -1133,7 +1133,7 @@ class FieldInjectionTest {
             "",
             "@Dependency",
             "@Singleton",
-            "class Resource {",
+            "public class Resource {",
             "",
             "   @Inject",
             "   Resource(Context context) {}",
@@ -1202,7 +1202,7 @@ class FieldInjectionTest {
         val moduleFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "interface DependencyModel {",
+            "public interface DependencyModel {",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
@@ -1261,13 +1261,13 @@ class FieldInjectionTest {
         val moduleFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "interface DependencyModel {",
+            "public interface DependencyModel {",
             "}")
 
         val dependencyParentFile = JavaFileObjects.forSourceLines("test.DependencyParent",
             "package test;",
             "",
-            "interface DependencyParent extends DependencyModel {",
+            "public interface DependencyParent extends DependencyModel {",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
@@ -1328,7 +1328,7 @@ class FieldInjectionTest {
         val moduleFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "interface DependencyModel {",
+            "public interface DependencyModel {",
             "}")
 
         val contextFile = JavaFileObjects.forSourceLines("test.Context",
@@ -1340,14 +1340,14 @@ class FieldInjectionTest {
             "",
             "@Dependency",
             "@Singleton",
-            "class Context implements Resource {",
+            "public class Context implements Resource {",
             "}")
 
         val resourceFile = JavaFileObjects.forSourceLines("test.Resource",
             "package test;",
             "",
             "",
-            "interface Resource {",
+            "public interface Resource {",
             "",
             "}")
 
@@ -1397,13 +1397,13 @@ class FieldInjectionTest {
         val superParentFile = JavaFileObjects.forSourceLines("test.SpeedDialTileClosedEventLogger",
             "package test;",
             "",
-            "interface SpeedDialTileClosedEventLogger {",
+            "public interface SpeedDialTileClosedEventLogger {",
             "}")
 
         val parentFile = JavaFileObjects.forSourceLines("test.SpeedDialTileClickedEventLogger",
             "package test;",
             "",
-            "interface SpeedDialTileClickedEventLogger {",
+            "public interface SpeedDialTileClickedEventLogger {",
             "}")
 
         val moduleFile = JavaFileObjects.forSourceLines("test.Amplitude",
@@ -1414,17 +1414,17 @@ class FieldInjectionTest {
             "",
             "@Dependency",
             "@Singleton",
-            "class Amplitude implements SpeedDialTileClickedEventLogger, SpeedDialTileClosedEventLogger {",
+            "public class Amplitude implements SpeedDialTileClickedEventLogger, SpeedDialTileClosedEventLogger {",
             "}")
 
-        val baseFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val baseFile = JavaFileObjects.forSourceLines("test.BaseModel",
             "package test;",
             "",
             "import $inject;",
             "import $dependency;",
             "",
             "@Dependency",
-            "class BaseModel {",
+            "public class BaseModel {",
             "   @Inject",
             "   BaseModel(SpeedDialTileClickedEventLogger speedDialTileClickedEventLogger, SpeedDialTileClosedEventLogger speedDialTileClosedEventLogger) {}",
             "}")
@@ -1488,13 +1488,13 @@ class FieldInjectionTest {
         val superParentFile = JavaFileObjects.forSourceLines("test.ClosedEventLogger",
             "package test;",
             "",
-            "interface ClosedEventLogger {",
+            "public interface ClosedEventLogger {",
             "}")
 
         val parentFile = JavaFileObjects.forSourceLines("test.ClickedEventLogger",
             "package test;",
             "",
-            "interface ClickedEventLogger {",
+            "public interface ClickedEventLogger {",
             "}")
 
         val moduleFile = JavaFileObjects.forSourceLines("test.Amplitude",
@@ -1505,7 +1505,7 @@ class FieldInjectionTest {
             "",
             "@Dependency",
             "@Singleton",
-            "class Amplitude implements ClickedEventLogger, ClosedEventLogger {",
+            "public class Amplitude implements ClickedEventLogger, ClosedEventLogger {",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
@@ -1561,13 +1561,13 @@ class FieldInjectionTest {
         val superParentFile = JavaFileObjects.forSourceLines("test.ClosedEventLogger",
             "package test;",
             "",
-            "interface ClosedEventLogger {",
+            "public interface ClosedEventLogger {",
             "}")
 
         val parentFile = JavaFileObjects.forSourceLines("test.ClickedEventLogger",
             "package test;",
             "",
-            "interface ClickedEventLogger {",
+            "public interface ClickedEventLogger {",
             "}")
 
         val moduleFile = JavaFileObjects.forSourceLines("test.Amplitude",
@@ -1578,7 +1578,7 @@ class FieldInjectionTest {
             "",
             "@Dependency",
             "@Singleton",
-            "class Amplitude implements ClickedEventLogger, ClosedEventLogger {",
+            "public class Amplitude implements ClickedEventLogger, ClosedEventLogger {",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
@@ -1638,13 +1638,13 @@ class FieldInjectionTest {
         val superParentFile = JavaFileObjects.forSourceLines("test.ClosedEventLogger",
             "package test;",
             "",
-            "interface ClosedEventLogger {",
+            "public interface ClosedEventLogger {",
             "}")
 
         val parentFile = JavaFileObjects.forSourceLines("test.ClickedEventLogger",
             "package test;",
             "",
-            "interface ClickedEventLogger {",
+            "public interface ClickedEventLogger {",
             "}")
 
         val moduleFile = JavaFileObjects.forSourceLines("test.Amplitude",
@@ -1655,7 +1655,7 @@ class FieldInjectionTest {
             "",
             "@Dependency",
             "@Singleton",
-            "class Amplitude implements ClickedEventLogger, ClosedEventLogger {",
+            "public class Amplitude implements ClickedEventLogger, ClosedEventLogger {",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.LoggerSingleton",
@@ -1705,13 +1705,13 @@ class FieldInjectionTest {
         val superParentFile = JavaFileObjects.forSourceLines("test.DownloadsNavigationPathIndicatorClickedEventLogger",
             "package test;",
             "",
-            "interface DownloadsNavigationPathIndicatorClickedEventLogger {",
+            "public interface DownloadsNavigationPathIndicatorClickedEventLogger {",
             "}")
 
         val parentFile = JavaFileObjects.forSourceLines("test.DownloadsNavigationSystemBackClickedEventLogger",
             "package test;",
             "",
-            "interface DownloadsNavigationSystemBackClickedEventLogger {",
+            "public interface DownloadsNavigationSystemBackClickedEventLogger {",
             "}")
 
 
@@ -1742,7 +1742,7 @@ class FieldInjectionTest {
             "",
             "@Dependency",
             "@Singleton",
-            "class AmplitudeService extends AmplitudeLogger {",
+            "public class AmplitudeService extends AmplitudeLogger {",
             "   @Inject",
             "   public AmplitudeService(Preferences prefs) {}",
             "}")
@@ -1756,7 +1756,7 @@ class FieldInjectionTest {
             "",
             "@Dependency",
             "@Singleton",
-            "class DownloadsNavigationLogger {",
+            "public class DownloadsNavigationLogger {",
             "   @Inject",
             "   DownloadsNavigationLogger(DownloadsNavigationPathIndicatorClickedEventLogger downloadsNavigationPathIndicatorClickedEventLogger, DownloadsNavigationSystemBackClickedEventLogger downloadsNavigationSystemBackClickedEventLogger) {}",
             "}")
@@ -3516,7 +3516,7 @@ class FieldInjectionTest {
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "class DependencyModel {",
+            "public class DependencyModel {",
             "}")
 
         val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
@@ -3739,7 +3739,7 @@ class FieldInjectionTest {
         val superParentFile = JavaFileObjects.forSourceLines("test.DownloadsNavigationPathIndicatorClickedEventLogger",
             "package test;",
             "",
-            "interface DownloadsNavigationPathIndicatorClickedEventLogger {",
+            "public interface DownloadsNavigationPathIndicatorClickedEventLogger {",
             "}")
 
 
@@ -3759,7 +3759,7 @@ class FieldInjectionTest {
             "",
             "@Dependency",
             "@Singleton",
-            "class AmplitudeService extends AmplitudeLogger {",
+            "public class AmplitudeService extends AmplitudeLogger {",
             "   @Inject",
             "   public AmplitudeService() {}",
             "}")
@@ -3773,7 +3773,7 @@ class FieldInjectionTest {
             "",
             "@Dependency",
             "@Singleton",
-            "class DownloadsNavigationLogger {",
+            "public class DownloadsNavigationLogger {",
             "   @Inject",
             "   DownloadsNavigationLogger(DownloadsNavigationPathIndicatorClickedEventLogger downloadsNavigationPathIndicatorClickedEventLogger) {}",
             "}")

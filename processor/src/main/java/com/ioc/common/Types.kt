@@ -1,9 +1,11 @@
 package com.ioc.common
 
+import com.ioc.DependencyModel
 import com.ioc.Ioc
 import com.ioc.IocLazy
 import com.ioc.IocProvider
 import com.squareup.javapoet.ClassName
+import com.squareup.javapoet.TypeName
 import java.lang.ref.WeakReference
 
 val lifecyclePackage = "androidx.lifecycle"
@@ -35,3 +37,15 @@ val excludedPackages = setOf(
     "android.app",
     "android.view"
 )
+
+fun singletonClassName(model: DependencyModel): String {
+    return "${model.originalType.simpleName.capitalize()}Singleton"
+}
+
+fun singletonClassPackage(model: DependencyModel): String {
+    return model.originalType.getPackage().toString()
+}
+
+fun singletonTypeName(model: DependencyModel): TypeName {
+    return ClassName.bestGuess("${singletonClassPackage(model)}.${singletonClassName(model)}")
+}
