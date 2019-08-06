@@ -2,6 +2,9 @@ package com.ioc
 
 import com.ioc.IProcessor.Companion.qualifierFinder
 import com.ioc.common.*
+import com.squareup.javapoet.ClassName
+import com.squareup.javapoet.ParameterizedTypeName
+import com.squareup.javapoet.TypeName
 
 import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
@@ -10,6 +13,22 @@ import javax.lang.model.element.VariableElement
 import javax.lang.model.type.TypeKind
 import javax.lang.model.type.TypeMirror
 import javax.lang.model.util.ElementFilter
+
+fun Element.asTypeName(): TypeName {
+    return ClassName.get(asType())
+}
+
+fun Element.asLazyType(): TypeName {
+    return ParameterizedTypeName.get(iocLazyType, asTypeName())
+}
+
+fun Element.asProviderType(): TypeName {
+    return ParameterizedTypeName.get(iocProviderType, asTypeName())
+}
+
+fun Element.asWeakType(): TypeName {
+    return ParameterizedTypeName.get(weakType, asTypeName())
+}
 
 fun postInitializationMethod(element: TypeElement): ExecutableElement? {
     val postInitializationMethod = element.methods { it.isHasAnnotation(PostInitialization::class.java) }.firstOrNull()

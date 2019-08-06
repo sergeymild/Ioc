@@ -40,23 +40,33 @@ object DependencyTree {
         return builder.build()
     }
 
-    private fun generateCode(dependency: DependencyModel, target: TargetType?): CodeBlock {
+    private fun generateCode(model: DependencyModel, target: TargetType?): CodeBlock {
 
         val builder = CodeBlock.builder()
 
-        if (dependency.isSingleton) return emptyCodBlock
+        if (model.isSingleton) return emptyCodBlock
 
-        if (dependency.isViewModel) return get(dependency.dependencies, target = target)
+        if (model.isViewModel) return get(model.dependencies, target = target)
 
-        dependency.methodProvider?.let {
-            return ProviderMethodBuilder.build(it, dependency, target)
+        model.methodProvider?.let {
+            return ProviderMethodBuilder.build(it, model, target)
         }
 
         // if we here it's mean what we have dependency with arguments constructor or empty constructor
-        if (dependency.constructor != null) {
-            return constructorCodeBlock(dependency, target).add(builder).build()
+        if (model.constructor != null) {
+            val dependencies = get(model.dependencies, target = target)
+            val builder = CodeBlock.builder().add(dependencies)
+
+            applyIsLoadIfNeed(model.dependencies, target)
+
+            val names = model.dependencyNames()
+            return builder.addStatement("\$T \$N = new \$T(\$L)",
+                model.originalClassName,
+                model.generatedName,
+                model.originalClassName,
+                names).build()
         }
 
-        throw ProcessorException("Can't find default constructor or provide method for `${dependency.dependencyTypeString}`").setElement(dependency.dependency)
+        throw ProcessorException("Can't find default constructor or provide method for `${model.dependencyTypeString}`").setElement(model.dependency)
     }
 }

@@ -7,6 +7,9 @@ import com.squareup.javapoet.CodeBlock
  * Created by sergeygolishnikov on 11/07/2017.
  */
 
+val emptyCodBlock = CodeBlock.builder().build()
+
+
 fun iocGetSingleton(model: DependencyModel): CodeBlock {
     val className = model.originalClassName
     return CodeBlock.builder().add("\$T.singleton(\$T.class)", iocType, className).build()
@@ -42,19 +45,4 @@ fun applyIsLoadIfNeed(dependencies: List<DependencyModel>, target: TargetType?) 
             dependency.generatedName = "target"
         }
     }
-}
-
-fun constructorCodeBlock(model: DependencyModel, target: TargetType?
-): CodeBlock {
-    val dependencies = DependencyTree.get(model.dependencies, target = target)
-    val builder = CodeBlock.builder().add(dependencies)
-
-    applyIsLoadIfNeed(model.dependencies, target)
-
-    val names = model.dependencyNames()
-    return builder.addStatement("\$T \$N = new \$T(\$L)",
-        model.originalClassName,
-        model.generatedName,
-        model.originalClassName,
-        names).build()
 }

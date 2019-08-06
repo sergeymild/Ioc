@@ -1,6 +1,8 @@
 package com.ioc.common
 
 import com.ioc.DependencyModel
+import com.ioc.asLazyType
+import com.ioc.asTypeName
 import com.squareup.javapoet.CodeBlock
 import com.squareup.javapoet.MethodSpec
 import com.squareup.javapoet.TypeSpec

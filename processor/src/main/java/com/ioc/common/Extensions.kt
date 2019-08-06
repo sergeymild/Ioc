@@ -15,49 +15,6 @@ import javax.tools.Diagnostic
  * Created by sergeygolishnikov on 20/11/2017.
  */
 
-val emptyCodBlock = CodeBlock.builder().build()
-
-fun Element.asTypeName(): TypeName {
-    return ClassName.get(asType())
-}
-
-fun CodeBlock.add(codeBlock: CodeBlock): CodeBlock {
-    return toBuilder().add(codeBlock).build()
-}
-
-fun CodeBlock.add(block: CodeBlock.Builder): CodeBlock.Builder {
-    return block.add(this)
-}
-
-fun Element.asLazyType(): TypeName {
-    return ParameterizedTypeName.get(iocLazyType, asTypeName())
-}
-
-fun Element.asProviderType(): TypeName {
-    return ParameterizedTypeName.get(iocProviderType, asTypeName())
-}
-
-fun Element.asWeakType(): TypeName {
-    return ParameterizedTypeName.get(weakType, asTypeName())
-}
-
-fun viewModelFactoryCode(name: CharSequence, code: CodeBlock.Builder): CodeBlock.Builder {
-    return CodeBlock.builder().add("\$T \$N = \$L;\n",
-        viewModelFactoryType,
-        "factory_$name",
-        TypeSpec.anonymousClassBuilder("")
-            .addSuperinterface(viewModelFactoryType)
-            .addMethod(MethodSpec.methodBuilder("create")
-                .addAnnotation(nonNullAnnotation)
-                .addModifiers(Modifier.PUBLIC)
-                .addParameter(ParameterSpec.builder(javaClassType, "modelClass", Modifier.FINAL).addAnnotation(nonNullAnnotation).build())
-                .addTypeVariable(TypeVariableName.get("T", viewModelType))
-                .returns(TypeVariableName.get("T"))
-                .addCode(code.build())
-                .build())
-            .build())
-}
-
 
 fun message(message: Any?) {
     IProcessor.messager.printMessage(Diagnostic.Kind.MANDATORY_WARNING, "$message")

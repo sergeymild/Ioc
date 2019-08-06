@@ -1,7 +1,6 @@
 package com.ioc.common;
 
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.SimpleElementVisitor6;
@@ -25,48 +24,6 @@ public class MoreElements {
         return element.accept(TypeElementVisitor.INSTANCE, null);
     }
 
-    public static boolean isType(Element element) {
-        return element.getKind().isClass() || element.getKind().isInterface();
-    }
-
-    public static boolean isExecutable(Element element) {
-        return element instanceof ExecutableElement;
-    }
-
-    public static ExecutableElement asExecutable(Element element) {
-        return element.accept(ExecutableElementVisitor.INSTANCE, null);
-    }
-
-    public static PackageElement asPackage(Element element) {
-        return element.accept(PackageElementVisitor.INSTANCE, null);
-    }
-
-    private static final class PackageElementVisitor extends CastingElementVisitor<PackageElement> {
-        private static final PackageElementVisitor INSTANCE = new PackageElementVisitor();
-
-        PackageElementVisitor() {
-            super("package element");
-        }
-
-        @Override
-        public PackageElement visitPackage(PackageElement e, Void ignore) {
-            return e;
-        }
-    }
-
-    private static final class ExecutableElementVisitor
-            extends CastingElementVisitor<ExecutableElement> {
-        private static final ExecutableElementVisitor INSTANCE = new ExecutableElementVisitor();
-
-        ExecutableElementVisitor() {
-            super("executable element");
-        }
-
-        @Override
-        public ExecutableElement visitExecutable(ExecutableElement e, Void label) {
-            return e;
-        }
-    }
 
     private static final class TypeElementVisitor extends CastingElementVisitor<TypeElement> {
         private static final TypeElementVisitor INSTANCE = new TypeElementVisitor();

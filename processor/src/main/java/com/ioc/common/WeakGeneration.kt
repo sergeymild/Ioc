@@ -1,6 +1,7 @@
 package com.ioc.common
 
 import com.ioc.DependencyModel
+import com.ioc.asWeakType
 import com.squareup.javapoet.CodeBlock
 
 object WeakGeneration {

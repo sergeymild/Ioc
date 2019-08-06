@@ -1,7 +1,5 @@
 package com.ioc
 
-import com.ioc.common.asLazyType
-import com.ioc.common.capitalize
 import com.ioc.common.keepAnnotation
 import com.ioc.common.singletonClassName
 import com.squareup.javapoet.ClassName

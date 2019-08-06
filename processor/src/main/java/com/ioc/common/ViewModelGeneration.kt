@@ -2,7 +2,8 @@ package com.ioc.common
 
 import com.ioc.DependencyModel
 import com.ioc.dependencyNames
-import com.squareup.javapoet.CodeBlock
+import com.squareup.javapoet.*
+import javax.lang.model.element.Modifier
 
 object ViewModelGeneration {
     fun wrapInAndroidViewModelIfNeed(model: DependencyModel, body: CodeBlock.Builder): CodeBlock.Builder {
@@ -23,4 +24,22 @@ object ViewModelGeneration {
             model.originalType)
         return viewModelBuilder
     }
+
+    private fun viewModelFactoryCode(name: CharSequence, code: CodeBlock.Builder): CodeBlock.Builder {
+        return CodeBlock.builder().add("\$T \$N = \$L;\n",
+            viewModelFactoryType,
+            "factory_$name",
+            TypeSpec.anonymousClassBuilder("")
+                .addSuperinterface(viewModelFactoryType)
+                .addMethod(MethodSpec.methodBuilder("create")
+                    .addAnnotation(nonNullAnnotation)
+                    .addModifiers(Modifier.PUBLIC)
+                    .addParameter(ParameterSpec.builder(javaClassType, "modelClass", Modifier.FINAL).addAnnotation(nonNullAnnotation).build())
+                    .addTypeVariable(TypeVariableName.get("T", viewModelType))
+                    .returns(TypeVariableName.get("T"))
+                    .addCode(code.build())
+                    .build())
+                .build())
+    }
+
 }
