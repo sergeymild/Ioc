@@ -11,7 +11,17 @@ import javax.lang.model.element.Modifier
 class InjectMethod(
     val methodSpec: MethodSpec,
     val isTargetUsedAsDependency: Boolean,
-    val returnTypeDependencyModel: DependencyModel?)
+    var returnTypeDependencyModel: DependencyModel?,
+    val methodClassTypeName: TypeName)
+
+fun InjectMethod.copy(target: TargetType, newModel: DependencyModel?): InjectMethod {
+    return InjectMethod(
+        methodSpec = methodSpec,
+        isTargetUsedAsDependency = isTargetUsedAsDependency,
+        returnTypeDependencyModel = newModel,
+        methodClassTypeName = methodClassTypeName
+    )
+}
 
 internal fun targetParameter(className: ClassName): ParameterSpec {
     return ParameterSpec.builder(className, "target", Modifier.FINAL)
@@ -27,13 +37,14 @@ class ImplementationsSpec constructor(
     fun inject(
         singletonsToInject: List<DependencyModel>,
         emptyConstructorToInject: List<DependencyModel>,
-        emptyModuleMethodToInject: MutableList<DependencyModel>): TypeSpec {
+        emptyModuleMethodToInject: MutableList<DependencyModel>,
+        fromDifferentModuleInject: MutableList<InjectMethod>): TypeSpec {
 
         val builder = TypeSpec.classBuilder(targetInjectionClassName(target))
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
             .addAnnotation(keepAnnotation)
 
-        generateMethods(singletonsToInject, emptyConstructorToInject, emptyModuleMethodToInject).forEach { builder.addMethod(it) }
+        generateMethods(singletonsToInject, emptyConstructorToInject, emptyModuleMethodToInject, fromDifferentModuleInject).forEach { builder.addMethod(it) }
 
         methods.forEach { builder.addMethod(it.methodSpec) }
 
@@ -43,7 +54,8 @@ class ImplementationsSpec constructor(
     private fun generateMethods(
         singletonsToInject: List<DependencyModel>,
         emptyConstructorToInject: List<DependencyModel>,
-        emptyModuleMethodToInject: MutableList<DependencyModel>
+        emptyModuleMethodToInject: MutableList<DependencyModel>,
+        fromDifferentModuleInject: MutableList<InjectMethod>
     ): List<MethodSpec> {
 
         val methods = mutableListOf<MethodSpec>()
@@ -70,6 +82,11 @@ class ImplementationsSpec constructor(
 
         for (dependency in emptyModuleMethodToInject) {
             builder.addCode(setInTarget(dependency, emptyModuleMethodProvide(dependency)))
+        }
+
+        for (injectMethod in fromDifferentModuleInject) {
+            builder.addCode(setInTarget(injectMethod.returnTypeDependencyModel!!, CodeBlock.builder()
+                .add("\$T.\$N()", injectMethod.methodClassTypeName, injectMethod.methodSpec.name).build()))
         }
 
         for (method in this.methods) {
@@ -105,9 +122,11 @@ class ImplementationsSpec constructor(
 
             val body = codeBlock.toBuilder()
 
-            val methodName = "provide${model.originalType.simpleName.capitalize()}"
+            val methodName = provideMethodName(model)
+            val modifiers = mutableListOf(Modifier.STATIC, Modifier.FINAL)
+            modifiers.add(if (isTargetUsedAsDependency) Modifier.PRIVATE else Modifier.PUBLIC)
             val methodBuilder = MethodSpec.methodBuilder(methodName)
-                .addModifiers(Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+                .addModifiers(modifiers)
                 .returns(model.returnType())
                 .addCode(body.build())
 
@@ -161,7 +180,7 @@ class ImplementationsSpec constructor(
                         dataObserver.targetViewModelField.toString(),
                         dataObserver.viewModelLiveDataField.toString(),
                         observerClassSpec)
-                    .build(), false, null))
+                    .build(), false, null, target.className))
             }
 
             return methods

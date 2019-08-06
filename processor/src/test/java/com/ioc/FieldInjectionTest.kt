@@ -304,7 +304,7 @@ class FieldInjectionTest {
             "       target.dependency = provideDependencyModel();",
             "   }",
             "",
-            "   private static final IocProvider<DependencyModel> provideDependencyModel() {",
+            "   public static final IocProvider<DependencyModel> provideDependencyModel() {",
             "       IocProvider<DependencyModel> providerDependencyModel = new IocProvider<DependencyModel>() {",
             "         protected DependencyModel initialize() {",
             "           DependencyModel dependencyModel = new DependencyModel();",
@@ -362,7 +362,7 @@ class FieldInjectionTest {
             "       target.dependency = provideDependencyType();",
             "   }",
             "",
-            "   private static final IocProvider<DependencyInterface> provideDependencyType() {",
+            "   public static final IocProvider<DependencyInterface> provideDependencyType() {",
             "       IocProvider<DependencyInterface> providerDependencyInterface = new IocProvider<DependencyInterface>() {",
             "         protected DependencyInterface initialize() {",
             "           DependencyType dependencyInterface = new DependencyType();",
@@ -420,7 +420,7 @@ class FieldInjectionTest {
             "       target.dependency = provideDependencyType();",
             "   }",
             "",
-            "   private static final IocLazy<DependencyInterface> provideDependencyType() {",
+            "   public static final IocLazy<DependencyInterface> provideDependencyType() {",
             "       IocLazy<DependencyInterface> lazyDependencyInterface = new IocLazy<DependencyInterface>() {",
             "         protected DependencyInterface initialize() {",
             "           DependencyType dependencyInterface = new DependencyType();",
@@ -594,7 +594,7 @@ class FieldInjectionTest {
             "       target.dependency = provideParentDependency();",
             "   }",
             "",
-            "   private static final ParentDependency provideParentDependency() {",
+            "   public static final ParentDependency provideParentDependency() {",
             "       DependencyModel dependencyModel = new DependencyModel();",
             "       ParentDependency parentDependency = new ParentDependency(dependencyModel);",
             "       return parentDependency;",
@@ -725,7 +725,7 @@ class FieldInjectionTest {
             "       target.dependency = provideParentDependency();",
             "   }",
             "",
-            "   private static final ParentDependency provideParentDependency() {",
+            "   public static final ParentDependency provideParentDependency() {",
             "       DependencyModel dependencyModel = new DependencyModel();",
             "       ParentDependency parentDependency = new ParentDependency(dependencyModel);",
             "       return parentDependency;",
@@ -798,7 +798,7 @@ class FieldInjectionTest {
             "       target.dependency = provideParentDependency();",
             "   }",
             "",
-            "   private static final ParentDependency provideParentDependency() {",
+            "   public static final ParentDependency provideParentDependency() {",
             "       DependencyModel dependencyModel = new DependencyModel();",
             "       ParentDependency parentDependency = new ParentDependency(dependencyModel);",
             "       return parentDependency;",
@@ -872,13 +872,13 @@ class FieldInjectionTest {
             "       target.parentDependency = provideParentDependency();",
             "   }",
             "",
-            "   private static final DependencyModel provideDependencyModel() {",
+            "   public static final DependencyModel provideDependencyModel() {",
             "       ChildDependencyModel childDependencyModel = new ChildDependencyModel();",
             "       DependencyModel dependencyModel = new DependencyModel(childDependencyModel);",
             "       return dependencyModel;",
             "   }",
             "",
-            "   private static final ParentDependency provideParentDependency() {",
+            "   public static final ParentDependency provideParentDependency() {",
             "       ChildDependencyModel childDependencyModel = new ChildDependencyModel();",
             "       DependencyModel dependencyModel = new DependencyModel(childDependencyModel);",
             "       ParentDependency parentDependency = new ParentDependency(dependencyModel);",
@@ -1064,7 +1064,7 @@ class FieldInjectionTest {
             "       target.dependency = provideDependencyModel();",
             "   }",
             "",
-            "   private static final DependencyModel provideDependencyModel() {",
+            "   public static final DependencyModel provideDependencyModel() {",
             "       Context context = new Context();",
             "       Context context2 = new Context();",
             "       Resource resource = new Resource(context2);",
@@ -1153,7 +1153,7 @@ class FieldInjectionTest {
             "       target.dependency = provideDependencyModel();",
             "   }",
             "",
-            "   private static final DependencyModel provideDependencyModel() {",
+            "   public static final DependencyModel provideDependencyModel() {",
             "       Context context = ContextModule.context();",
             "       DependencyModel dependencyModel = new DependencyModel(context, Ioc.singleton(Resource.class));",
             "       return dependencyModel;",
@@ -1365,7 +1365,7 @@ class FieldInjectionTest {
             "       target.dependency = provideAppModel();",
             "   }",
             "",
-            "   private static final AppModel provideAppModel() {",
+            "   public static final AppModel provideAppModel() {",
             "       AppModel dependencyModel = new AppModel(Ioc.singleton(Context.class));",
             "       return dependencyModel;",
             "   }",
@@ -1443,7 +1443,7 @@ class FieldInjectionTest {
             "       target.dependency = provideBaseModel();",
             "   }",
             "",
-            "   private static final BaseModel provideBaseModel() {",
+            "   public static final BaseModel provideBaseModel() {",
             "       BaseModel baseModel = new BaseModel(Ioc.singleton(Amplitude.class), Ioc.singleton(Amplitude.class));",
             "       return baseModel;",
             "   }",
@@ -1865,7 +1865,7 @@ class FieldInjectionTest {
             "       target.appendBuildCheck(provideBuildCheck());",
             "   }",
             "",
-            "   private static final BuildCheck provideBuildCheck() {",
+            "   public static final BuildCheck provideBuildCheck() {",
             "       BuildCheck buildCheck = new BuildCheck(Ioc.singleton(Preferences.class));",
             "       return buildCheck;",
             "   }",
@@ -2012,7 +2012,7 @@ class FieldInjectionTest {
             "       target.appendBuildCheck(provideController());",
             "   }",
             "",
-            "   private static final Controller provideController() {",
+            "   public static final Controller provideController() {",
             "       HttpLoggingInterceptor httpLoggingInterceptor = RestModule.provideHttpLoggingInterceptor();",
             "       Controller controller = new Controller(httpLoggingInterceptor);",
             "       return controller;",
@@ -2375,7 +2375,7 @@ class FieldInjectionTest {
             "       target.preferences = providePreferences();",
             "   }",
             "",
-            "   private static final Preferences providePreferences() {",
+            "   public static final Preferences providePreferences() {",
             "       Context context = ContextModule.context(Ioc.singleton(AmplitudeDefaultLogger.class));",
             "       Preferences preferences = new Preferences(context, Ioc.singleton(AmplitudeDefaultLogger.class));",
             "       return preferences;",
@@ -2448,7 +2448,7 @@ class FieldInjectionTest {
             "       target.presenter = providePresenter();",
             "   }",
             "",
-            "   private static final Presenter providePresenter() {",
+            "   public static final Presenter providePresenter() {",
             "       Context context = ContextModule.context();",
             "       WeakReference<Context> weakContext = new WeakReference<Context>(context);",
             "       Presenter presenter = new Presenter(weakContext);",
@@ -2523,7 +2523,7 @@ class FieldInjectionTest {
             "       target.presenter = providePresenter();",
             "   }",
             "",
-            "   private static final Presenter providePresenter() {",
+            "   public static final Presenter providePresenter() {",
             "       IocProvider<Context> providerContext = new IocProvider<Context>() {",
             "           protected Context initialize() {",
             "             Context context = ContextModule.context();",
@@ -2642,7 +2642,7 @@ class FieldInjectionTest {
             "       target.presenter = providePresenter();",
             "   }",
             "",
-            "   private static final Presenter providePresenter() {",
+            "   public static final Presenter providePresenter() {",
             "       IocLazy<Context> lazyContext = new IocLazy<Context>() {",
             "           protected Context initialize() {",
             "             Context context = ContextModule.context();",
@@ -2720,7 +2720,7 @@ class FieldInjectionTest {
             "       target.presenter = providePresenter();",
             "   }",
             "",
-            "   private static final IocLazy<Presenter> providePresenter() {",
+            "   public static final IocLazy<Presenter> providePresenter() {",
             "       IocLazy<Presenter> lazyPresenter = new IocLazy<Presenter>() {",
             "           protected Presenter initialize() {",
             "             Context context = ContextModule.context();",
@@ -2893,7 +2893,7 @@ class FieldInjectionTest {
             "       target.presenter = providePresenter();",
             "   }",
             "",
-            "   private static final Presenter providePresenter() {",
+            "   public static final Presenter providePresenter() {",
             "       Presenter presenter = ContextModule.presenter(Ioc.singleton(Context.class));",
             "       return presenter;",
             "   }",
@@ -3016,7 +3016,7 @@ class FieldInjectionTest {
             "       target.presenter = providePresenter();",
             "   }",
             "",
-            "   private static final Presenter providePresenter() {",
+            "   public static final Presenter providePresenter() {",
             "       Resource resource = new Resource(Ioc.singleton(Context.class));",
             "       Presenter presenter = new Presenter(Ioc.singleton(Context.class), resource);",
             "       return presenter;",
@@ -3087,7 +3087,7 @@ class FieldInjectionTest {
             "       target.context = provideResource();",
             "   }",
             "",
-            "   private static final Resource provideResource() {",
+            "   public static final Resource provideResource() {",
             "       Preferences preferences = new Preferences();",
             "       Resource context = new Resource(preferences);",
             "       return context;",
@@ -3163,7 +3163,7 @@ class FieldInjectionTest {
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, presenter, preferences))
+            .that(listOf(activityFile, presenter, preferences))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -3383,7 +3383,7 @@ class FieldInjectionTest {
             "       target.dependency = provideDependency();",
             "   }",
             "",
-            "   private static final Dependency provideDependency() {",
+            "   public static final Dependency provideDependency() {",
             "       Logger logger = new Logger();",
             "       IocProvider<FileManager> providerFileManager = new IocProvider<FileManager>() {",
             "           protected FileManager initialize() {",
@@ -3464,7 +3464,7 @@ class FieldInjectionTest {
             "       target.dependency = provideDependency();",
             "   }",
             "",
-            "   private static final Dependency provideDependency() {",
+            "   public static final Dependency provideDependency() {",
             "       Logger logger = new Logger();",
             "       IocLazy<FileManager> lazyFileManager = new IocLazy<FileManager>() {",
             "           protected FileManager initialize() {",
@@ -3849,6 +3849,136 @@ class FieldInjectionTest {
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
             .that(listOf(activityFile, activityParentFile, dependencyFile, parentDependencyFile))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun injectFromDifferentModule() {
+
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            "package test;",
+            "",
+            "import $inject;",
+            "",
+            "public class Activity {",
+            "",
+            "   @Inject",
+            "   public ClickedEventLogger clickedEventLogger;",
+            "}")
+
+        val baseActivityFile = JavaFileObjects.forSourceLines("test.BaseActivity",
+            "package test;",
+            "",
+            "import $inject;",
+            "",
+            "public class BaseActivity {",
+            "",
+            "   @Inject",
+            "   public ClickedEventLogger clickedEventLogger;",
+            "}")
+
+        val parentFile = JavaFileObjects.forSourceLines("test.ClickedEventLogger",
+            "package test;",
+            "",
+            "public class ClickedEventLogger {",
+            "   public ClickedEventLogger(SimpleDependency simple) {}",
+            "}")
+
+        val simpleDependency = JavaFileObjects.forSourceLines("test.SimpleDependency",
+            "package test;",
+            "",
+            "public class SimpleDependency {",
+            "}")
+
+
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+            "package test;",
+            "",
+            "import $keep",
+            "import $nonNull",
+            "",
+            "@Keep",
+            "public final class ActivityInjector {",
+            "   @Keep",
+            "   public static final void inject(@NonNull final Activity target) {",
+            "       target.clickedEventLogger = provideClickedEventLogger();",
+            "   }",
+            "",
+            "   public static final ClickedEventLogger provideClickedEventLogger() {",
+            "       SimpleDependency simpleDependency = new SimpleDependency();",
+            "       ClickedEventLogger clickedEventLogger = new ClickedEventLogger(simpleDependency);",
+            "       return clickedEventLogger;",
+            "   }",
+            "}")
+
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(activityFile, baseActivityFile, simpleDependency, parentFile))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun injectFromDifferentBaseActivityModule() {
+
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            "package test;",
+            "",
+            "import $inject;",
+            "",
+            "public class Activity {",
+            "",
+            "   @Inject",
+            "   public ClickedEventLogger clickedEventLogger;",
+            "}")
+
+        val baseActivityFile = JavaFileObjects.forSourceLines("test.BaseActivity",
+            "package test;",
+            "",
+            "import $inject;",
+            "",
+            "public class BaseActivity {",
+            "",
+            "   @Inject",
+            "   private ClickedEventLogger clickedEventLogger;",
+            "   public ClickedEventLogger get() { return null; };",
+            "   public void set(ClickedEventLogger logger) {};",
+            "}")
+
+        val parentFile = JavaFileObjects.forSourceLines("test.ClickedEventLogger",
+            "package test;",
+            "",
+            "public class ClickedEventLogger {",
+            "   public ClickedEventLogger(SimpleDependency simple) {}",
+            "}")
+
+        val simpleDependency = JavaFileObjects.forSourceLines("test.SimpleDependency",
+            "package test;",
+            "",
+            "public class SimpleDependency {",
+            "}")
+
+
+        val injectedFile = JavaFileObjects.forSourceLines("test.BaseActivityInjector",
+            "package test;",
+            "",
+            "import $keep",
+            "import $nonNull",
+            "",
+            "@Keep",
+            "public final class BaseActivityInjector {",
+            "   @Keep",
+            "   public static final void inject(@NonNull final BaseActivity target) {",
+            "       target.set(ActivityInjector.provideClickedEventLogger());",
+            "   }",
+            "}")
+
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(activityFile, baseActivityFile, simpleDependency, parentFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)

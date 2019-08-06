@@ -220,7 +220,7 @@ class SingletonNameTests : BaseTest {
             "       target.setDependency(provideParentDependency());",
             "   }",
             "",
-            "   private static final ParentDependency provideParentDependency() {",
+            "   public static final ParentDependency provideParentDependency() {",
             "       DependencyModel dependencyModel = ModuleClass.getDependency();",
             "       ParentDependency parentDependency = ModuleClass.getParentDependency(dependencyModel, Ioc.singleton(Dependency2.class));",
             "       return parentDependency;",

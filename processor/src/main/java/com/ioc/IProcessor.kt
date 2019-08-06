@@ -4,6 +4,8 @@ import com.ioc.ImplementationsSpec.Companion.addDataObservers
 import com.ioc.ImplementationsSpec.Companion.dependencyInjectionCode
 import com.ioc.ImplementationsSpec.Companion.provideInjectionMethod
 import com.ioc.common.*
+import com.squareup.javapoet.MethodSpec
+import com.squareup.javapoet.TypeName
 import java.util.*
 import javax.annotation.processing.*
 import javax.inject.Singleton
@@ -214,7 +216,9 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         SingletonFactorySpec.createSpec(singletons).writeClass("com.ioc")
     }
 
+    class CachedMethod(val classTypeName: TypeName, val methodSpec: MethodSpec)
     private fun generateInjectableSpecs(targets: Map<TargetType, MutableList<DependencyModel>>) {
+        val cachedGeneratedMethods = mutableMapOf<String, CachedMethod>()
         for (target in targets) {
 
             val sorted = target.key.dependencies.sortedByDescending { it.sortOrder }
@@ -223,6 +227,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
             val singletonsToInject = mutableListOf<DependencyModel>()
             val emptyConstructorToInject = mutableListOf<DependencyModel>()
             val emptyModuleMethodToInject = mutableListOf<DependencyModel>()
+            val fromDifferentModuleInject = mutableListOf<InjectMethod>()
             for (dependency in sorted) {
                 if (dependency.isSingleton) {
                     singletonsToInject.add(dependency)
@@ -239,16 +244,39 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
                     continue
                 }
 
+                val named = if (dependency.named != null) dependency.named!! else ""
+                val key = "$named${dependency.originalTypeString}"
+                val isTargetUsedAsDependency = isTargetUsedWhileCreateDependency(target.key, dependency)
+
+                if (cachedGeneratedMethods.containsKey(key)) {
+                    val cache = cachedGeneratedMethods.getValue(key)
+                    val methodCode = cache.methodSpec.code
+                    if (isTargetUsedAsDependency) {
+                        methods.add(InjectMethod(MethodSpec.methodBuilder(cache.methodSpec.name)
+                            .addParameter(targetParameter(target.key.className))
+                            .returns(cache.methodSpec.returnType)
+                            .addModifiers(cache.methodSpec.modifiers)
+                            .addAnnotation(keepAnnotation)
+                            .addCode(methodCode)
+                            .build(), isTargetUsedAsDependency, dependency, cache.classTypeName))
+                    }
+                    else if (!isTargetUsedAsDependency && dependency.isNotGeneric()) {
+                        fromDifferentModuleInject.add(InjectMethod(cache.methodSpec, isTargetUsedAsDependency, dependency, cache.classTypeName))
+                    }
+                    continue
+                }
+
                 generateUniqueNamesForInjectMethodDependencies(target.key, dependency.dependencies)
                 val code = dependencyInjectionCode(target.key, dependency)
-                // generate base injection code
-                val isTargetUsedAsDependency = isTargetUsedWhileCreateDependency(target.key, dependency)
                 val methodBuilder = provideInjectionMethod(target.key.className, isTargetUsedAsDependency, dependency, code.build())
-                methods.add(InjectMethod(methodBuilder.build(), isTargetUsedAsDependency, dependency))
+                val builtMethod = methodBuilder.build()
+                val method = InjectMethod(builtMethod, isTargetUsedAsDependency, dependency, targetInjectionTypeName(target.key))
+                methods.add(method)
+                cachedGeneratedMethods[key] = CachedMethod(targetInjectionTypeName(target.key), builtMethod)
             }
 
             methods.addAll(addDataObservers(target.key))
-            val typeSpec = ImplementationsSpec(target.key, methods).inject(singletonsToInject, emptyConstructorToInject, emptyModuleMethodToInject)
+            val typeSpec = ImplementationsSpec(target.key, methods).inject(singletonsToInject, emptyConstructorToInject, emptyModuleMethodToInject, fromDifferentModuleInject)
             typeSpec.writeClass(targetInjectionPackage(target.key))
         }
     }

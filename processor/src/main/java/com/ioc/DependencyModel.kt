@@ -71,6 +71,10 @@ fun DependencyModel.copy(): DependencyModel {
     }
 }
 
+fun DependencyModel.isNotGeneric(): Boolean {
+    return !isProvider && !isLazy && !isWeak
+}
+
 class DependencyModel constructor(
     val dependency: Element,
     val originalType: TypeElement,

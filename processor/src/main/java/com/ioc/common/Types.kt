@@ -36,6 +36,10 @@ val excludedPackages = setOf(
     "android.view"
 )
 
+fun provideMethodName(model: DependencyModel): String {
+    return "provide${model.originalType.simpleName.capitalize()}"
+}
+
 fun targetInjectionClassName(target: TargetType): String {
     return "${target.name}Injector"
 }

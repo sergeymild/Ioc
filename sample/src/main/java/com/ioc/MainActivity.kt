@@ -9,25 +9,15 @@ import javax.inject.Singleton
 
 class BrowserUi
 
-interface Au3
-interface Au2
+class AutoCompleteListenerImpl(val browserUi: BrowserUi)
 
-interface AuI: Au3
-
-@Singleton
-@Dependency
-class AutoCompleteListener: AuI, Au2
-
-@Singleton
-class AutoCompleteListenerImpl
-
-class D
+class D {
+    @Inject
+    lateinit var autoCompleteListener: AutoCompleteListenerImpl
+}
 
 //@InjectParentDependencies
 class MainActivity : AppCompatActivity() {
-
-    @Inject
-    lateinit var d: D
 
     @Inject
     lateinit var autoCompleteListener: AutoCompleteListenerImpl
@@ -36,7 +26,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        SingletonFactory.provide(AuI::class.java)
 
 
 //        try {
