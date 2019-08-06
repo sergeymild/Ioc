@@ -103,7 +103,6 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         methodsWithDependencyAnnotation.clear()
 
         val dependencies = roundEnv.getElementsAnnotatedWith(Dependency::class.java)
-        val libraries = roundEnv.getElementsAnnotatedWith(LibraryModules::class.java)
 
         for (dependency in dependencies) {
             if (dependency.isNotMethodAndInterface()) {
@@ -111,14 +110,10 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
                 continue
             }
 
-            if (dependency.kind == ElementKind.METHOD) {
+            if (dependency.isMethod()) {
                 methodsWithDependencyAnnotation.add(dependency as ExecutableElement)
             }
         }
-
-        val alreadyReadModules = mutableSetOf<String>()
-        libraries.forEach { findLibraryModules(it.getAnnotation(LibraryModules::class.java), alreadyReadModules) }
-        alreadyReadModules.clear()
 
         measure("Ioc Annotation Processing") {
             try {
