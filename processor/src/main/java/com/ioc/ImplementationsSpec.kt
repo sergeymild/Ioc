@@ -29,7 +29,7 @@ class ImplementationsSpec constructor(
         emptyConstructorToInject: List<DependencyModel>,
         emptyModuleMethodToInject: MutableList<DependencyModel>): TypeSpec {
 
-        val builder = TypeSpec.classBuilder("${target.name}Injector")
+        val builder = TypeSpec.classBuilder(targetInjectionClassName(target))
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
             .addAnnotation(keepAnnotation)
 
@@ -49,7 +49,7 @@ class ImplementationsSpec constructor(
         val methods = mutableListOf<MethodSpec>()
 
         val builder = MethodSpec.methodBuilder("inject")
-            .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+            .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
             .addAnnotation(keepAnnotation)
             .addParameter(targetParameter(target.className))
 
@@ -57,7 +57,7 @@ class ImplementationsSpec constructor(
         target.firstParentWithDependencies()?.let {
             val parentType = it.className
             val injectorType = ClassName.get(parentType.packageName(), "${parentType.simpleName()}Injector")
-            builder.addStatement("new \$T().inject(target)", injectorType)
+            builder.addStatement("\$T.inject(target)", injectorType)
         }
 
         for (dependency in singletonsToInject) {
@@ -107,7 +107,7 @@ class ImplementationsSpec constructor(
 
             val methodName = "provide${model.originalType.simpleName.capitalize()}"
             val methodBuilder = MethodSpec.methodBuilder(methodName)
-                .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
+                .addModifiers(Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
                 .returns(model.returnType())
                 .addCode(body.build())
 
@@ -155,7 +155,7 @@ class ImplementationsSpec constructor(
                 }
                 methods.add(InjectMethod(MethodSpec
                     .methodBuilder("observe${dataObserver.liveDataName()}${liveDataTypeName}From$viewModelName")
-                    .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
+                    .addModifiers(Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
                     .addParameter(targetParameter(target.className))
                     .addStatement(observeTypeString,
                         dataObserver.targetViewModelField.toString(),

@@ -1,9 +1,6 @@
 package com.ioc.common
 
-import com.ioc.DependencyModel
-import com.ioc.Ioc
-import com.ioc.IocLazy
-import com.ioc.IocProvider
+import com.ioc.*
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.TypeName
 import java.lang.ref.WeakReference
@@ -19,6 +16,7 @@ val nonNullAnnotation = ClassName.bestGuess("android.support.annotation.NonNull"
 val viewModelProvidersType = ClassName.bestGuess("$lifecyclePackage.ViewModelProviders")
 val viewModelType = ClassName.bestGuess("$lifecyclePackage.ViewModel")
 val androidLiveDataObserver = ClassName.bestGuess("$lifecyclePackage.Observer")
+val hashMapType = ClassName.get(HashMap::class.java)
 
 val viewModelPackages = listOf("android.arch.lifecycle.ViewModel", "androidx.lifecycle.ViewModel")
 val liveDataPackages = listOf("androidx.lifecycle.MutableLiveData", "androidx.lifecycle.LiveData")
@@ -37,6 +35,18 @@ val excludedPackages = setOf(
     "android.app",
     "android.view"
 )
+
+fun targetInjectionClassName(target: TargetType): String {
+    return "${target.name}Injector"
+}
+
+fun targetInjectionPackage(target: TargetType): String {
+    return target.className.packageName()
+}
+
+fun targetInjectionTypeName(target: TargetType): TypeName {
+    return ClassName.bestGuess("${targetInjectionPackage(target)}.${targetInjectionClassName(target)}")
+}
 
 fun singletonClassName(model: DependencyModel): String {
     return "${model.originalType.simpleName.capitalize()}Singleton"

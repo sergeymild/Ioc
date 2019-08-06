@@ -187,6 +187,10 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         createSingletons(projectSingletons.values)
         generateInjectableSpecs(targetsWithDependencies)
 
+        if (targetTypes.isNotEmpty()) {
+            TargetFactorySpec.createSpec(targetTypes).writeClass("com.ioc")
+        }
+
         return true
     }
 
@@ -245,7 +249,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
 
             methods.addAll(addDataObservers(target.key))
             val typeSpec = ImplementationsSpec(target.key, methods).inject(singletonsToInject, emptyConstructorToInject, emptyModuleMethodToInject)
-            typeSpec.writeClass(target.key.className.packageName())
+            typeSpec.writeClass(targetInjectionPackage(target.key))
         }
     }
 
