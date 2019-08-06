@@ -2,7 +2,9 @@ package com.ioc.common
 
 import com.ioc.*
 import com.squareup.javapoet.ClassName
+import com.squareup.javapoet.ParameterizedTypeName
 import com.squareup.javapoet.TypeName
+import com.squareup.javapoet.TypeVariableName
 import java.lang.ref.WeakReference
 
 val lifecyclePackage = "androidx.lifecycle"
@@ -19,6 +21,7 @@ val androidLiveDataObserver = ClassName.bestGuess("$lifecyclePackage.Observer")
 val hashMapType = ClassName.get(HashMap::class.java)
 val weakReferenceType = ClassName.get(WeakReference::class.java)
 val lifecycleOwner = "androidx.lifecycle.LifecycleOwner"
+val javaClassType = ParameterizedTypeName.get(ClassName.bestGuess("java.lang.Class"), TypeVariableName.get("T"))
 
 val viewModelPackages = listOf("android.arch.lifecycle.ViewModel", "androidx.lifecycle.ViewModel")
 val liveDataPackages = listOf("androidx.lifecycle.MutableLiveData", "androidx.lifecycle.LiveData")
