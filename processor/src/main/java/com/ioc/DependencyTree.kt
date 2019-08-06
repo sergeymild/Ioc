@@ -41,11 +41,7 @@ object DependencyTree {
     }
 
     private fun generateCode(model: DependencyModel, target: TargetType?): CodeBlock {
-
-        val builder = CodeBlock.builder()
-
         if (model.isSingleton) return emptyCodBlock
-
         if (model.isViewModel) return get(model.dependencies, target = target)
 
         model.methodProvider?.let {
