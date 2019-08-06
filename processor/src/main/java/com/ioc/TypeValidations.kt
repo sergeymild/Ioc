@@ -1,10 +1,7 @@
 package com.ioc
 
 import com.ioc.common.*
-import javax.lang.model.element.Element
-import javax.lang.model.element.ExecutableElement
-import javax.lang.model.element.Modifier
-import javax.lang.model.element.TypeElement
+import javax.lang.model.element.*
 import javax.lang.model.type.TypeKind
 
 
@@ -14,7 +11,7 @@ fun validateObserverMethod(method: ExecutableElement) {
         throw ProcessorException("method ${method.enclosingElement}.$method annotated with @DataObserver must be public.").setElement(method.enclosingElement)
     }
 
-    if (method.parameters.size > 1) {
+    if (method.parameters.size > 1 || method.parameters.isEmpty()) {
         throw ProcessorException("method ${method.enclosingElement}.$method annotated with @DataObserver must contains only one parameter.").setElement(method.enclosingElement)
     }
 
@@ -25,8 +22,15 @@ fun validateObserverMethod(method: ExecutableElement) {
 
 @Throws(ProcessorException::class)
 fun validateTargetForLiveDataObserver(typeElement: TypeElement) {
-    if (!typeElement.isCanHaveViewModel()) {
+    if (!typeElement.isCanHaveLiveDataObserver()) {
         throw ProcessorException("@DataObserver methods may be placed only in Activity or Fragment but was found in $typeElement.").setElement(typeElement)
+    }
+}
+
+@Throws(ProcessorException::class)
+fun validateViewModelForLiveData(element: VariableElement) {
+    if (element.isAndroidViewModel() && !element.enclosingElement.isCanHaveViewModel()) {
+        throw ProcessorException("@DataObserver methods may be placed only in Activity or Fragment but was found in ${element.enclosingElement}.").setElement(element)
     }
 }
 

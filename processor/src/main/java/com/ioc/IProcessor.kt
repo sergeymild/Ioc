@@ -11,7 +11,6 @@ import javax.annotation.processing.*
 import javax.inject.Singleton
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.Element
-import javax.lang.model.element.ElementKind
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.TypeElement
 import javax.lang.model.util.Types

@@ -35,7 +35,7 @@ fun ExecutableElement.firstParameter(): TypeMirror {
 
 fun Element.findViewModels(): List<VariableElement> {
     return ElementFilter.fieldsIn(enclosedElements)
-        .filter { it.isViewModel() }
+        .filter { it.isViewModel() || it.isAndroidViewModel() }
 }
 
 fun Element.findLiveData(): List<VariableElement> {
@@ -58,6 +58,7 @@ fun findDataObservers(element: TypeElement): List<TargetDataObserver> {
     observerMethods.forEach(::validateObserverMethod)
     validateTargetForLiveDataObserver(element)
     val viewModels = element.findViewModels()
+    viewModels.forEach(::validateViewModelForLiveData)
 
     for (viewModel in viewModels) {
         val viewModelType = viewModel.asTypeElement()
@@ -84,7 +85,7 @@ fun findDataObservers(element: TypeElement): List<TargetDataObserver> {
     }
 
     if (observerMethods.isNotEmpty()) {
-        throw ProcessorException("$element contains methods [${observerMethods.joinToString { it.simpleName }}] which annotated as @DataObserver but they are not used.").setElement(element)
+        throw ProcessorException("$element contains methods [${observerMethods.joinToString { it.simpleName }}] which annotated as @DataObserver but didn't find any view models with LiveData.").setElement(element)
     }
 
     return targetDataObservers

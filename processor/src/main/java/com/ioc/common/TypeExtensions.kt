@@ -14,7 +14,6 @@ import javax.lang.model.element.*
 import javax.lang.model.type.DeclaredType
 import javax.lang.model.type.TypeKind
 import javax.lang.model.type.TypeMirror
-import javax.lang.model.util.ElementFilter
 import javax.lang.model.util.ElementScanner8
 
 /**
@@ -265,19 +264,6 @@ fun CharSequence.titleize(): String {
     return toString().capitalize()
 }
 
-fun Element.isHasArgumentsConstructor(): Boolean =
-    ElementFilter.constructorsIn(asTypeElement().enclosedElements)
-        .any { it.parameters.isNotEmpty() || it.isHasAnnotation(Inject::class.java) }
-
-fun Element.argumentsConstructor(): ExecutableElement? =
-    ElementFilter.constructorsIn(asTypeElement().enclosedElements)
-        .firstOrNull { it.parameters.isNotEmpty() || it.isHasAnnotation(Inject::class.java) }
-
-fun Element.injectionFields(): List<Element> =
-    ElementFilter.fieldsIn(asTypeElement().enclosedElements)
-        .filter { it.isHasAnnotation(Inject::class.java) }
-
-
 fun Element.isSingleton(): Boolean {
     return isHasAnnotation(Singleton::class.java)
 }
@@ -300,7 +286,11 @@ fun Element.isPrimitive(): Boolean {
 
 fun Element.isViewModel(): Boolean {
     if (asType().kind.isPrimitive) return false
+    return isHasAnnotation(ViewModelDependency::class.java)
+}
 
+fun Element.isAndroidViewModel(): Boolean {
+    if (asType().kind.isPrimitive) return false
     var superType = asTypeElement().superclass
 
     while (superType != null) {
@@ -334,6 +324,30 @@ fun Element.isCanHaveViewModel(): Boolean {
         if (allowedViewModelParents.contains(superType.toString())) return true
         superType = superType.asTypeElement().superclass
     }
+
+    return false
+}
+
+fun Element.isCanHaveLiveDataObserver(): Boolean {
+    if (asType().kind.isPrimitive) return false
+
+    val typeElement = asTypeElement()
+
+    val supertypes = mutableSetOf<TypeMirror>()
+    val queue = LinkedList<TypeMirror>()
+    queue.addAll(typeElement.interfaces)
+    queue.add(typeElement.superclass)
+
+    while (queue.isNotEmpty()) {
+        val supertype = queue.pop()
+        if (supertype.isNotValid()) continue
+        if (supertype.toString() == lifecycleOwner) return true
+        supertypes.add(supertype)
+        val superclass = supertype.asTypeElement()
+        queue.addAll(superclass.interfaces)
+        queue.add(superclass.superclass)
+    }
+
     return false
 }
 

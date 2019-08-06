@@ -3,18 +3,32 @@ package com.ioc
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.*
 import com.ios.injector.R
 import javax.inject.Inject
 
-class BrowserUi
-
-
-
-//@InjectParentDependencies
-class MainActivity : AppCompatActivity() {
+class BrowserUi: LifecycleOwner {
+    override fun getLifecycle(): Lifecycle {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 
     @Inject
-    lateinit var browserUi: Lazy<BrowserUi>
+    @ViewModelDependency
+    lateinit var vm: VM
+
+    @DataObserver
+    fun ds(string: String) {
+
+    }
+}
+
+
+class VM {
+    val dataO = MutableLiveData<String>()
+}
+
+class MainActivity : AppCompatActivity() {
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,9 +44,9 @@ class MainActivity : AppCompatActivity() {
 //
 
     }
-//
-//    @DataObserver
-//    fun dataObserver(string: String) {
-//
-//    }
+
+    @DataObserver
+    fun dataObserver(string: String) {
+
+    }
 }

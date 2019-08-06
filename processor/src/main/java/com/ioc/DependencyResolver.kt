@@ -58,7 +58,7 @@ class DependencyResolver(
         }
 
         // Check is android viewModel field
-        val isViewModel = dependencyElement.isViewModel()
+        val isViewModel = dependencyElement.isAndroidViewModel()
 
         if (isViewModel) validateIsAllowCanHaveViewModel(dependencyElement, target.element)
 

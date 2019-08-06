@@ -694,6 +694,70 @@ class ViewModelTests {
 
     @Test
     @Throws(Exception::class)
+    fun liveDataObserverForever2() {
+
+        val activityViewModel = JavaFileObjects.forSourceLines("test.ActivityViewModel",
+            "package test;",
+            "import $lifecyclePackage.MutableLiveData;",
+            "",
+            "public class ActivityViewModel {",
+            "   public MutableLiveData<String> stringLiveData = new MutableLiveData<String>();",
+            "   public ActivityViewModel() {};",
+            "}")
+
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            "package test;",
+            "",
+            "import $inject;",
+            "import $iocLocalScope;",
+            "import $iocDataObserver;",
+            "import $iocDataObserver.ObserveType;",
+            "import $lifecyclePackage.LifecycleOwner;",
+            Helpers.importType(ViewModelDependency::class.java),
+
+            "public class Activity implements LifecycleOwner {",
+            "",
+            "   @Inject",
+            "   @ViewModelDependency",
+            "   public ActivityViewModel activityViewModel;",
+            "   @DataObserver(DataObserver.ObserveType.FOREVER)",
+            "   public void observeStringLiveData(String data) {}",
+            "}")
+
+
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+            "package test;",
+            "import $keep;",
+            "import $nonNull;",
+            "import $lifecyclePackage.Observer;",
+            "import java.lang.String;",
+            "",
+            "@Keep",
+            "public final class ActivityInjector {",
+            "   @Keep",
+            "   public static final void inject(@NonNull final Activity target) {",
+            "       target.activityViewModel = new ActivityViewModel();",
+            "       observeMutableLiveDataStringFromActivityViewModel(target);",
+            "   }",
+            "",
+            "   private static final void observeMutableLiveDataStringFromActivityViewModel(@NonNull final Activity target) {",
+            "       target.activityViewModel.stringLiveData.observeForever(new Observer<String>() {",
+            "           public void onChanged(String observingData) {",
+            "               target.observeStringLiveData(observingData);",
+            "           }",
+            "       });",
+            "   }",
+            "}")
+
+        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(JavaSourcesSubjectFactory.javaSources())
+            .that(listOf<JavaFileObject>(activityFile, androidViewModel, androidViewModelProvider, androidViewModelProviders, androidAppCompatActivity, androidFragmentActivity, activityViewModel, androidMutableLiveData, androidLiveData, androidLiveDataObserver, androidLifecycleOwner))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile)
+    }
+
+    @Test
+    @Throws(Exception::class)
     fun failLiveDataObserverMethodIsPrivate() {
 
         val activityViewModel = JavaFileObjects.forSourceLines("test.ActivityViewModel",
@@ -843,7 +907,7 @@ class ViewModelTests {
             .that(listOf<JavaFileObject>(activityFile, androidViewModel, androidViewModelProvider, androidViewModelProviders, androidAppCompatActivity, androidFragmentActivity, activityViewModel, androidMutableLiveData, androidLiveData, androidLiveDataObserver, androidLifecycleOwner))
             .processedWith(IProcessor())
             .failsToCompile()
-            .withErrorContaining("test.Activity contains methods [observeStringLiveData] which annotated as @DataObserver but they are not used.")
+            .withErrorContaining("test.Activity contains methods [observeStringLiveData] which annotated as @DataObserver but didn't find any view models with LiveData.")
             .`in`(activityFile)
             .onLine(6)
     }
@@ -900,5 +964,44 @@ class ViewModelTests {
             .withErrorContaining("@DataObserver methods may be placed only in Activity or Fragment but was found in test.Activity.")
             .`in`(activityFile)
             .onLine(5)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun failEmptyParameters() {
+
+        val activityViewModel = JavaFileObjects.forSourceLines("test.ActivityViewModel",
+            "package test;",
+            "import $lifecyclePackage.ViewModel;",
+            "import $lifecyclePackage.MutableLiveData;",
+            "",
+            "public class ActivityViewModel extends ViewModel {",
+            "   public MutableLiveData<String> stringLiveData = new MutableLiveData<String>();",
+            "   public ActivityViewModel() {};",
+            "}")
+
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            "package test;",
+            "",
+            "import $inject;",
+            "import $iocDataObserver;",
+            "import androidx.appcompat.app.AppCompatActivity;",
+
+            "public class Activity extends AppCompatActivity {",
+            "",
+            "   @Inject",
+            "   public ActivityViewModel activityViewModel;",
+            "   @DataObserver",
+            "   public void observeStringLiveData() {}",
+            "}")
+
+
+        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(JavaSourcesSubjectFactory.javaSources())
+            .that(listOf<JavaFileObject>(activityFile, androidViewModel, androidViewModelProvider, androidViewModelProviders, androidAppCompatActivity, androidFragmentActivity, activityViewModel, androidMutableLiveData, androidLiveData, androidLiveDataObserver, androidLifecycleOwner))
+            .processedWith(IProcessor())
+            .failsToCompile()
+            .withErrorContaining("method test.Activity.observeStringLiveData() annotated with @DataObserver must contains only one parameter.")
+            .`in`(activityFile)
+            .onLine(6)
     }
 }
