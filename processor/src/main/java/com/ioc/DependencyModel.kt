@@ -1,6 +1,7 @@
 package com.ioc
 
-import com.ioc.common.*
+import com.ioc.common.asTypeElement
+import com.ioc.common.decapitalize
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.ParameterizedTypeName
 import com.squareup.javapoet.TypeName
@@ -24,9 +25,6 @@ fun DependencyModel.isAllowEmptyConstructorInjection(): Boolean {
     return methodProvider == null
         && (constructor != null && !constructor!!.modifiers.contains(Modifier.PRIVATE))
         && dependencies.isEmpty()
-        && !isProvider
-        && !isLazy
-        && !isWeak
         && !isViewModel
 }
 
@@ -34,19 +32,7 @@ fun DependencyModel.isAllowModuleMethodProvide(): Boolean {
     val method = methodProvider
     return method != null
         && method.dependencies.isEmpty()
-        && !isProvider
-        && !isLazy
-        && !isWeak
         && !isViewModel
-}
-
-fun DependencyModel.returnType(): TypeName {
-    return when {
-        isLazy -> dependency.asLazyType()
-        isProvider -> dependency.asProviderType()
-        isWeak -> dependency.asWeakType()
-        else -> originalClassName
-    }
 }
 
 fun DependencyModel.copy(): DependencyModel {
@@ -69,10 +55,6 @@ fun DependencyModel.copy(): DependencyModel {
         it.setterMethod = setterMethod
         it.dependencies = dependencies.map { d -> d.copy() }
     }
-}
-
-fun DependencyModel.isNotGeneric(): Boolean {
-    return !isProvider && !isLazy && !isWeak
 }
 
 class DependencyModel constructor(

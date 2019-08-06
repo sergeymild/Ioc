@@ -301,22 +301,16 @@ class FieldInjectionTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public static final void inject(@NonNull final Activity target) {",
-            "       target.dependency = provideDependencyModel();",
-            "   }",
-            "",
-            "   public static final IocProvider<DependencyModel> provideDependencyModel() {",
-            "       IocProvider<DependencyModel> providerDependencyModel = new IocProvider<DependencyModel>() {",
-            "         protected DependencyModel initialize() {",
-            "           DependencyModel dependencyModel = new DependencyModel();",
-            "           return dependencyModel;",
-            "         }",
-            "       };",
-            "       return providerDependencyModel;",
+            "       target.dependency = new IocProvider<DependencyModel>() {",
+            "           protected DependencyModel initialize() {",
+            "               return new DependencyModel();",
+            "           }",
+            "       }",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, dependencyFile))
+            .that(listOf(activityFile, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -359,17 +353,11 @@ class FieldInjectionTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public static final void inject(@NonNull final Activity target) {",
-            "       target.dependency = provideDependencyType();",
-            "   }",
-            "",
-            "   public static final IocProvider<DependencyInterface> provideDependencyType() {",
-            "       IocProvider<DependencyInterface> providerDependencyInterface = new IocProvider<DependencyInterface>() {",
-            "         protected DependencyInterface initialize() {",
-            "           DependencyType dependencyInterface = new DependencyType();",
-            "           return dependencyInterface;",
-            "         }",
-            "       };",
-            "       return providerDependencyInterface;",
+            "       target.dependency = new IocProvider<DependencyInterface>() {",
+            "           protected DependencyInterface initialize() {",
+            "               return new DependencyType();",
+            "           }",
+            "       }",
             "   }",
             "}")
 
@@ -411,23 +399,17 @@ class FieldInjectionTest {
             "",
             "import $keep",
             "import $nonNull",
-            importType(IocLazy::class.java),
+            "import $iocLazy",
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
             "   public static final void inject(@NonNull final Activity target) {",
-            "       target.dependency = provideDependencyType();",
-            "   }",
-            "",
-            "   public static final IocLazy<DependencyInterface> provideDependencyType() {",
-            "       IocLazy<DependencyInterface> lazyDependencyInterface = new IocLazy<DependencyInterface>() {",
-            "         protected DependencyInterface initialize() {",
-            "           DependencyType dependencyInterface = new DependencyType();",
-            "           return dependencyInterface;",
-            "         }",
-            "       };",
-            "       return lazyDependencyInterface;",
+            "       target.dependency = new IocLazy<DependencyInterface>() {",
+            "           protected DependencyInterface initialize() {",
+            "               return new DependencyType();",
+            "           }",
+            "       }",
             "   }",
             "}")
 
@@ -2717,23 +2699,22 @@ class FieldInjectionTest {
             "",
             "   @Keep",
             "   public static final void inject(@NonNull final Activity target) {",
-            "       target.presenter = providePresenter();",
-            "   }",
-            "",
-            "   public static final IocLazy<Presenter> providePresenter() {",
-            "       IocLazy<Presenter> lazyPresenter = new IocLazy<Presenter>() {",
+            "       target.presenter = new IocLazy<Presenter>() {",
             "           protected Presenter initialize() {",
-            "             Context context = ContextModule.context();",
-            "             Presenter presenter = new Presenter(context);",
-            "             return presenter;",
+            "               return providePresenter();",
             "           }",
             "       }",
-            "       return lazyPresenter;",
+            "   }",
+            "",
+            "   public static final Presenter providePresenter() {",
+            "       Context context = ContextModule.context();",
+            "       Presenter presenter = new Presenter(context);",
+            "       return presenter;",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, presenter, contextModule, context))
+            .that(listOf(activityFile, presenter, contextModule, context))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)

@@ -41,26 +41,20 @@ class WeakDependencyTests {
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import android.support.annotation.Keep",
-            "import android.support.annotation.NonNull",
-            importType(WeakReference::class.java),
+            "import $keep",
+            "import $nonNull",
+            "import $weakReferenceType",
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
             "   public static final void inject(@NonNull final Activity target) {",
-            "       target.weakDependency = provideDependencyModel();",
-            "   }",
-            "",
-            "   public static final WeakReference<DependencyModel> provideDependencyModel() {",
-            "       DependencyModel dependencyModel = new DependencyModel();",
-            "       WeakReference<DependencyModel> weakDependencyModel = new WeakReference<DependencyModel>(dependencyModel);",
-            "       return weakDependencyModel;",
+            "       target.weakDependency = new WeakReference<>(new DependencyModel());",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, dependencyFile))
+            .that(listOf(activityFile, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -112,14 +106,13 @@ class WeakDependencyTests {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public static final void inject(@NonNull final Activity target) {",
-            "       target.weakDependency = provideDependencyModel();",
+            "       target.weakDependency = new WeakReference<>(provideDependencyModel());",
             "   }",
             "",
-            "   public static final WeakReference<DependencyModel> provideDependencyModel() {",
+            "   public static final DependencyModel provideDependencyModel() {",
             "       Context context = new Context();",
             "       DependencyModel dependencyModel = new DependencyModel(context);",
-            "       WeakReference<DependencyModel> weakDependencyModel = new WeakReference<DependencyModel>(dependencyModel);",
-            "       return weakDependencyModel;",
+            "       return dependencyModel;",
             "   }",
             "}")
 
@@ -165,18 +158,12 @@ class WeakDependencyTests {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public static final void inject(@NonNull final Activity target) {",
-            "       target.weakDependency(provideDependencyModel());",
-            "   }",
-            "",
-            "   public static final WeakReference<DependencyModel> provideDependencyModel() {",
-            "       DependencyModel dependencyModel = new DependencyModel();",
-            "       WeakReference<DependencyModel> weakDependencyModel = new WeakReference<DependencyModel>(dependencyModel);",
-            "       return weakDependencyModel;",
+            "       target.weakDependency(new WeakReference<>(new DependencyModel()));",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, dependencyFile))
+            .that(listOf(activityFile, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -231,19 +218,18 @@ class WeakDependencyTests {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public static final void inject(@NonNull final Activity target) {",
-            "       target.weakDependency(provideDependencyModel());",
+            "       target.weakDependency(new WeakReference<>(provideDependencyModel()));",
             "   }",
             "",
-            "   public static final WeakReference<DependencyModel> provideDependencyModel() {",
+            "   public static final DependencyModel provideDependencyModel() {",
             "       Context context = new Context();",
             "       DependencyModel dependencyModel = new DependencyModel(context);",
-            "       WeakReference<DependencyModel> weakDependencyModel = new WeakReference<DependencyModel>(dependencyModel);",
-            "       return weakDependencyModel;",
+            "       return dependencyModel;",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, contextFile, dependencyFile))
+            .that(listOf(activityFile, contextFile, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -396,7 +382,7 @@ class WeakDependencyTests {
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, resourceFile, dependencyProvideModuleFile, contextFile, dependencyFile))
+            .that(listOf(activityFile, resourceFile, dependencyProvideModuleFile, contextFile, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -450,18 +436,12 @@ class WeakDependencyTests {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public static final void inject(@NonNull final Activity target) {",
-            "       target.dependency = provideDependencyModel();",
-            "   }",
-            "",
-            "   public static final WeakReference<DependencyModel> provideDependencyModel() {",
-            "       DependencyModel dependencyModel = DependencyProvide.getDependency();",
-            "       WeakReference<DependencyModel> weakDependencyModel = new WeakReference<DependencyModel>(dependencyModel);",
-            "       return weakDependencyModel;",
+            "       target.dependency = new WeakReference<>(DependencyProvide.getDependency());",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, dependencyProvideModuleFile, dependencyFile))
+            .that(listOf(activityFile, dependencyProvideModuleFile, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -521,19 +501,18 @@ class WeakDependencyTests {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public static final void inject(@NonNull final Activity target) {",
-            "       target.dependency = provideDependencyModel();",
+            "       target.dependency = new WeakReference<>(provideDependencyModel());",
             "   }",
             "",
-            "   public static final WeakReference<DependencyModel> provideDependencyModel() {",
+            "   public static final DependencyModel provideDependencyModel() {",
             "       Context context = new Context();",
             "       DependencyModel dependencyModel = DependencyProvide.getDependency(context);",
-            "       WeakReference<DependencyModel> weakDependencyModel = new WeakReference<DependencyModel>(dependencyModel);",
-            "       return weakDependencyModel;",
+            "       return dependencyModel;",
             "   }",
             "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(Arrays.asList<JavaFileObject>(activityFile, dependencyProvideModuleFile, contextFile, dependencyFile))
+            .that(listOf(activityFile, dependencyProvideModuleFile, contextFile, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)

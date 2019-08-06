@@ -608,7 +608,7 @@ class ViewModelTests {
             "}")
 
         Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(JavaSourcesSubjectFactory.javaSources())
-            .that(listOf<JavaFileObject>(activityFile, androidViewModel, androidViewModelProvider, androidViewModelProviders, androidAppCompatActivity, androidFragmentActivity, activityViewModel, androidMutableLiveData, androidLiveData, androidLiveDataObserver, androidLifecycleOwner))
+            .that(listOf(activityFile, androidViewModel, androidViewModelProvider, androidViewModelProviders, androidAppCompatActivity, androidFragmentActivity, activityViewModel, androidMutableLiveData, androidLiveData, androidLiveDataObserver, androidLifecycleOwner))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)

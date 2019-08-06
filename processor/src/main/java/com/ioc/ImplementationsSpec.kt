@@ -77,11 +77,19 @@ class ImplementationsSpec constructor(
         }
 
         for (dependency in emptyConstructorToInject) {
-            builder.addCode(setInTarget(dependency, emptyConstructor(dependency)))
+            var newCode = LazyGeneration.wrapProvideMethod(dependency, emptyConstructor(dependency))
+            newCode = ProviderGeneration.wrapProvideMethod(dependency, newCode)
+            newCode = WeakGeneration.wrapProvideMethod(dependency, newCode)
+            builder.addCode(setInTarget(dependency, newCode))
+
+            //builder.addCode(setInTarget(dependency, emptyConstructor(dependency)))
         }
 
         for (dependency in emptyModuleMethodToInject) {
-            builder.addCode(setInTarget(dependency, emptyModuleMethodProvide(dependency)))
+            var newCode = LazyGeneration.wrapProvideMethod(dependency, emptyModuleMethodProvide(dependency))
+            newCode = ProviderGeneration.wrapProvideMethod(dependency, newCode)
+            newCode = WeakGeneration.wrapProvideMethod(dependency, newCode)
+            builder.addCode(setInTarget(dependency, newCode))
         }
 
         for (injectMethod in fromDifferentModuleInject) {
@@ -94,6 +102,7 @@ class ImplementationsSpec constructor(
         }
 
         for (method in this.methods) {
+            // observer method
             if (method.methodSpec.returnType == TypeName.VOID) {
                 builder.addStatement("\$N(target)", method.methodSpec.name)
                 continue
@@ -104,7 +113,13 @@ class ImplementationsSpec constructor(
             } else {
                 CodeBlock.of("\$N()", method.methodSpec.name)
             }
-            builder.addCode(setInTarget(method.returnTypeDependencyModel!!, callMethodCode))
+
+            var newCode = LazyGeneration.wrapProvideMethod(method.returnTypeDependencyModel!!, callMethodCode)
+            newCode = ProviderGeneration.wrapProvideMethod(method.returnTypeDependencyModel!!, newCode)
+            newCode = WeakGeneration.wrapProvideMethod(method.returnTypeDependencyModel!!, newCode)
+            builder.addCode(setInTarget(method.returnTypeDependencyModel!!, newCode))
+
+            //builder.addCode(setInTarget(method.returnTypeDependencyModel!!, callMethodCode))
         }
 
         val postInitialization = target.postInitialization
@@ -131,7 +146,7 @@ class ImplementationsSpec constructor(
             modifiers.add(if (isTargetUsedAsDependency) Modifier.PRIVATE else Modifier.PUBLIC)
             val methodBuilder = MethodSpec.methodBuilder(methodName)
                 .addModifiers(modifiers)
-                .returns(model.returnType())
+                .returns(model.originalClassName)
                 .addCode(body.build())
 
             if (isTargetUsedAsDependency) methodBuilder.addParameter(targetParameter(target))

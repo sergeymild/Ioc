@@ -29,9 +29,11 @@ object DependencyTree {
 
 
 
-            code = ProviderGeneration.wrapInProviderClassIfNeed(dependency, code)
-            code = LazyGeneration.wrapInLazyClassIfNeed(dependency, code)
-            code = WeakGeneration.wrapInWeakIfNeed(dependency, code)
+            if (!skipCheckLocalScope) {
+                code = ProviderGeneration.wrapInProviderClassIfNeed(dependency, code)
+                code = LazyGeneration.wrapInLazyClassIfNeed(dependency, code)
+                code = WeakGeneration.wrapInWeakIfNeed(dependency, code)
+            }
             code = ViewModelGeneration.wrapInAndroidViewModelIfNeed(dependency, code)
             builder.add(code.build())
         }
