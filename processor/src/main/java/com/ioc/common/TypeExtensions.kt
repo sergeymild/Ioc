@@ -44,6 +44,10 @@ fun Element.isPublic(): Boolean {
     return modifiers.contains(Modifier.PUBLIC)
 }
 
+fun Element.isConstructor(): Boolean {
+    return kind == ElementKind.CONSTRUCTOR
+}
+
 fun Element.getGenericFirstType(): Element {
     if (!isSupportedType()) throw ProcessorException("Unsupported type $simpleName").setElement(this)
     return asType().getGenericFirstType()
@@ -105,6 +109,7 @@ fun RoundEnvironment.rootElementsWithInjectedDependencies(): List<TypeElement> {
     val injectedElements = getElementsAnnotatedWith(Inject::class.java)
 
     for (dependencyElement in injectedElements) {
+        if (dependencyElement.isConstructor()) continue
         val enclosingElement = dependencyElement.enclosingElement
 
         // if first time meet class element

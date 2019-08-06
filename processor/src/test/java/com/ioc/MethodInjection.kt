@@ -6,7 +6,6 @@ import com.google.testing.compile.JavaSourcesSubjectFactory
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -717,5 +716,4 @@ class MethodInjection : BaseTest {
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
     }
-
 }

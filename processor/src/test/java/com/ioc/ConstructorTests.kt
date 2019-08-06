@@ -382,7 +382,7 @@ class ConstructorTests : BaseTest {
             "   public Manager manager;",
             "}")
 
-        val injectedFile = JavaFileObjects.forSourceLines("test.ManagerSingleton",
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
             "import $keep",
