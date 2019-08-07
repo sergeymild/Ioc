@@ -120,7 +120,7 @@ fun RoundEnvironment.rootElementsWithInjectedDependencies(): List<TypeElement> {
     for (dependencyElement in injectedElements) {
         if (dependencyElement.isConstructor()) continue
         val enclosingElement = dependencyElement.enclosingElement
-        val key = enclosingElement.asType().toString()
+        val key = enclosingElement.asMapKey()
 
         // if first time meet class element
         if (!targetDependencies.containsKey(key)) {
@@ -155,7 +155,7 @@ fun RoundEnvironment.rootElementsWithInjectedDependencies(): List<TypeElement> {
 }
 
 fun addRootDependencyIfNeed(typeElement: TypeElement): Boolean {
-    val key = typeElement.asType().toString()
+    val key = typeElement.asMapKey()
     if (targetDependencies.containsKey(key)) return false
     val found = scanForAnnotation(typeElement, injectJavaType)
     if (found.isEmpty()) return false
@@ -188,7 +188,7 @@ fun RoundEnvironment.findDependenciesInParents() {
 
         if (isDependenciesFound && !rootTypeElements.contains(typeElement)) {
             rootTypeElements.add(typeElement)
-            targetDependencies.getOrPut(typeElement.asType().toString()) { mutableSetOf() }
+            targetDependencies.getOrPut(typeElement.asMapKey()) { mutableSetOf() }
         }
     }
 }
@@ -201,7 +201,7 @@ fun mapToTargetWithDependencies(dependencyResolver: DependencyResolver): Map<Tar
 
         val dependencies = targetsWithDependencies.getOrPut(targetType) { mutableListOf() }
 
-        val injectElements = targetDependencies.getValue(targetTypeElement.asType().toString())
+        val injectElements = targetDependencies.getValue(targetTypeElement.asMapKey())
         for (injectElement in injectElements) {
             if (injectElement.kind == ElementKind.CONSTRUCTOR) continue
             val resolved = dependencyResolver.resolveDependency(injectElement, target = targetType)
@@ -311,32 +311,34 @@ fun Element.isSingleton(): Boolean {
 }
 
 fun Element.isWeak(): Boolean {
-    return asType().toString().startsWith(weakJavaType.canonicalName)
+    return asTypeString().startsWith(weakJavaType.canonicalName)
 }
 
 fun Element.isLazy(): Boolean {
-    return asType().toString().startsWith(lazyJavaType.canonicalName)
+    return asTypeString().startsWith(lazyJavaType.canonicalName)
 }
 
 fun Element.isProvider(): Boolean {
-    return asType().toString().startsWith(providerJavaType.canonicalName)
+    return asTypeString().startsWith(providerJavaType.canonicalName)
 }
 
 fun Element.isPrimitive(): Boolean {
     return asType().kind.isPrimitive
 }
 
+fun Element.asMapKey(): String = asTypeString()
+
 fun Element.isViewModel(): Boolean {
-    if (asType().kind.isPrimitive) return false
+    if (isPrimitive()) return false
     return isHasAnnotation(viewModelJavaType)
 }
 
 fun Element.isAndroidViewModel(): Boolean {
-    if (asType().kind.isPrimitive) return false
+    if (isPrimitive()) return false
     var superType = asTypeElement().superclass
 
     while (superType != null) {
-        if (superType.kind == TypeKind.NONE) break
+        if (superType.isNotValid()) break
         if (viewModelPackages.contains(superType.toString())) return true
         superType = superType.asTypeElement().superclass
     }
@@ -344,12 +346,12 @@ fun Element.isAndroidViewModel(): Boolean {
 }
 
 fun Element.isLiveData(): Boolean {
-    if (asType().kind.isPrimitive) return false
+    if (isPrimitive()) return false
 
     var superType = asTypeElement().superclass
 
     while (superType != null) {
-        if (superType.kind == TypeKind.NONE) break
+        if (superType.isNotValid()) break
         if (liveDataPackages.contains(superType.asElement().toString())) return true
         superType = superType.asTypeElement().superclass
     }
@@ -357,12 +359,12 @@ fun Element.isLiveData(): Boolean {
 }
 
 fun Element.isCanHaveViewModel(): Boolean {
-    if (asType().kind.isPrimitive) return false
+    if (isPrimitive()) return false
 
     var superType = asTypeElement().superclass
 
     while (superType != null) {
-        if (superType.kind == TypeKind.NONE) break
+        if (superType.isNotValid()) break
         if (allowedViewModelParents.contains(superType.toString())) return true
         superType = superType.asTypeElement().superclass
     }
@@ -371,7 +373,7 @@ fun Element.isCanHaveViewModel(): Boolean {
 }
 
 fun Element.isCanHaveLiveDataObserver(): Boolean {
-    if (asType().kind.isPrimitive) return false
+    if (isPrimitive()) return false
 
     val typeElement = asTypeElement()
 
