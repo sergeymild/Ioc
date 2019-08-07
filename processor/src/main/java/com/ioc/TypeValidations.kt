@@ -12,7 +12,7 @@ fun validateObserverMethod(method: ExecutableElement) {
     }
 
     if (method.parameters.size > 1 || method.parameters.isEmpty()) {
-        throw ProcessorException("method ${method.enclosingElement}.$method annotated with @DataObserver must contains only one parameter.").setElement(method.enclosingElement)
+        throwsDataObserverMustHaveOnlyOneParameter(method)
     }
 
     if (method.returnType.kind != TypeKind.VOID) {
@@ -50,6 +50,20 @@ fun validateAbstractModuleMethodProvider(method: ExecutableElement) {
     //public abstract InterfaceType method(InterfaceType);
     if (implementationType?.isInterface() == true) {
         throw ProcessorException("${method.enclosingElement.simpleName}.${method.simpleName}($implementationType) returns $type which is interface also contains interface as parameter must be implementation").setElement(method)
+    }
+}
+
+fun validateMethodAnnotatedWithTarget(method: ExecutableElement) {
+    if (method.parameters.isNotEmpty()) {
+        throw ProcessorException("${method.enclosingElement.simpleName}.${method.simpleName} with @Scan must have no parameters.")
+    }
+
+    if (!method.isAbstract()) {
+        throw ProcessorException("${method.enclosingElement.simpleName}.${method.simpleName} with @Scan must be abstract.")
+    }
+
+    if (method.returnType.kind == TypeKind.VOID) {
+        throw ProcessorException("${method.enclosingElement.simpleName}.${method.simpleName} with @Scan must return type for scan")
     }
 }
 
@@ -116,6 +130,32 @@ fun validateConstructorParameter(element: Element) {
     }
 }
 
+/**
+ *  Exceptions
+ * */
+
+fun exceptionGetterIsNotFound(element: Element): ProcessorException {
+    return ProcessorException("@Inject annotation placed on field `${element.simpleName}` in `${element.enclosingElement.simpleName}` with private access and which does't have public getter method.").setElement(element)
+}
+
+fun exceptionDidNotFindConstructorOrMethodProvider(element: Element): ProcessorException {
+    return ProcessorException("Can't find default constructor or provide method for `${element.asType()}`").setElement(element)
+}
+
+/**
+ *  Throws
+ * */
+
+@Throws(Throwable::class)
+fun throwsDataObserverMustHaveOnlyOneParameter(method: Element) {
+    throw ProcessorException("method ${method.enclosingElement}.$method annotated with @DataObserver must contains only one parameter.").setElement(method.enclosingElement)
+}
+
+@Throws(Throwable::class)
+fun throwsGetterIsNotFound(element: Element) {
+    throw exceptionGetterIsNotFound(element)
+}
+
 fun throwsMoreThanOneDependencyFoundIfNeed(element: Element, named: String?, models: List<CharSequence>) {
     if (models.size <= 1) return
     throw ProcessorException("Found more than one implementation of `${element.asType()}` with qualifier `${namedStringForError(named)}` [${models.joinToString()}]")
@@ -126,10 +166,6 @@ fun throwsCantFindImplementations(model: Element, target: TargetType?) {
     throw ProcessorException("Can't find method provider of `${model.asType()} ${model.enclosingElement}` maybe you forgot add correct @Named, @Qualifier annotations or add @Dependency on provides method, `${target?.element}`").setElement(target?.element)
 }
 
-fun didNotFindConstructorOrMethodProvider(element: Element): ProcessorException {
-    return ProcessorException("Can't find default constructor or provide method for `${element.asType()}`").setElement(element)
-}
-
 fun throwsIfTargetUsedInSingleton(target: TargetType, parentElement: Element, models: List<DependencyModel>) {
     if (models.any { target.isSubtype(it.dependency, it.originalType) }) {
         throw ProcessorException("target can't be user as dependency in Singleton").setElement(parentElement)
@@ -138,16 +174,6 @@ fun throwsIfTargetUsedInSingleton(target: TargetType, parentElement: Element, mo
 
 fun throwsSingletonMethodAbstractReturnType(method: ExecutableElement) {
     throw ProcessorException("`${method.enclosingElement}.${method.simpleName}()` annotated with @Singleton must returns implementation not abstract type").setElement(method)
-}
-
-@Throws(Throwable::class)
-fun throwsGetterIsNotFoundException(element: Element): ProcessorException {
-    return ProcessorException("@Inject annotation placed on field `${element.simpleName}` in `${element.enclosingElement.simpleName}` with private access and which does't have public getter method.").setElement(element)
-}
-
-@Throws(Throwable::class)
-fun throwsGetterIsNotFound(element: Element) {
-    throw throwsGetterIsNotFoundException(element)
 }
 
 @Throws(ProcessorException::class)

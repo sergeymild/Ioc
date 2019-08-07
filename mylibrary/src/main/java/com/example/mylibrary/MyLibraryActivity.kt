@@ -1,9 +1,13 @@
 package com.example.mylibrary
 
-import android.app.Activity
+import com.ioc.Ioc
 import javax.inject.Inject
 
-open class MyLibraryActivity : Activity() {
+open class MyLibraryActivity {
     @Inject
     lateinit var bottomFactory: BottomFactory
+
+    init {
+        Ioc.inject(this)
+    }
 }

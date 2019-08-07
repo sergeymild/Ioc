@@ -13,22 +13,19 @@ import javax.lang.model.SourceVersion
 import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.TypeElement
+import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
 import javax.tools.Diagnostic
 import kotlin.properties.Delegates
 
 
-interface ErrorThrowable {
-    @Throws(Throwable::class)
-    fun throwError(element: Element? = null, message: String?)
-}
-
 @SupportedAnnotationTypes("javax.inject.*")
-open class IProcessor : AbstractProcessor(), ErrorThrowable {
+open class IProcessor : AbstractProcessor() {
     lateinit var dependencyResolver: DependencyResolver
 
     companion object {
         var filer: Filer by Delegates.notNull()
+        var elementUtils: Elements by Delegates.notNull()
         val classesWithDependencyAnnotation = mutableListOf<Element>()
         val methodsWithDependencyAnnotation = mutableListOf<ExecutableElement>()
         val projectSingletons = mutableMapOf<String, DependencyModel>()
@@ -37,53 +34,6 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         var processingEnvironment: ProcessingEnvironment by Delegates.notNull()
         val qualifierFinder = QualifierFinder()
         lateinit var types: Types
-
-        fun generateUniqueNamesForInjectMethodDependencies(target: TargetType?, models: List<DependencyModel>) {
-            resetUniqueNames()
-            val queue = LinkedList(models)
-
-            while (queue.isNotEmpty()) {
-                val dep = queue.pop()
-                if (!dep.isSingleton &&
-                    !target.isSubtype(dep.dependency, dep.originalType) &&
-                    !target.isLocalScope(dep.dependency, dep.originalType)) {
-
-                    dep.generatedName = uniqueName(dep)
-                }
-                if (!dep.isSingleton) queue.addAll(dep.dependencies)
-            }
-        }
-
-        fun createTarget(element: TypeElement, dependencyFinder: DependencyTypesFinder): TargetType {
-            val type = TargetType(element)
-
-            type.postInitialization = postInitializationMethod(element)
-            type.dataObservers = findDataObservers(element)
-            type.supertypes.addAll(dependencyFinder.collectSuperTypes(type.element))
-
-            type.asTargetDependencies.add(element.asType().toString())
-            for (supertype in type.supertypes) {
-                type.asTargetDependencies.add(supertype.toString())
-            }
-
-            // find all localScoped dependencies for use it later
-            val injectAnnotationType = processingEnvironment.elementUtils.getTypeElement(LocalScope::class.java.canonicalName)
-            val scanner = AnnotationSetScanner(processingEnvironment, mutableSetOf())
-            for (localScoped in scanner.scan(element, injectAnnotationType)) {
-                val getterName = findDependencyGetter(localScoped)
-                    .orElse { throwsGetterIsNotFound(localScoped) }
-                    .toGetterName()
-                type.localScopeDependencies[localScoped.asType().toString()] = getterName
-            }
-
-            // get first superclass
-            type.superclass?.let {
-                type.parentTarget = createTarget(it.asTypeElement(), dependencyFinder)
-            }
-
-            return type
-        }
-
     }
 
     override fun getSupportedSourceVersion(): SourceVersion? {
@@ -95,6 +45,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         filer = processingEnv.filer
         messager = processingEnv.messager
         processingEnvironment = processingEnv
+        elementUtils = processingEnv.elementUtils
     }
 
 
@@ -134,18 +85,13 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
     }
 
     @Throws(Throwable::class)
-    override fun throwError(element: Element?, message: String?) {
-        throw RuntimeException(message)
-    }
-
-    @Throws(Throwable::class)
     fun newParse(roundEnv: RoundEnvironment): Boolean {
         dependencyFinder = DependencyTypesFinder(qualifierFinder)
         dependencyResolver = DependencyResolver(qualifierFinder, dependencyFinder)
         dependencyFinder.dependencyResolver = dependencyResolver
 
         roundEnv.rootElementsWithInjectedDependencies()
-        roundEnv.findDependenciesInParents(processingEnv)
+        roundEnv.findDependenciesInParents()
 
         val targetsWithDependencies = mapToTargetWithDependencies(dependencyResolver)
         val targetTypes = targetsWithDependencies.keys

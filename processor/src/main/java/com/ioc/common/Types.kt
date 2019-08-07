@@ -6,6 +6,9 @@ import com.squareup.javapoet.ParameterizedTypeName
 import com.squareup.javapoet.TypeName
 import com.squareup.javapoet.TypeVariableName
 import java.lang.ref.WeakReference
+import javax.inject.Inject
+import javax.inject.Provider
+import javax.inject.Singleton
 
 val lifecyclePackage = "androidx.lifecycle"
 val iocLazyType = ClassName.get(IocLazy::class.java)
@@ -22,6 +25,15 @@ val hashMapType = ClassName.get(HashMap::class.java)
 val weakReferenceType = ClassName.get(WeakReference::class.java)
 val lifecycleOwner = "androidx.lifecycle.LifecycleOwner"
 val javaClassType = ParameterizedTypeName.get(ClassName.bestGuess("java.lang.Class"), TypeVariableName.get("T"))
+val scanJavaType = Scan::class.java
+val injectJavaType = Inject::class.java
+val injectParentDependenciesJavaType = InjectParentDependencies::class.java
+val singletonJavaType = Singleton::class.java
+val weakJavaType = WeakReference::class.java
+val lazyJavaType = Lazy::class.java
+val providerJavaType = Provider::class.java
+val viewModelJavaType = ViewModel::class.java
+val objectJavaType = Object::class.java
 
 val viewModelPackages = listOf("android.arch.lifecycle.ViewModel", "androidx.lifecycle.ViewModel")
 val liveDataPackages = listOf("androidx.lifecycle.MutableLiveData", "androidx.lifecycle.LiveData")

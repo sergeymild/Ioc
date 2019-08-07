@@ -63,6 +63,6 @@ object DependencyTree {
                 names).build()
         }
 
-        throw didNotFindConstructorOrMethodProvider(model.dependency)
+        throw exceptionDidNotFindConstructorOrMethodProvider(model.dependency)
     }
 }

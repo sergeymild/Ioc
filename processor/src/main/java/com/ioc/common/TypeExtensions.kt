@@ -1,6 +1,9 @@
 package com.ioc.common
 
 import com.ioc.*
+import com.ioc.IProcessor.Companion.elementUtils
+import com.ioc.IProcessor.Companion.processingEnvironment
+import com.ioc.Scan
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.TypeName
 import java.lang.ref.WeakReference
@@ -101,34 +104,54 @@ class AnnotationSetScanner(
     }
 }
 
+fun scanForAnnotation(typeElement: TypeElement, annotation: Class<*>): MutableSet<Element> {
+    val annotationType = elementUtils.getTypeElement(annotation.canonicalName)
+    val injectElements = mutableSetOf<Element>()
+    val scanner = AnnotationSetScanner(processingEnvironment, injectElements)
+    return scanner.scan(typeElement, annotationType)
+}
+
 fun RoundEnvironment.rootElementsWithInjectedDependencies(): List<TypeElement> {
     targetDependencies.clear()
     rootTypeElements.clear()
 
-    val injectedElements = getElementsAnnotatedWith(Inject::class.java)
+    val injectedElements = getElementsAnnotatedWith(injectJavaType)
 
     for (dependencyElement in injectedElements) {
         if (dependencyElement.isConstructor()) continue
         val enclosingElement = dependencyElement.enclosingElement
+        val key = enclosingElement.asType().toString()
 
         // if first time meet class element
-        if (!targetDependencies.containsKey(enclosingElement.asType().toString())) {
+        if (!targetDependencies.containsKey(key)) {
             val typeElement = enclosingElement.asTypeElement()
             rootTypeElements.add(typeElement)
         }
 
-        val dependencies = targetDependencies.getOrPut(enclosingElement.asType().toString()) { mutableSetOf() }
+        val dependencies = targetDependencies.getOrPut(key) { mutableSetOf() }
         dependencies.add(dependencyElement)
+    }
+
+    // find all module methods with @Scan annotation
+    for (method in methodsWithDependencyAnnotation()) {
+        if (!method.isHasAnnotation(scanJavaType)) continue
+        validateMethodAnnotatedWithTarget(method)
+        val targetTypeElement = method.returnType.asTypeElement()
+        val key = targetTypeElement.asType().toString()
+        if (!targetDependencies.containsKey(key)) {
+            val found = scanForAnnotation(targetTypeElement, injectJavaType)
+            targetDependencies[key] = found.toMutableSet()
+            rootTypeElements.add(targetTypeElement)
+        }
     }
 
     return rootTypeElements
 }
 
-fun RoundEnvironment.findDependenciesInParents(processingEnv: ProcessingEnvironment) {
+fun RoundEnvironment.findDependenciesInParents() {
     val uniqueRootTypeElements = mutableSetOf<String>()
 
-    val injectAnnotationType = processingEnv.elementUtils.getTypeElement(Inject::class.java.canonicalName)
-    for (childElement in getElementsAnnotatedWith(InjectParentDependencies::class.java)) {
+    for (childElement in getElementsAnnotatedWith(injectParentDependenciesJavaType)) {
         val typeElement = childElement.asTypeElement()
         var superclass = typeElement.superclass
         var isDependenciesFound = false
@@ -136,9 +159,7 @@ fun RoundEnvironment.findDependenciesInParents(processingEnv: ProcessingEnvironm
             if (uniqueRootTypeElements.contains(superclass.toString())) continue
             val superclassTypeElement = superclass.asTypeElement()
 
-            val injectElements = mutableSetOf<Element>()
-            val scanner = AnnotationSetScanner(processingEnv, injectElements)
-            val found = scanner.scan(superclassTypeElement, injectAnnotationType)
+            val found = scanForAnnotation(superclassTypeElement, injectJavaType)
 
             val dependencies = targetDependencies.getOrPut(superclass.toString()) { mutableSetOf() }
             dependencies.addAll(found)
@@ -161,7 +182,7 @@ fun mapToTargetWithDependencies(dependencyResolver: DependencyResolver): Map<Tar
     val targetsWithDependencies = mutableMapOf<TargetType, MutableList<DependencyModel>>()
 
     for (targetTypeElement in rootTypeElements) {
-        val targetType = IProcessor.createTarget(targetTypeElement, IProcessor.dependencyFinder)
+        val targetType = createTarget(targetTypeElement, IProcessor.dependencyFinder)
 
         val dependencies = targetsWithDependencies.getOrPut(targetType) { mutableListOf() }
 
@@ -190,7 +211,7 @@ fun Element.isNotMethodAndInterface(): Boolean {
 }
 
 fun TypeMirror.isNotValid(): Boolean {
-    return toString() == Object::class.java.canonicalName
+    return toString() == objectJavaType.canonicalName
         || kind == TypeKind.NONE
         || kind == TypeKind.PACKAGE
         || kind == TypeKind.NULL
@@ -265,19 +286,19 @@ fun CharSequence.titleize(): String {
 }
 
 fun Element.isSingleton(): Boolean {
-    return isHasAnnotation(Singleton::class.java)
+    return isHasAnnotation(singletonJavaType)
 }
 
 fun Element.isWeak(): Boolean {
-    return asType().toString().startsWith(WeakReference::class.java.canonicalName)
+    return asType().toString().startsWith(weakJavaType.canonicalName)
 }
 
 fun Element.isLazy(): Boolean {
-    return asType().toString().startsWith(Lazy::class.java.canonicalName)
+    return asType().toString().startsWith(lazyJavaType.canonicalName)
 }
 
 fun Element.isProvider(): Boolean {
-    return asType().toString().startsWith(Provider::class.java.canonicalName)
+    return asType().toString().startsWith(providerJavaType.canonicalName)
 }
 
 fun Element.isPrimitive(): Boolean {
@@ -286,7 +307,7 @@ fun Element.isPrimitive(): Boolean {
 
 fun Element.isViewModel(): Boolean {
     if (asType().kind.isPrimitive) return false
-    return isHasAnnotation(ViewModel::class.java)
+    return isHasAnnotation(viewModelJavaType)
 }
 
 fun Element.isAndroidViewModel(): Boolean {
@@ -425,7 +446,7 @@ fun findDependencyGetterFromTypeOrSuperType(element: Element): Element {
             }
         }
     }
-    throw throwsGetterIsNotFoundException(element)
+    throw exceptionGetterIsNotFound(element)
 }
 
 fun Element.toGetterName(): String = if (this is ExecutableElement) "$simpleName()" else simpleName.toString()

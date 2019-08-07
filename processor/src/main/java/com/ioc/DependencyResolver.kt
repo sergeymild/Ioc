@@ -147,7 +147,7 @@ class DependencyResolver(
 
         var newTarget = target
         if (isParentSingleton) {
-            newTarget = IProcessor.createTarget(typeElement, dependencyTypesFinder)
+            newTarget = createTarget(typeElement, dependencyTypesFinder)
         }
 
         // TODO generic type

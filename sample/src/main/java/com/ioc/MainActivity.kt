@@ -4,24 +4,14 @@ package com.ioc
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.*
+import com.example.mylibrary.MyLibraryActivity
 import com.ios.injector.R
 import javax.inject.Inject
 
-class BrowserUi: LifecycleOwner {
-    override fun getLifecycle(): Lifecycle {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    @Inject
-    @ViewModel
-    lateinit var vm: VM
-
-    @DataObserver
-    fun ds(string: String) {
-
-    }
+interface Modu {
+    @Dependency @Scan
+    fun provideMyLibraryActivity(): MyLibraryActivity
 }
-
 
 class VM {
     val dataO = MutableLiveData<String>()
@@ -29,11 +19,13 @@ class VM {
 
 class MainActivity : AppCompatActivity() {
 
+    @Inject
+    lateinit var myLibraryActivity: MyLibraryActivity
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
+        Ioc.inject(this)
 
 
 //        try {
@@ -42,11 +34,6 @@ class MainActivity : AppCompatActivity() {
 //        } catch (e: ClassNotFoundException) {
 //        }
 //
-
-    }
-
-    @DataObserver
-    fun dataObserver(string: String) {
 
     }
 }
