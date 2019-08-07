@@ -1,7 +1,10 @@
 package com.ioc
 
 
-import com.ioc.common.*
+import com.ioc.common.LazyGeneration
+import com.ioc.common.ProviderGeneration
+import com.ioc.common.ViewModelGeneration
+import com.ioc.common.WeakGeneration
 import com.squareup.javapoet.CodeBlock
 
 /**
@@ -18,16 +21,8 @@ object DependencyTree {
         for (dependency in dependencyModels) {
             if (!skipCheckLocalScope && target.isLocalScope(dependency.dependency, dependency.originalType)) continue
             if (target.isSubtype(dependency.dependency, dependency.originalType)) continue
-            val packageName = dependency.originalType.asTypeElement().getPackage()
-            val isAllowedPackage = excludedPackages.any { packageName.toString().startsWith(it) }
-            if (dependency.methodProvider == null && isAllowedPackage) {
-                throwsCantFindImplementations(dependency.dependency, target)
-            }
-
             var code = generateCode(dependency, target).toBuilder()
             applyIsLoadIfNeed(dependency.dependencies, target)
-
-
 
             if (!skipCheckLocalScope) {
                 code = ProviderGeneration.wrapInProviderClassIfNeed(dependency, code)

@@ -146,13 +146,6 @@ class ImplementationsSpec constructor(
         }
 
         fun dependencyInjectionCode(target: TargetType, model: DependencyModel): CodeBlock.Builder {
-
-            val packageName = model.originalType.asTypeElement().getPackage()
-            val isAllowedPackage = excludedPackages.any { packageName.toString().startsWith(it) }
-            if (model.methodProvider == null && isAllowedPackage) {
-                throwsCantFindImplementations(model.dependency, target)
-            }
-
             val builder = CodeBlock.builder()
 
             val code = DependencyTree.get(listOf(model), skipCheckLocalScope = true, target = target)

@@ -3807,12 +3807,10 @@ class FieldInjectionTest {
 
         val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
             "package test;",
-            "import $inject;",
             "public class ParentDependency {}")
 
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
-            "import $inject;",
             "public class DependencyModel {}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",

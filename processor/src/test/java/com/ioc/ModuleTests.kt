@@ -2517,4 +2517,54 @@ class ModuleTests {
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
     }
+
+//    @Test
+//    @Throws(Exception::class)
+//    fun failNotAllowedTypeDependency() {
+//        val db = JavaFileObjects.forSourceLines("android.util.DB",
+//            "package android.util;",
+//            "",
+//            "public interface DB {",
+//            "}")
+//
+//        val dbImpl = JavaFileObjects.forSourceLines("android.util.DBImpl",
+//            "package android.util;",
+//            "",
+//            "public class DBImpl implements DB {",
+//            "}")
+//
+//        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
+//            "package test;",
+//            "",
+//            "import $inject;",
+//            "import android.util.DB;",
+//            "",
+//            "public class Activity {",
+//            "",
+//            "   @Inject",
+//            "   public DB db;",
+//            "}")
+//
+//        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+//            "package test;",
+//            "",
+//            "import android.support.annotation.Keep;",
+//            "import android.support.annotation.NonNull;",
+//            "",
+//            "@Keep",
+//            "public final class ActivityInjector {",
+//            "",
+//            "   @Keep",
+//            "   public static final void inject(@NonNull final Activity target) {",
+//            "       target.service = new CountryService();",
+//            "       target.someString = ModuleFile.NestedModule.getString();",
+//            "   }",
+//            "}")
+//
+//        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+//            .that(listOf(activityFile, db, dbImpl))
+//            .processedWith(IProcessor())
+//            .compilesWithoutError()
+//            .and().generatesSources(injectedFile)
+//    }
 }

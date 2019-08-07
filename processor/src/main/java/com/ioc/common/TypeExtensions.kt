@@ -126,6 +126,18 @@ fun RoundEnvironment.rootElementsWithInjectedDependencies(): List<TypeElement> {
         if (!targetDependencies.containsKey(key)) {
             val typeElement = enclosingElement.asTypeElement()
             rootTypeElements.add(typeElement)
+
+            // first 3 supertypes for @Inject dependencies
+            var superclass = typeElement.superclass
+            var index = 0
+            while (index < 3) {
+                if (!superclass.isAllowForScan()) break
+                val superclassType = superclass.asTypeElement()
+                if (addRootDependencyIfNeed(superclassType)) {
+                    superclass = superclassType.superclass
+                }
+                index++
+            }
         }
 
         val dependencies = targetDependencies.getOrPut(key) { mutableSetOf() }
@@ -136,16 +148,20 @@ fun RoundEnvironment.rootElementsWithInjectedDependencies(): List<TypeElement> {
     for (method in methodsWithDependencyAnnotation()) {
         if (!method.isHasAnnotation(scanJavaType)) continue
         validateMethodAnnotatedWithTarget(method)
-        val targetTypeElement = method.returnType.asTypeElement()
-        val key = targetTypeElement.asType().toString()
-        if (!targetDependencies.containsKey(key)) {
-            val found = scanForAnnotation(targetTypeElement, injectJavaType)
-            targetDependencies[key] = found.toMutableSet()
-            rootTypeElements.add(targetTypeElement)
-        }
+        addRootDependencyIfNeed(method.returnType.asTypeElement())
     }
 
     return rootTypeElements
+}
+
+fun addRootDependencyIfNeed(typeElement: TypeElement): Boolean {
+    val key = typeElement.asType().toString()
+    if (targetDependencies.containsKey(key)) return false
+    val found = scanForAnnotation(typeElement, injectJavaType)
+    if (found.isEmpty()) return false
+    targetDependencies[key] = found
+    rootTypeElements.add(typeElement)
+    return true
 }
 
 fun RoundEnvironment.findDependenciesInParents() {
@@ -155,7 +171,7 @@ fun RoundEnvironment.findDependenciesInParents() {
         val typeElement = childElement.asTypeElement()
         var superclass = typeElement.superclass
         var isDependenciesFound = false
-        while (!superclass.isNotValid()) {
+        while (superclass.isAllowForScan()) {
             if (uniqueRootTypeElements.contains(superclass.toString())) continue
             val superclassTypeElement = superclass.asTypeElement()
 
@@ -168,7 +184,6 @@ fun RoundEnvironment.findDependenciesInParents() {
                 isDependenciesFound = true
             }
             superclass = superclassTypeElement.superclass
-            if (superclass.isNotValid()) break
         }
 
         if (isDependenciesFound && !rootTypeElements.contains(typeElement)) {
@@ -215,6 +230,12 @@ fun TypeMirror.isNotValid(): Boolean {
         || kind == TypeKind.NONE
         || kind == TypeKind.PACKAGE
         || kind == TypeKind.NULL
+}
+
+fun TypeMirror.isAllowForScan(): Boolean {
+    if (isNotValid()) return false
+    val typeString = this.toString()
+    return excludedPackages.none { typeString.startsWith(it) }
 }
 
 fun Element.isEqualTo(other: Element): Boolean {
