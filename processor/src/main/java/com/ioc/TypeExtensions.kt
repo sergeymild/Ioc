@@ -78,7 +78,7 @@ fun findDataObservers(element: TypeElement): List<TargetDataObserver> {
                 if (observerMethod.firstParameter().toString() == liveDataGeneric.asType().toString() && liveDataNamed == observerMethodNamed) {
                     targetDataObservers.add(TargetDataObserver(
                         viewModel = viewModelType,
-                        targetViewModelField = findDependencyGetter(viewModel),
+                        targetViewModelField = findDependencyGetter(viewModel).orElse { throwsSetterIsNotFound(viewModel) },
                         viewModelLiveDataField = findDependencyGetterFromTypeOrSuperType(viewModelLiveDataField),
                         observingType = liveDataGeneric,
                         observerMethod = observerMethod,

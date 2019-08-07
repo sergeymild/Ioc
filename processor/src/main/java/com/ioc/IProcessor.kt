@@ -70,7 +70,9 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
             val injectAnnotationType = processingEnvironment.elementUtils.getTypeElement(LocalScope::class.java.canonicalName)
             val scanner = AnnotationSetScanner(processingEnvironment, mutableSetOf())
             for (localScoped in scanner.scan(element, injectAnnotationType)) {
-                val getterName = findDependencyGetter(localScoped).toGetterName()
+                val getterName = findDependencyGetter(localScoped)
+                    .orElse { throwsGetterIsNotFound(localScoped) }
+                    .toGetterName()
                 type.localScopeDependencies[localScoped.asType().toString()] = getterName
             }
 

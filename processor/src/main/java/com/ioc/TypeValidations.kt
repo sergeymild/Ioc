@@ -95,27 +95,78 @@ fun validatePostInitializationMethod(method: ExecutableElement) {
     }
 }
 
-
-fun namedStringForError(named: String?): String {
-    return if (named.isNullOrBlank()) "@Default" else "@$named"
+fun validateContainsSetterAndGetterInParent(element: Element) {
+    findDependencySetter(element).orElse { throwsSetterIsNotFound(element) }
+    findDependencyGetter(element).orElse { throwsGetterIsNotFound(element) }
 }
 
-fun throwMoreThanOneDependencyFoundIfNeed(element: Element, named: String?, models: List<CharSequence>) {
+fun validateSetterMethod(method: ExecutableElement) {
+    if (method.parameters.size > 1) {
+        throw ProcessorException("@Inject annotation is placed on method `$method` in `${method.enclosingElement.simpleName}` with more than one parameter").setElement(method)
+    }
+
+    if (method.isPrivate()) {
+        throw ProcessorException("@Inject annotation is placed on method `$method` in `${method.enclosingElement.simpleName}` with private access").setElement(method)
+    }
+}
+
+fun validateConstructorParameter(element: Element) {
+    if (element.isPrimitive()) {
+        throw ProcessorException("Constructor used primitive type").setElement(element)
+    }
+}
+
+fun throwsMoreThanOneDependencyFoundIfNeed(element: Element, named: String?, models: List<CharSequence>) {
     if (models.size <= 1) return
     throw ProcessorException("Found more than one implementation of `${element.asType()}` with qualifier `${namedStringForError(named)}` [${models.joinToString()}]")
         .setElement(element)
 }
 
-fun throwCantFindImplementations(model: Element, target: TargetType?) {
-    throw ProcessorException("Can't find methodProvider of `${model.asType()} ${model.enclosingElement}` maybe you forgot add correct @Named, @Qualifier annotations or add @Dependency on provides method, `${target?.element}`").setElement(target?.element)
+fun throwsCantFindImplementations(model: Element, target: TargetType?) {
+    throw ProcessorException("Can't find method provider of `${model.asType()} ${model.enclosingElement}` maybe you forgot add correct @Named, @Qualifier annotations or add @Dependency on provides method, `${target?.element}`").setElement(target?.element)
 }
 
-fun throwIfTargetUsedInSingleton(target: TargetType, parentElement: Element, models: List<DependencyModel>) {
+fun didNotFindConstructorOrMethodProvider(element: Element): ProcessorException {
+    return ProcessorException("Can't find default constructor or provide method for `${element.asType()}`").setElement(element)
+}
+
+fun throwsIfTargetUsedInSingleton(target: TargetType, parentElement: Element, models: List<DependencyModel>) {
     if (models.any { target.isSubtype(it.dependency, it.originalType) }) {
         throw ProcessorException("target can't be user as dependency in Singleton").setElement(parentElement)
     }
 }
 
-fun throwSingletonMethodAbstractReturnType(method: ExecutableElement) {
+fun throwsSingletonMethodAbstractReturnType(method: ExecutableElement) {
     throw ProcessorException("`${method.enclosingElement}.${method.simpleName}()` annotated with @Singleton must returns implementation not abstract type").setElement(method)
+}
+
+@Throws(Throwable::class)
+fun throwsGetterIsNotFoundException(element: Element): ProcessorException {
+    return ProcessorException("@Inject annotation placed on field `${element.simpleName}` in `${element.enclosingElement.simpleName}` with private access and which does't have public getter method.").setElement(element)
+}
+
+@Throws(Throwable::class)
+fun throwsGetterIsNotFound(element: Element) {
+    throw throwsGetterIsNotFoundException(element)
+}
+
+@Throws(ProcessorException::class)
+fun throwsSetterIsNotFound(element: Element) {
+    throw ProcessorException("@Inject annotation placed on field `${element.simpleName}` in `${element.enclosingElement.simpleName}` with private access and which does't have public setter method.").setElement(element)
+}
+
+fun throwsInjectPlacedOnPrivateMethod(element: Element) {
+    throw ProcessorException("@Inject annotation is placed on method `$element` in `${element.enclosingElement}` with private access").setElement(element)
+}
+
+fun throwsConstructorIsPrivate(element: Element) {
+    throw ProcessorException("${element.enclosingElement}.${element.simpleName} contains @Inject must be public").setElement(element)
+}
+
+fun throwsConstructorHasUnsupportedParameters(element: Element) {
+    throw ProcessorException("@Inject annotation placed on constructor in ${element.enclosingElement} which have unsupported parameters.").setElement(element)
+}
+
+fun throwsDidNotFindSuitableConstructor(element: Element) {
+    throw ProcessorException("Cant find suitable constructors ${element.enclosingElement}").setElement(element)
 }

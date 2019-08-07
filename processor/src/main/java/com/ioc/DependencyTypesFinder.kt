@@ -35,7 +35,7 @@ class DependencyTypesFinder(
         if (!isInterface && !isAbstractClass) return null
 
         if ((isInterface || isAbstractClass) && methodProvider == null) {
-            throwCantFindImplementations(element, target)
+            throwsCantFindImplementations(element, target)
         }
 
         return null
@@ -53,7 +53,7 @@ class DependencyTypesFinder(
                     originalType = implementationType,
                     isSingleton = implementationType.isSingleton()
                 ))
-                throwMoreThanOneDependencyFoundIfNeed(element, named, implementations.map { it.originalTypeString })
+                throwsMoreThanOneDependencyFoundIfNeed(element, named, implementations.map { it.originalTypeString })
             }
         }
         return implementations.firstOrNull()
@@ -76,7 +76,7 @@ class DependencyTypesFinder(
                 originalType = implementationType ?: type,
                 isSingleton = method.isSingleton()
             ))
-            throwMoreThanOneDependencyFoundIfNeed(element, named, implementations.map { it.originalTypeString })
+            throwsMoreThanOneDependencyFoundIfNeed(element, named, implementations.map { it.originalTypeString })
         }
         return implementations.firstOrNull()
     }
@@ -103,11 +103,11 @@ class DependencyTypesFinder(
             type.isKotlinModule = isKotlinModule
             type.name = provider.simpleName
             type.isSingleton = type.isSingleton || provider.isSingleton()
-            if (type.isSingleton) throwIfTargetUsedInSingleton(target, provider, type.dependencies)
+            if (type.isSingleton) throwsIfTargetUsedInSingleton(target, provider, type.dependencies)
             if (type.isSingleton && returnType.isAbstract() && qualifierFinder.getQualifier(provider) != null)
-                throwSingletonMethodAbstractReturnType(provider)
+                throwsSingletonMethodAbstractReturnType(provider)
             implementations.add(type)
-            throwMoreThanOneDependencyFoundIfNeed(element, named, implementations.map { it.name })
+            throwsMoreThanOneDependencyFoundIfNeed(element, named, implementations.map { it.name })
         }
 
         return implementations.firstOrNull()

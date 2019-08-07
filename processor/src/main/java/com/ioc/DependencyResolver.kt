@@ -7,7 +7,6 @@ import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.TypeElement
 import javax.lang.model.util.ElementFilter
-import javax.lang.model.util.Types
 
 /**
  * Created by sergeygolishnikov on 31/10/2017.
@@ -33,27 +32,20 @@ class DependencyResolver(
         val fieldName = dependencyElement.simpleName
 
         if (element.isMethod() && element.isPrivate()) {
-            throw ProcessorException("@Inject annotation is placed on method `$element` in `${element.enclosingElement}` with private access").setElement(element)
+            throwsInjectPlacedOnPrivateMethod(element)
         }
 
         // If @Inject annotation is placed on private field
         // try to find setter method with one parameter and same type
         if (element.isPrivate()) {
-            val result = findSetterAndGetterMethods(element)
-            setterMethod = result.setter
+            validateContainsSetterAndGetterInParent(element)
+            setterMethod = findDependencySetter(element).orElse { throwsSetterIsNotFound(element) }
         }
 
         // If @Inject annotation is placed on setter method
         if (element.isMethod()) {
-            setterMethod = element as ExecutableElement
-            if (setterMethod.parameters.size > 1) {
-                throw ProcessorException("@Inject annotation is placed on method `$element` in `${element.enclosingElement.simpleName}` with more than one parameter").setElement(element)
-            }
-
-            if (setterMethod.isPrivate()) {
-                throw ProcessorException("@Inject annotation is placed on method `$element` in `${element.enclosingElement.simpleName}` with private access").setElement(element)
-            }
-
+            setterMethod = element.asMethod()
+            validateSetterMethod(setterMethod)
             dependencyElement = setterMethod.parameters[0]
         }
 
@@ -166,9 +158,7 @@ class DependencyResolver(
             }
 
             // Ioc not supported primitive types for now
-            if (argument.isPrimitive()) {
-                throw ProcessorException("Constructor used primitive type").setElement(argument)
-            }
+            validateConstructorParameter(argument)
 
             val dependency = resolveDependency(argument, newTarget)
             constructorDependencies.add(dependency)
@@ -182,19 +172,17 @@ class DependencyResolver(
         var constructor = constructors.firstOrNull { it.isHasAnnotation(Inject::class.java) }
 
         if (constructor != null && constructor.isPrivate()) {
-            throw ProcessorException("${constructor.enclosingElement}.${constructor.simpleName} contains @Inject must be public")
+            throwsConstructorIsPrivate(constructor)
         }
 
         if (constructor == null && constructors.size == 1) constructor = constructors.firstOrNull()
 
         if (constructor != null && constructor.parameters.any { !it.isSupportedType() }) {
-            throw ProcessorException("@Inject annotation placed on constructor in ${constructor.enclosingElement} which have unsupported parameters.").setElement(constructor)
+            throwsConstructorHasUnsupportedParameters(constructor)
         }
 
         if (constructor == null) constructor = constructors.firstOrNull { it.parameters.isEmpty() }
-        if (constructor != null && constructor.isPrivate()) {
-            throw ProcessorException("Cant find suitable constructors ${constructor.enclosingElement}").setElement(constructor)
-        }
+        if (constructor != null && constructor.isPrivate()) throwsDidNotFindSuitableConstructor(constructor)
 
         return constructor
     }

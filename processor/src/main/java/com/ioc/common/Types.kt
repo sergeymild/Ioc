@@ -68,3 +68,7 @@ fun singletonClassPackage(model: DependencyModel): String {
 fun singletonTypeName(model: DependencyModel): TypeName {
     return ClassName.bestGuess("${singletonClassPackage(model)}.${singletonClassName(model)}")
 }
+
+fun namedStringForError(named: String?): String {
+    return if (named.isNullOrBlank()) "@Default" else "@$named"
+}

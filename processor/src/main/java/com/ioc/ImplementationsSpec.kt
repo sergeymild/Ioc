@@ -150,7 +150,7 @@ class ImplementationsSpec constructor(
             val packageName = model.originalType.asTypeElement().getPackage()
             val isAllowedPackage = excludedPackages.any { packageName.toString().startsWith(it) }
             if (model.methodProvider == null && isAllowedPackage) {
-                throwCantFindImplementations(model.dependency, target)
+                throwsCantFindImplementations(model.dependency, target)
             }
 
             val builder = CodeBlock.builder()

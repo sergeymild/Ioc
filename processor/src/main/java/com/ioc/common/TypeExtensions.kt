@@ -371,47 +371,41 @@ fun Element.isStatic(): Boolean {
     return modifiers.contains(Modifier.STATIC)
 }
 
-fun <T> List<T>.addTo(other: MutableList<T>) {
-    other.addAll(this)
+fun ExecutableElement.isContainsOneParameterOf(element: Element): Boolean {
+    return parameters.size == 1 && parameters[0].isEqualTo(element)
 }
-
-class SetterAndGetter(val setter: ExecutableElement, val getter: Element)
 
 @Throws(ProcessorException::class)
 fun findDependencySetter(element: Element): ExecutableElement? {
     return element.enclosingElement.methods {
-        it.isPublic() && it.parameters.size == 1 && it.parameters[0].isEqualTo(element)
+        it.isPublic() && it.isContainsOneParameterOf(element)
     }.firstOrNull()
 }
 
 @Throws(ProcessorException::class)
-fun findDependencyGetter(element: Element): Element {
+fun findDependencyGetter(element: Element): Element? {
     if (element.isPublic()) return element
     return element.enclosingElement.methods {
-        it.isPublic() && it.parameters.isEmpty() && it.returnType.toString() == element.asType().toString()
+        it.isPublic() && it.parameters.isEmpty() && it.returnType.isEqualTo(element)
     }.firstOrNull()
-        ?: throw ProcessorException("@Inject annotation placed on field `${element.simpleName}` in `${element.enclosingElement.simpleName}` with private access and which does't have public getter method.").setElement(element)
 }
 
-fun TypeMirror.isJavaObject(): Boolean {
-    return toString() == "java.lang.Object"
-}
+fun collectSuperTypes(typeElement: TypeElement?, includeSelf: Boolean = false): Set<TypeMirror> {
+    typeElement ?: return emptySet()
 
-fun supertypes(element: Element): Set<String> {
-    val supertypes = mutableSetOf<String>()
-    val type = element.asTypeElement()
+    val supertypes = mutableSetOf<TypeMirror>()
     val queue = LinkedList<TypeMirror>()
-    queue.add(type.asType())
-    queue.add(type.superclass)
-    queue.addAll(type.interfaces)
+    if (includeSelf) queue.add(typeElement.asType())
+    queue.addAll(typeElement.interfaces)
+    queue.add(typeElement.superclass)
 
     while (queue.isNotEmpty()) {
         val supertype = queue.pop()
-        if (supertype.kind == TypeKind.NONE) continue
-        supertypes.add(supertype.asElement().toString())
-        val supertypeElement = supertype.asTypeElement()
-        if (supertypeElement.superclass != null && !supertypeElement.superclass.isJavaObject()) queue.add(supertypeElement.superclass)
-        queue.addAll(supertypeElement.interfaces)
+        if (supertype.isNotValid()) continue
+        supertypes.add(supertype)
+        val superclass = supertype.asTypeElement()
+        queue.addAll(superclass.interfaces)
+        queue.add(superclass.superclass)
     }
 
     return supertypes
@@ -420,26 +414,18 @@ fun supertypes(element: Element): Set<String> {
 @Throws(ProcessorException::class)
 fun findDependencyGetterFromTypeOrSuperType(element: Element): Element {
     if (element.isPublic()) return element
-    val supertypes = supertypes(element)
+    val supertypes = collectSuperTypes(element.asTypeElement(), includeSelf = true)
     val genericType = element.getGenericFirstOrSelfType()
     for (method in element.enclosingElement.methods()) {
         val returnType = method.returnType.asElement().toString()
-        if (supertypes.contains(returnType)) {
+        if (supertypes.any { IProcessor.types.erasure(it).toString() == returnType }) {
             val typeArguments = method.returnType.typeArguments()
-            if (typeArguments.isNotEmpty() && typeArguments.size == 1 && typeArguments[0].toString() == genericType.asType().toString()) {
+            if (typeArguments.isNotEmpty() && typeArguments.size == 1 && typeArguments[0].isEqualTo(genericType)) {
                 return method
             }
         }
     }
-    throw ProcessorException("@Inject annotation placed on field `${element.simpleName}` in `${element.enclosingElement.simpleName}` with private access and which does't have public getter method.").setElement(element)
+    throw throwsGetterIsNotFoundException(element)
 }
 
 fun Element.toGetterName(): String = if (this is ExecutableElement) "$simpleName()" else simpleName.toString()
-
-fun findSetterAndGetterMethods(element: Element): SetterAndGetter {
-    val setterMethod = findDependencySetter(element).orElse {
-        throw ProcessorException("@Inject annotation placed on field `${element.simpleName}` in `${element.enclosingElement.simpleName}` with private access and which does't have public setter method.").setElement(element)
-    }
-    val getterMethod = findDependencyGetter(element)
-    return SetterAndGetter(setterMethod, getterMethod)
-}

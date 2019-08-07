@@ -21,7 +21,7 @@ object DependencyTree {
             val packageName = dependency.originalType.asTypeElement().getPackage()
             val isAllowedPackage = excludedPackages.any { packageName.toString().startsWith(it) }
             if (dependency.methodProvider == null && isAllowedPackage) {
-                throwCantFindImplementations(dependency.dependency, target)
+                throwsCantFindImplementations(dependency.dependency, target)
             }
 
             var code = generateCode(dependency, target).toBuilder()
@@ -63,6 +63,6 @@ object DependencyTree {
                 names).build()
         }
 
-        throw ProcessorException("Can't find default constructor or provide method for `${model.dependencyTypeString}`").setElement(model.dependency)
+        throw didNotFindConstructorOrMethodProvider(model.dependency)
     }
 }
