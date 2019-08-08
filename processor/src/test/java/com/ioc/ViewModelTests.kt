@@ -80,7 +80,15 @@ class ViewModelTests {
         "import $fragmentActivityPackage.FragmentActivity;",
         "",
         "public class AppCompatActivity extends FragmentActivity {",
+        "}")
 
+    private val androidFragment = JavaFileObjects.forSourceLines("androidx.fragment.app.Fragment",
+        "package androidx.fragment.app;",
+        "import $lifecyclePackage.LiveData;",
+        "import $lifecyclePackage.LifecycleOwner;",
+        "",
+        "public class Fragment implements LifecycleOwner {",
+        "   public LifecycleOwner getViewLifecycleOwner() { return null; }",
         "}")
 
 
@@ -751,6 +759,135 @@ class ViewModelTests {
 
         Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(JavaSourcesSubjectFactory.javaSources())
             .that(listOf<JavaFileObject>(activityFile, androidViewModel, androidViewModelProvider, androidViewModelProviders, androidAppCompatActivity, androidFragmentActivity, activityViewModel, androidMutableLiveData, androidLiveData, androidLiveDataObserver, androidLifecycleOwner))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun liveDataObserverInFragment() {
+
+        val activityViewModel = JavaFileObjects.forSourceLines("test.ActivityViewModel",
+            "package test;",
+            "import $lifecyclePackage.MutableLiveData;",
+            "",
+            "public class ActivityViewModel {",
+            "   public MutableLiveData<String> stringLiveData = new MutableLiveData<String>();",
+            "   public ActivityViewModel() {};",
+            "}")
+
+        val activityFile = JavaFileObjects.forSourceLines("test.AppFragment",
+            "package test;",
+            "",
+            "import $inject;",
+            "import $iocLocalScope;",
+            "import $iocDataObserver;",
+            "import $lifecyclePackage.LifecycleOwner;",
+            "import androidx.fragment.app.Fragment;",
+            Helpers.importType(ViewModel::class.java),
+
+            "public class AppFragment extends Fragment {",
+            "",
+            "   @Inject",
+            "   @ViewModel",
+            "   public ActivityViewModel activityViewModel;",
+            "   @DataObserver",
+            "   public void observeStringLiveData(String data) {}",
+            "}")
+
+
+        val injectedFile = JavaFileObjects.forSourceLines("test.AppFragmentInjector",
+            "package test;",
+            "import $keep;",
+            "import $nonNull;",
+            "import $lifecyclePackage.Observer;",
+            "import java.lang.String;",
+            "",
+            "@Keep",
+            "public final class AppFragmentInjector {",
+            "   @Keep",
+            "   public static final void inject(@NonNull final AppFragment target) {",
+            "       target.activityViewModel = new ActivityViewModel();",
+            "       observeMutableLiveDataStringFromActivityViewModel(target);",
+            "   }",
+            "",
+            "   private static final void observeMutableLiveDataStringFromActivityViewModel(@NonNull final AppFragment target) {",
+            "       target.activityViewModel.stringLiveData.observe(target.getViewLifecycleOwner(), new Observer<String>() {",
+            "           public void onChanged(String observingData) {",
+            "               target.observeStringLiveData(observingData);",
+            "           }",
+            "       });",
+            "   }",
+            "}")
+
+        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(JavaSourcesSubjectFactory.javaSources())
+            .that(listOf<JavaFileObject>(activityFile, androidViewModel, androidViewModelProvider, androidViewModelProviders, androidFragment, androidAppCompatActivity, androidFragmentActivity, activityViewModel, androidMutableLiveData, androidLiveData, androidLiveDataObserver, androidLifecycleOwner))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun liveDataObserverForeverInFragment() {
+
+        val activityViewModel = JavaFileObjects.forSourceLines("test.ActivityViewModel",
+            "package test;",
+            "import $lifecyclePackage.MutableLiveData;",
+            "",
+            "public class ActivityViewModel {",
+            "   public MutableLiveData<String> stringLiveData = new MutableLiveData<String>();",
+            "   public ActivityViewModel() {};",
+            "}")
+
+        val activityFile = JavaFileObjects.forSourceLines("test.AppFragment",
+            "package test;",
+            "",
+            "import $inject;",
+            "import $iocLocalScope;",
+            "import $iocDataObserver;",
+            "import $lifecyclePackage.LifecycleOwner;",
+            "import $iocDataObserver.ObserveType;",
+            "import androidx.fragment.app.Fragment;",
+            Helpers.importType(ViewModel::class.java),
+
+            "public class AppFragment extends Fragment {",
+            "",
+            "   @Inject",
+            "   @ViewModel",
+            "   public ActivityViewModel activityViewModel;",
+            "   @DataObserver(DataObserver.ObserveType.FOREVER)",
+            "   public void observeStringLiveData(String data) {}",
+            "}")
+
+
+        val injectedFile = JavaFileObjects.forSourceLines("test.AppFragmentInjector",
+            "package test;",
+            "import $keep;",
+            "import $nonNull;",
+            "import $lifecyclePackage.Observer;",
+            "import java.lang.String;",
+            "",
+            "@Keep",
+            "public final class AppFragmentInjector {",
+            "   @Keep",
+            "   public static final void inject(@NonNull final AppFragment target) {",
+            "       target.activityViewModel = new ActivityViewModel();",
+            "       observeMutableLiveDataStringFromActivityViewModel(target);",
+            "   }",
+            "",
+            "   private static final void observeMutableLiveDataStringFromActivityViewModel(@NonNull final AppFragment target) {",
+            "       target.activityViewModel.stringLiveData.observeForever(new Observer<String>() {",
+            "           public void onChanged(String observingData) {",
+            "               target.observeStringLiveData(observingData);",
+            "           }",
+            "       });",
+            "   }",
+            "}")
+
+        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(JavaSourcesSubjectFactory.javaSources())
+            .that(listOf<JavaFileObject>(activityFile, androidViewModel, androidViewModelProvider, androidViewModelProviders, androidFragment, androidAppCompatActivity, androidFragmentActivity, activityViewModel, androidMutableLiveData, androidLiveData, androidLiveDataObserver, androidLifecycleOwner))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)

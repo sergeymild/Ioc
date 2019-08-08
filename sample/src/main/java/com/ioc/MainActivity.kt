@@ -3,6 +3,7 @@ package com.ioc
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
 import com.download.transitionlibrary.PublicTraDe
 import com.example.mylibrary.MyLibraryActivity
@@ -31,6 +32,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         Ioc.inject(this)
+
+        Fragment
 
 
 //        try {

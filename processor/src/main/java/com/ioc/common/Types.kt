@@ -35,9 +35,11 @@ val providerJavaType = Provider::class.java
 val viewModelJavaType = ViewModel::class.java
 val objectJavaType = Object::class.java
 
+val androidXFragmentPackage = "androidx.fragment.app.Fragment"
 val viewModelPackages = listOf("android.arch.lifecycle.ViewModel", "androidx.lifecycle.ViewModel")
 val liveDataPackages = listOf("androidx.lifecycle.MutableLiveData", "androidx.lifecycle.LiveData")
 val allowedViewModelParents = listOf(
+    "androidx.fragment.app.Fragment",
     "android.support.v4.app.Fragment",
     "android.support.v4.app.FragmentActivity",
     "androidx.appcompat.app.AppCompatActivity"
@@ -50,7 +52,8 @@ val excludedPackages = setOf(
     "android.content",
     "android.util",
     "android.app",
-    "android.view"
+    "android.view",
+    "androidx"
 )
 
 fun provideMethodName(model: DependencyModel): String {

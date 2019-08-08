@@ -1,5 +1,6 @@
 package com.ioc
 
+import com.ioc.common.androidXFragmentPackage
 import com.ioc.common.asTypeElement
 import com.ioc.common.isEqualTo
 import com.ioc.common.isInterface
@@ -53,6 +54,10 @@ fun TargetType?.localScopeName(
     this ?: return "unused"
     return (localScopeDependencies[dependencyType.asType().toString()]
         ?: localScopeDependencies[originalType.asType().toString()])!!
+}
+
+fun TargetType.isAndroidXFragment(): Boolean {
+    return supertypes.map { it.toString() }.contains(androidXFragmentPackage)
 }
 
 class TargetType(val element: TypeElement) {

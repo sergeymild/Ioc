@@ -171,7 +171,9 @@ class ImplementationsSpec constructor(
                     .build()
 
 
-                var observeTypeString = "target.\$N.\$N.observe(target, \$L)"
+                var lifecycleOwner = "target"
+                if (target.isAndroidXFragment()) lifecycleOwner = "target.getViewLifecycleOwner()"
+                var observeTypeString = "target.\$N.\$N.observe($lifecycleOwner, \$L)"
                 if (dataObserver.observeType == DataObserver.ObserveType.FOREVER) {
                     observeTypeString = "target.\$N.\$N.observeForever(\$L)"
                 }
