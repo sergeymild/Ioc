@@ -2,6 +2,13 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 
+apply plugin: "debuglog.plugin"
+
+debugLog {
+    enabled = true
+    annotations = [ "com.ioc.DebugLog" ]
+}
+
 android {
     compileSdkVersion 28
 
@@ -84,15 +91,6 @@ dependencies {
 
     implementation 'androidx.appcompat:appcompat:1.0.2'
 
-    implementation project(':core')
-    implementation project(':mylibrary')
-    implementation project(':common')
-
-    androidTestImplementation project(':core')
-    kaptAndroidTest project(':processor')
-
-    kapt project(':processor')
-    kaptTest project(':processor')
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
     testImplementation 'junit:junit:4.12'

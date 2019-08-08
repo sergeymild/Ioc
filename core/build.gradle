@@ -1,6 +1,6 @@
 apply plugin: 'java'
-apply plugin: 'com.github.dcendents.android-maven' // ADD THIS
-apply plugin: 'maven-publish' // ADD THIS
+//apply plugin: 'com.github.dcendents.android-maven' // ADD THIS
+//apply plugin: 'maven-publish' // ADD THIS
 
 group='com.ioc'
 archivesBaseName = "ioc-core"
@@ -20,13 +20,13 @@ sourceCompatibility = "1.7"
 targetCompatibility = "1.7"
 
 
-publishing {
-    publications {
-        libraryJar(MavenPublication) {
-            groupId = 'com.github.sergeymild.ioc'
-            artifactId = 'ioc-core'
-            version = baseVersion
-            from components.java
-        }
-    }
-}
+//publishing {
+//    publications {
+//        libraryJar(MavenPublication) {
+//            groupId = 'com.github.sergeymild.ioc'
+//            artifactId = 'ioc-core'
+//            version = baseVersion
+//            from components.java
+//        }
+//    }
+//}

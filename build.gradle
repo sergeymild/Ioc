@@ -5,6 +5,7 @@ buildscript {
     repositories {
         jcenter()
         mavenCentral()
+        mavenLocal()
         flatDir {
             dirs 'libs'
         }
@@ -15,8 +16,9 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:3.4.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.0'
+        //classpath 'com.github.dcendents:android-maven-gradle-plugin:2.0'
         classpath 'com.github.jengelman.gradle.plugins:shadow:5.1.0'
+        classpath "debuglog:gradle-plugin:0.0.1"
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
@@ -32,6 +34,7 @@ ext.sdk = props.getProperty("sdk.dir")
 
 allprojects {
     repositories {
+        mavenLocal()
         google()
         jcenter()
     }
@@ -39,4 +42,13 @@ allprojects {
 
 task clean(type: Delete) {
     delete rootProject.buildDir
+}
+
+subprojects {
+    repositories { jcenter() }
+
+    // Install into local Maven repo with `./gradlew :kotlin-plugin:install :gradle-plugin:install`
+    apply plugin: "maven"
+    group = "debuglog"
+    version = "0.0.1"
 }

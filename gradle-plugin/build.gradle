@@ -1,0 +1,21 @@
+apply plugin: "java-gradle-plugin"
+apply plugin: "org.jetbrains.kotlin.jvm"
+apply plugin: "kotlin-kapt"
+
+gradlePlugin {
+    plugins {
+        simplePlugin {
+            id = "debuglog.plugin" // users will do `apply plugin: "debuglog.plugin"`
+            implementationClass = "debuglog.DebugLogGradlePlugin" // entry-point class
+        }
+    }
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-gradle-plugin-api:$kotlin_version"
+
+    // Needed to register Subplugin as a service
+    compileOnly "com.google.auto.service:auto-service:1.0-rc4"
+    kapt "com.google.auto.service:auto-service:1.0-rc4"
+}
