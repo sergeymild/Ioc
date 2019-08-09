@@ -1333,14 +1333,13 @@ class NamedTest : BaseTest {
             "",
             "import $keep",
             "import $nonNull",
-            "import $ioc",
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
             "   public static final void inject(@NonNull final Activity target) {",
-            "       target.setDebugFromMethod(Ioc.singleton(DebugDependency.class));",
-            "       target.setReleaseFromMethod(Ioc.singleton(ReleaseDependency.class));",
+            "       target.setDebugFromMethod(DebugDependencySingleton.getInstance());",
+            "       target.setReleaseFromMethod(ReleaseDependencySingleton.getInstance());",
             "   }",
             "}")
 

@@ -3,16 +3,11 @@ package com.ioc.common
 import com.ioc.*
 import com.ioc.IProcessor.Companion.elementUtils
 import com.ioc.IProcessor.Companion.processingEnvironment
-import com.ioc.Scan
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.TypeName
-import java.lang.ref.WeakReference
 import java.util.*
 import javax.annotation.processing.ProcessingEnvironment
 import javax.annotation.processing.RoundEnvironment
-import javax.inject.Inject
-import javax.inject.Provider
-import javax.inject.Singleton
 import javax.lang.model.element.*
 import javax.lang.model.type.DeclaredType
 import javax.lang.model.type.TypeKind
@@ -70,8 +65,7 @@ fun Element.getPackage(): PackageElement {
     return MoreElements.getPackage(this)
 }
 
-val targetDependencies = mutableMapOf<String, MutableSet<Element>>()
-val rootTypeElements = mutableListOf<TypeElement>()
+
 
 class AnnotationSetScanner(
     private val processingEnvironment: ProcessingEnvironment,
@@ -111,9 +105,10 @@ fun scanForAnnotation(typeElement: TypeElement, annotation: Class<*>): MutableSe
     return scanner.scan(typeElement, annotationType)
 }
 
-fun RoundEnvironment.rootElementsWithInjectedDependencies(): List<TypeElement> {
-    targetDependencies.clear()
-    rootTypeElements.clear()
+fun RoundEnvironment.rootElementsWithInjectedDependencies(
+    targetDependencies: MutableMap<String, MutableSet<Element>>,
+    rootTypeElements: MutableList<TypeElement>): List<TypeElement> {
+
 
     val injectedElements = getElementsAnnotatedWith(injectJavaType)
 
@@ -133,7 +128,7 @@ fun RoundEnvironment.rootElementsWithInjectedDependencies(): List<TypeElement> {
             while (index < 3) {
                 if (!superclass.isAllowForScan()) break
                 val superclassType = superclass.asTypeElement()
-                if (addRootDependencyIfNeed(superclassType)) {
+                if (addRootDependencyIfNeed(superclassType, targetDependencies, rootTypeElements)) {
                     superclass = superclassType.superclass
                 }
                 index++
@@ -148,13 +143,17 @@ fun RoundEnvironment.rootElementsWithInjectedDependencies(): List<TypeElement> {
     for (method in methodsWithDependencyAnnotation()) {
         if (!method.isHasAnnotation(scanJavaType)) continue
         validateMethodAnnotatedWithTarget(method)
-        addRootDependencyIfNeed(method.returnType.asTypeElement())
+        addRootDependencyIfNeed(method.returnType.asTypeElement(), targetDependencies, rootTypeElements)
     }
 
     return rootTypeElements
 }
 
-fun addRootDependencyIfNeed(typeElement: TypeElement): Boolean {
+fun addRootDependencyIfNeed(
+    typeElement: TypeElement,
+    targetDependencies: MutableMap<String, MutableSet<Element>>,
+    rootTypeElements: MutableList<TypeElement>): Boolean {
+
     val key = typeElement.asMapKey()
     if (targetDependencies.containsKey(key)) return false
     val found = scanForAnnotation(typeElement, injectJavaType)
@@ -164,7 +163,10 @@ fun addRootDependencyIfNeed(typeElement: TypeElement): Boolean {
     return true
 }
 
-fun RoundEnvironment.findDependenciesInParents() {
+fun RoundEnvironment.findDependenciesInParents(
+    targetDependencies: MutableMap<String, MutableSet<Element>>,
+    rootTypeElements: MutableList<TypeElement>) {
+
     val uniqueRootTypeElements = mutableSetOf<String>()
 
     for (childElement in getElementsAnnotatedWith(injectParentDependenciesJavaType)) {
@@ -193,7 +195,11 @@ fun RoundEnvironment.findDependenciesInParents() {
     }
 }
 
-fun mapToTargetWithDependencies(dependencyResolver: DependencyResolver): Map<TargetType, MutableList<DependencyModel>> {
+fun mapToTargetWithDependencies(
+    dependencyResolver: DependencyResolver,
+    targetDependencies: MutableMap<String, MutableSet<Element>>,
+    rootTypeElements: MutableList<TypeElement>
+): Map<TargetType, MutableList<DependencyModel>> {
     val targetsWithDependencies = mutableMapOf<TargetType, MutableList<DependencyModel>>()
 
     for (targetTypeElement in rootTypeElements) {
@@ -281,7 +287,8 @@ fun TypeMirror.asDeclared(): DeclaredType {
 
 fun TypeMirror.typeArguments(): List<TypeMirror> {
     if (this !is DeclaredType) return emptyList()
-    return MoreTypes.asDeclared(this).typeArguments
+    val declared = MoreTypes.asDeclared(this)
+    return if (declared.typeArguments.isNotEmpty()) declared.typeArguments else emptyList()
 }
 
 

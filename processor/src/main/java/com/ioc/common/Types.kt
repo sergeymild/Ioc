@@ -77,7 +77,9 @@ fun singletonClassName(model: DependencyModel): String {
 }
 
 fun singletonClassPackage(model: DependencyModel): String {
-    return model.originalType.getPackage().toString()
+    val name = model.originalType.getPackage().toString()
+    if (excludedPackages.any { name.startsWith(it) }) return "com.ioc"
+    return name
 }
 
 fun singletonTypeName(model: DependencyModel): TypeName {

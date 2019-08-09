@@ -20,7 +20,7 @@ class NewSingletonSpec(private val dependency: DependencyModel) {
         val singletonName = singletonClassName(dependency)
         return TypeSpec.classBuilder(singletonName)
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-            .superclass(dependency.originalType.asLazyType())
+            .superclass(dependency.asLazyType())
             .addAnnotation(keepAnnotation)
             .addMethod(getInstanceMethod(singletonName))
             .addMethod(initializeMethod())
@@ -31,9 +31,9 @@ class NewSingletonSpec(private val dependency: DependencyModel) {
     private fun getInstanceMethod(singletonName: String): MethodSpec {
         return MethodSpec.methodBuilder("getInstance")
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL, Modifier.STATIC)
-            .returns(ClassName.bestGuess(singletonName))
+            .returns(dependency.originalClassName)
             .addStatement("if (instance == null) instance = new \$N()", singletonName)
-            .addStatement("return instance")
+            .addStatement("return instance.get()")
             .build()
     }
 
@@ -49,7 +49,8 @@ class NewSingletonSpec(private val dependency: DependencyModel) {
         val names = dependency.dependencyNames()
 
         dependency.methodProvider?.let {
-            return builder.addStatement("return \$T.\$N(\$L)", it.module, it.name, names).build()
+            val instance = if (it.isKotlinModule) "INSTANCE." else ""
+            return builder.addStatement("return \$T.$instance\$N(\$L)", it.module, it.name, names).build()
         }
         builder.addStatement("return new \$T(\$L)", dependency.originalClassName, names)
         return builder.build()

@@ -1,6 +1,8 @@
 package com.ioc
 
-import com.ioc.common.iocType
+import com.ioc.common.singletonClassName
+import com.ioc.common.singletonClassPackage
+import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.CodeBlock
 
 /**
@@ -11,8 +13,9 @@ val emptyCodBlock = CodeBlock.builder().build()
 
 
 fun iocGetSingleton(model: DependencyModel): CodeBlock {
-    val className = model.originalClassName
-    return CodeBlock.builder().add("\$T.singleton(\$T.class)", iocType, className).build()
+
+    val className = ClassName.get(singletonClassPackage(model), singletonClassName(model))
+    return CodeBlock.builder().add("\$T.getInstance()", className).build()
 }
 
 fun emptyConstructor(model: DependencyModel): CodeBlock {

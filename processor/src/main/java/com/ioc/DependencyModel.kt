@@ -1,7 +1,6 @@
 package com.ioc
 
-import com.ioc.common.asTypeElement
-import com.ioc.common.decapitalize
+import com.ioc.common.*
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.ParameterizedTypeName
 import com.squareup.javapoet.TypeName
@@ -55,6 +54,13 @@ fun DependencyModel.copy(): DependencyModel {
         it.setterMethod = setterMethod
         it.dependencies = dependencies.map { d -> d.copy() }
     }
+}
+
+fun DependencyModel.asLazyType(): TypeName {
+    val names = dependency.asType().typeArguments().map { ClassName.get(it) }.toTypedArray()
+    if (names.isEmpty()) return ParameterizedTypeName.get(iocLazyType, originalClassName)
+    val type = ParameterizedTypeName.get(ClassName.get(originalType), *names)
+    return ParameterizedTypeName.get(iocLazyType, type)
 }
 
 class DependencyModel constructor(

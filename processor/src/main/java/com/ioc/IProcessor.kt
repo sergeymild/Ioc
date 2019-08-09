@@ -90,21 +90,19 @@ open class IProcessor : AbstractProcessor() {
         dependencyResolver = DependencyResolver(qualifierFinder, dependencyFinder)
         dependencyFinder.dependencyResolver = dependencyResolver
 
-        roundEnv.rootElementsWithInjectedDependencies()
-        roundEnv.findDependenciesInParents()
+        val targetDependencies = mutableMapOf<String, MutableSet<Element>>()
+        val rootTypeElements = mutableListOf<TypeElement>()
 
-        val targetsWithDependencies = mapToTargetWithDependencies(dependencyResolver)
+        roundEnv.rootElementsWithInjectedDependencies(targetDependencies, rootTypeElements)
+        roundEnv.findDependenciesInParents(targetDependencies, rootTypeElements)
+
+        val targetsWithDependencies = mapToTargetWithDependencies(dependencyResolver, targetDependencies, rootTypeElements)
         val targetTypes = targetsWithDependencies.keys
 
         val singletonElements = roundEnv.getElementsAnnotatedWith(Singleton::class.java)
         for (singletonElement in singletonElements) {
             validateSingletonClass(singletonElement)
             validateSingletonMethod(singletonElement)
-            var element = singletonElement
-            if (singletonElement.isMethod()) element = singletonElement.asMethod().returnType.asElement()
-            if (projectSingletons.containsKey(element.asTypeString())) continue
-            val t = processingEnvironment.elementUtils.getTypeElement(SingletonStorage::class.java.canonicalName)
-            dependencyResolver.resolveDependency(element, TargetType(t))
         }
 
         for (target in targetsWithDependencies) {
@@ -153,9 +151,6 @@ open class IProcessor : AbstractProcessor() {
             val spec = NewSingletonSpec(singleton)
             spec.createSpec().writeClass(singletonClassPackage(singleton))
         }
-
-        if (singletons.isEmpty()) return
-        SingletonFactorySpec.createSpec(singletons).writeClass("com.ioc")
     }
 
     class CachedMethod(val classTypeName: TypeName, val methodSpec: MethodSpec)
