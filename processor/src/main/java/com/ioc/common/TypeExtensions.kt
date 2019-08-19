@@ -109,6 +109,7 @@ fun RoundEnvironment.rootElementsWithInjectedDependencies(
     targetDependencies: MutableMap<String, MutableSet<Element>>,
     rootTypeElements: MutableList<TypeElement>): List<TypeElement> {
 
+    val checkedSuperclasses = mutableSetOf<String>()
 
     val injectedElements = getElementsAnnotatedWith(injectJavaType)
 
@@ -124,15 +125,27 @@ fun RoundEnvironment.rootElementsWithInjectedDependencies(
 
             // first 3 supertypes for @Inject dependencies
             var superclass = typeElement.superclass
-            var index = 0
-            while (index < 3) {
-                if (!superclass.isAllowForScan()) break
+            message("startCheck: $typeElement")
+            while (superclass.isAllowForScan()) {
+                message("   check: $superclass")
+                if (!checkedSuperclasses.add(superclass.toString())) {
+                    message("   already checked: $superclass")
+                    break
+                }
                 val superclassType = superclass.asTypeElement()
                 if (addRootDependencyIfNeed(superclassType, targetDependencies, rootTypeElements)) {
                     superclass = superclassType.superclass
                 }
-                index++
             }
+//            var index = 0
+//            while (index < 3) {
+//                if (!superclass.isAllowForScan()) break
+//                val superclassType = superclass.asTypeElement()
+//                if (addRootDependencyIfNeed(superclassType, targetDependencies, rootTypeElements)) {
+//                    superclass = superclassType.superclass
+//                }
+//                index++
+//            }
         }
 
         val dependencies = targetDependencies.getOrPut(key) { mutableSetOf() }
@@ -238,7 +251,8 @@ fun TypeMirror.isNotValid(): Boolean {
         || kind == TypeKind.NULL
 }
 
-fun TypeMirror.isAllowForScan(): Boolean {
+fun TypeMirror?.isAllowForScan(): Boolean {
+    this ?: return false
     if (isNotValid()) return false
     val typeString = this.toString()
     return excludedPackages.none { typeString.startsWith(it) }

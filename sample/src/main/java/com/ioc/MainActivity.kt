@@ -3,7 +3,8 @@ package com.ioc
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.download.transitionlibrary.PublicTraDe
+import com.example.common.CommonActivity
+import com.example.common.Preferences
 import com.example.mylibrary.MyLibraryActivity
 import com.ios.injector.R
 import javax.inject.Inject
@@ -13,6 +14,9 @@ object Module {
     fun provideExampleDependencyString(): String {
         return "example"
     }
+
+    @Dependency
+    fun prefs(): Preferences? = null
 }
 
 interface IParent {
@@ -20,28 +24,46 @@ interface IParent {
 }
 
 @Dependency
-class Parent: IParent {
+class Parent {
 
+
+}
+
+open class ParentActivity: CommonActivity() {
     @Inject
-    lateinit var exampleString : String
+    lateinit var parent: Parent
+}
 
-    override fun s(): String {
-        return exampleString
-    }
+open class AnotherParentActivity: ParentActivity() {
+    @Inject
+    lateinit var string: String
+}
 
-    init {
-        Ioc.inject(this)
-    }
+open class OneMoreParentActivity: ParentActivity() {
+    @Inject
+    lateinit var string: String
+}
+
+open class TwoMoreParentActivity: OneMoreParentActivity() {
+    @Inject
+    lateinit var string2: String
+}
+
+open class FourMoreParentActivity: ThreeMoreParentActivity() {
+    @Inject
+    lateinit var string3: String
+}
+
+open class ThreeMoreParentActivity: OneMoreParentActivity() {
+    @Inject
+    lateinit var string2: String
 }
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : ParentActivity() {
 
     @Inject
     lateinit var myLibraryActivity: MyLibraryActivity
-
-    @Inject
-    lateinit var traDe: PublicTraDe
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
