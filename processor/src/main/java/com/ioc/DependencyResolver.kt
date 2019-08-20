@@ -69,7 +69,9 @@ class DependencyResolver(
 
 
         var isSingleton = dependencyTypeElement.isSingleton()
-        var isLocalScoped = dependencyTypeElement.isLocalScoped()
+        var isLocalScoped = element.isLocalScoped()
+        isLocalScoped = dependencyElement.isLocalScoped() || isLocalScoped
+        isLocalScoped = dependencyTypeElement.isLocalScoped() || isLocalScoped
 
 
         val named = named
