@@ -23,6 +23,7 @@ class ModuleMethodProvider(
     var module: Element,
     var named: String? = null,
     var isSingleton: Boolean = false,
+    var isLocal: Boolean = false,
     var isKotlinModule: Boolean = false) {
     var dependencies: MutableList<DependencyModel> = mutableListOf()
 

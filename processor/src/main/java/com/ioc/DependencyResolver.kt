@@ -122,7 +122,7 @@ class DependencyResolver(
             isWeak = isWeak,
             isSingleton = methodProvider?.isSingleton ?: isSingleton,
             isViewModel = isViewModel,
-            isLocal = isLocalScoped)
+            isLocal = methodProvider?.isLocal ?: isLocalScoped)
 
 
         dependency.methodProvider = methodProvider

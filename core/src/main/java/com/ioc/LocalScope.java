@@ -13,7 +13,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Created by sergeygolishnikov on 10/07/2017.
  */
-@Target({ FIELD, TYPE })
+@Target({ FIELD, TYPE, METHOD })
 @Retention(RUNTIME)
 @Documented
 public @interface LocalScope {

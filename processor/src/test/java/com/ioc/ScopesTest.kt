@@ -218,6 +218,7 @@ class ScopesTest : BaseTest {
             LocalScope::class.java.import(),
             "@LocalScope",
             "public class SecondScoped {",
+            "   public SecondScoped(String scoped) {}",
             "}")
 
         val sessionImpl = JavaFileObjects.forSourceLines("test.SessionImplementation",
@@ -225,7 +226,7 @@ class ScopesTest : BaseTest {
             Dependency::class.java.import(),
             "@Dependency",
             "public class SessionImplementation implements Session {",
-            "   SessionImplementation(BrowserUi browserUi, SecondScoped secondScoped) {}",
+            "   SessionImplementation(BrowserUi browserUi, SecondScoped secondScoped, String scopedString) {}",
             "}")
 
         val logger = JavaFileObjects.forSourceLines("test.Logger",
@@ -233,7 +234,7 @@ class ScopesTest : BaseTest {
             Dependency::class.java.import(),
             "@Dependency",
             "public class Logger {",
-            "   Logger(BrowserUi browserUi) {}",
+            "   Logger(BrowserUi browserUi, String scopedString) {}",
             "}")
 
         val browserUi = JavaFileObjects.forSourceLines("test.BrowserUi",
@@ -243,6 +244,16 @@ class ScopesTest : BaseTest {
             "@LocalScope",
             "public abstract class BrowserUi {",
             "   BrowserUi(Context context) {}",
+            "}")
+
+        val moduleScoped = JavaFileObjects.forSourceLines("test.ModuleScoped",
+            "package test;",
+            Dependency::class.java.import(),
+            LocalScope::class.java.import(),
+            "public class ModuleScoped {",
+            "   @LocalScope",
+            "   @Dependency",
+            "   public static String provideLocalString() { return null; }",
             "}")
 
         val phoneBrowserUi = JavaFileObjects.forSourceLines("test.PhoneBrowserUi",
@@ -276,43 +287,53 @@ class ScopesTest : BaseTest {
 
             "   @Inject",
             "   public SecondScoped secondScoped;",
+            "   @Inject",
+            "   public String scopedString;",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.MainActivityInjector",
-            "package test;",
-            "",
-            "import $keep",
-            "import $nonNull",
-            "",
-            "@Keep",
-            "public final class MainActivityInjector {",
-            "",
-            "   @Keep",
-            "   public static final void inject(@NonNull final MainActivity target) {",
-            "       target.secondScoped = new SecondScoped();",
-            "       target.browserUi = providePhoneBrowserUi(target);",
-            "       target.session = provideSessionImplementation(target);",
-            "       target.logger = provideLogger(target);",
-            "   }",
-            "",
-            "   private static final PhoneBrowserUi providePhoneBrowserUi(@NonNull final MainActivity target) {",
-            "       PhoneBrowserUi browserUi = new PhoneBrowserUi(target);",
-            "       return browserUi;",
-            "   }",
-            "",
-            "   private static final SessionImplementation provideSessionImplementation(@NonNull final MainActivity target) {",
-            "       SessionImplementation session = new SessionImplementation(target.browserUi, target.secondScoped);",
-            "       return session;",
-            "   }",
-            "",
-            "   private static final Logger provideLogger(@NonNull final MainActivity target) {",
-            "       Logger logger = new Logger(target.browserUi);",
-            "       return logger;",
-            "   }",
-            "}")
+            """
+                package test;
+
+                import android.support.annotation.Keep;
+                import android.support.annotation.NonNull;
+                
+                @Keep
+                public final class MainActivityInjector {
+                  @Keep
+                  public static final void inject(@NonNull final MainActivity target) {
+                    target.scopedString = ModuleScoped.provideLocalString();
+                    target.browserUi = providePhoneBrowserUi(target);
+                    target.secondScoped = provideSecondScoped(target);
+                    target.session = provideSessionImplementation(target);
+                    target.logger = provideLogger(target);
+                  }
+                
+                  private static final PhoneBrowserUi providePhoneBrowserUi(@NonNull final MainActivity target) {
+                    PhoneBrowserUi browserUi = new PhoneBrowserUi(target);
+                    return browserUi;
+                  }
+                  
+                  private static final SecondScoped provideSecondScoped(@NonNull final MainActivity target) {
+                    SecondScoped secondScoped = new SecondScoped(target.scopedString);
+                    return secondScoped;
+                  }
+                
+                  private static final SessionImplementation provideSessionImplementation(
+                      @NonNull final MainActivity target) {
+                    SessionImplementation session = new SessionImplementation(target.browserUi,target.secondScoped,target.scopedString);
+                    return session;
+                  }
+                
+                  private static final Logger provideLogger(@NonNull final MainActivity target) {
+                    Logger logger = new Logger(target.browserUi,target.scopedString);
+                    return logger;
+                  }
+                }
+            """.trimIndent())
 
         Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(listOf(activityFile, sessionImpl, secondScoped, logger, session, browserUi, phoneBrowserUi))
+            .that(listOf(activityFile, sessionImpl, moduleScoped, secondScoped, logger, session, browserUi, phoneBrowserUi))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)

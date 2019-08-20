@@ -75,7 +75,8 @@ class DependencyTypesFinder(
             implementations.add(DependencyModel(
                 dependency = element,
                 originalType = implementationType ?: type,
-                isSingleton = method.isSingleton()
+                isSingleton = method.isSingleton(),
+                isLocal = method.isLocalScoped()
             ))
             throwsMoreThanOneDependencyFoundIfNeed(element, named, implementations.map { it.originalTypeString })
         }
@@ -104,6 +105,7 @@ class DependencyTypesFinder(
             type.isKotlinModule = isKotlinModule
             type.name = provider.simpleName
             type.isSingleton = type.isSingleton || provider.isSingleton()
+            type.isLocal = type.isLocal || provider.isLocalScoped()
             if (type.isSingleton) throwsIfTargetUsedInSingleton(target, provider, type.dependencies)
             if (type.isSingleton && returnType.isAbstract() && qualifierFinder.getQualifier(provider) != null)
                 throwsSingletonMethodAbstractReturnType(provider)
