@@ -1,8 +1,6 @@
 package com.ioc
 
-import com.ioc.common.hashMapType
-import com.ioc.common.keepAnnotation
-import com.ioc.common.targetInjectionTypeName
+import com.ioc.common.*
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.CodeBlock
 import com.squareup.javapoet.TypeSpec
@@ -18,6 +16,9 @@ object TargetFactorySpec {
         val staticBlock = CodeBlock.builder()
         var count = 0
         for (target in targets) {
+            if (!target.element.isPublic()) {
+                throwTargetMustBePublic(target.element)
+            }
             count += 1
 
 

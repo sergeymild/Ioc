@@ -27,7 +27,7 @@ inline fun measure(message: String, block: () -> Unit) {
         block()
     } finally {
         val end = System.currentTimeMillis()
-        message("$message: [secs: ${TimeUnit.MILLISECONDS.toSeconds(end - start)}]")
+        message("$message: [mills: ${end - start}]")
     }
 }
 

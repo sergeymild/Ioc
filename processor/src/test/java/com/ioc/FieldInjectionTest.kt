@@ -3996,36 +3996,118 @@ class FieldInjectionTest {
             "public class SimpleDependency {",
             "}")
 
-
         val injectedFile = JavaFileObjects.forSourceLines("test.BaseActivityInjector",
-            "package test;",
-            "",
-            "import $keep",
-            "import $nonNull",
-            "import $iocLazy",
-            "import $iosProvider",
-            "import $weakReferenceType",
-            "",
-            "@Keep",
-            "public final class BaseActivityInjector {",
-            "   @Keep",
-            "   public static final void inject(@NonNull final BaseActivity target) {",
-            "       target.lazyEventLogger = new IocLazy<ClickedEventLogger>() {",
-            "           protected ClickedEventLogger initialize() {",
-            "               return ActivityInjector.provideClickedEventLogger();",
-            "           }",
-            "       }",
-            "       target.providerEventLogger = new IocProvider<ClickedEventLogger>() {",
-            "           protected ClickedEventLogger initialize() {",
-            "               return ActivityInjector.provideClickedEventLogger();",
-            "           }",
-            "       }",
-            "       target.weakEventLogger = new WeakReference<>(ActivityInjector.provideClickedEventLogger());",
-            "   }",
-            "}")
+            """
+            package test;
+            import android.support.annotation.Keep;
+            import android.support.annotation.NonNull;
+            import com.ioc.IocLazy;
+            import com.ioc.IocProvider;
+            import java.lang.ref.WeakReference;
+            
+            @Keep
+            public final class BaseActivityInjector {
+              @Keep
+              public static final void inject(@NonNull final BaseActivity target) {
+                target.lazyEventLogger = new IocLazy<ClickedEventLogger>() {
+                  protected ClickedEventLogger initialize() {
+                    return ActivityInjector.provideClickedEventLogger();
+                  }
+                };
+                target.providerEventLogger = new IocProvider<ClickedEventLogger>() {
+                  protected ClickedEventLogger initialize() {
+                    return ActivityInjector.provideClickedEventLogger();
+                  }
+                };
+                target.weakEventLogger = new WeakReference<>(ActivityInjector.provideClickedEventLogger());
+              }
+            }
+        """.trimIndent())
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
             .that(listOf(activityFile, baseActivityFile, simpleDependency, parentFile))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun failNestedClassMustBePublic() {
+
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            """
+                package test;
+                import $inject;
+                public class Activity {
+                    
+                    class Nested {
+                        @Inject
+                        public SimpleDependency simpleDependency;
+                    }
+                
+                }
+            """.trimIndent())
+
+
+        val simpleDependency = JavaFileObjects.forSourceLines("test.SimpleDependency",
+            "package test;",
+            "",
+            "public class SimpleDependency {",
+            "}")
+
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(activityFile, simpleDependency))
+            .processedWith(IProcessor())
+            .failsToCompile()
+            .withErrorContaining("test.Activity.Nested must be public.")
+            .`in`(activityFile)
+            .onLine(5)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun findNestedClass() {
+
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            """
+                package test;
+                import $inject;
+                public class Activity {
+                    
+                    public class Nested {
+                        @Inject
+                        public SimpleDependency simpleDependency;
+                    }
+                
+                }
+            """.trimIndent())
+
+
+        val simpleDependency = JavaFileObjects.forSourceLines("test.SimpleDependency",
+            "package test;",
+            "",
+            "public class SimpleDependency {",
+            "}")
+
+        val injectedFile = JavaFileObjects.forSourceLines("test.NestedInjector",
+            """
+            package test;
+
+            import android.support.annotation.Keep;
+            import android.support.annotation.NonNull;
+            
+            @Keep
+            public final class NestedInjector {
+              @Keep
+              public static final void inject(@NonNull final Activity.Nested target) {
+                target.simpleDependency = new SimpleDependency();
+              }
+            }
+        """.trimIndent())
+
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(activityFile, simpleDependency))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)

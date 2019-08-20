@@ -16,9 +16,8 @@ fun createTarget(element: TypeElement, dependencyFinder: DependencyTypesFinder):
     }
 
     // find all localScoped dependencies for use it later
-    val injectAnnotationType = IProcessor.processingEnvironment.elementUtils.getTypeElement(LocalScope::class.java.canonicalName)
-    val scanner = AnnotationSetScanner(IProcessor.processingEnvironment, mutableSetOf())
-    for (localScoped in scanner.scan(element, injectAnnotationType)) {
+    val found = scanForAnnotation(element, localScopeJavaType)
+    for (localScoped in found) {
         val getterName = findDependencyGetter(localScoped)
             .orElse { throwsGetterIsNotFound(localScoped) }
             .toGetterName()

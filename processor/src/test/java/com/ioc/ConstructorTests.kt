@@ -41,7 +41,9 @@ class ConstructorTests : BaseTest {
         val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
             "package test;",
             "",
+            Inject::class.java.import(),
             "public class ParentDependency {",
+            "   @Inject",
             "   public ParentDependency(DependencyModel argument) {}",
             "}")
 

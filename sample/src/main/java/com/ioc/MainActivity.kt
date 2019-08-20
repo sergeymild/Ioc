@@ -23,8 +23,7 @@ interface IParent {
     fun s(): String
 }
 
-@Dependency
-class Parent {
+class Parent @Inject constructor(private val s: String) {
 
 
 }

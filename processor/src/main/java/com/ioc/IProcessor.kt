@@ -93,8 +93,9 @@ open class IProcessor : AbstractProcessor() {
         val targetDependencies = mutableMapOf<String, MutableSet<Element>>()
         val rootTypeElements = mutableListOf<TypeElement>()
 
-        roundEnv.rootElementsWithInjectedDependencies(targetDependencies, rootTypeElements)
-        roundEnv.findDependenciesInParents(targetDependencies, rootTypeElements)
+        measure("rootElementsWithInjectedDependencies") {
+            roundEnv.rootElementsWithInjectedDependencies(targetDependencies, rootTypeElements)
+        }
 
         val targetsWithDependencies = mapToTargetWithDependencies(dependencyResolver, targetDependencies, rootTypeElements)
         val targetTypes = targetsWithDependencies.keys

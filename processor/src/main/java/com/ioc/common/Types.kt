@@ -27,6 +27,7 @@ val lifecycleOwner = "androidx.lifecycle.LifecycleOwner"
 val javaClassType = ParameterizedTypeName.get(ClassName.bestGuess("java.lang.Class"), TypeVariableName.get("T"))
 val scanJavaType = Scan::class.java
 val injectJavaType = Inject::class.java
+val localScopeJavaType = LocalScope::class.java
 val injectParentDependenciesJavaType = InjectParentDependencies::class.java
 val singletonJavaType = Singleton::class.java
 val weakJavaType = WeakReference::class.java

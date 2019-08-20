@@ -3,16 +3,15 @@ package com.ioc.common
 import com.ioc.*
 import com.ioc.IProcessor.Companion.elementUtils
 import com.ioc.IProcessor.Companion.processingEnvironment
+import com.ioc.scanner.AnnotationSetScanner
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.TypeName
 import java.util.*
-import javax.annotation.processing.ProcessingEnvironment
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.element.*
 import javax.lang.model.type.DeclaredType
 import javax.lang.model.type.TypeKind
 import javax.lang.model.type.TypeMirror
-import javax.lang.model.util.ElementScanner8
 
 /**
  * Created by sergeygolishnikov on 31/10/2017.
@@ -65,43 +64,9 @@ fun Element.getPackage(): PackageElement {
     return MoreElements.getPackage(this)
 }
 
-
-
-class AnnotationSetScanner(
-    private val processingEnvironment: ProcessingEnvironment,
-    elements: MutableSet<Element>) : ElementScanner8<MutableSet<Element>, TypeElement>(elements) {
-    private var annotatedElements: MutableSet<Element> = LinkedHashSet()
-
-    override fun visitType(var1: TypeElement, var2: TypeElement): MutableSet<Element> {
-        this.scan(var1.typeParameters, var2)
-        return super.visitType(var1, var2)
-    }
-
-    override fun visitExecutable(var1: ExecutableElement, var2: TypeElement): MutableSet<Element> {
-        this.scan(var1.typeParameters, var2)
-        return super.visitExecutable(var1, var2)
-    }
-
-    override fun scan(var1: Element, var2: TypeElement): MutableSet<Element> {
-        val var3 = processingEnvironment.elementUtils.getAllAnnotationMirrors(var1)
-        val var4 = var3.iterator()
-
-        while (var4.hasNext()) {
-            val var5 = var4.next() as AnnotationMirror
-            if (var2 == var5.annotationType.asElement()) {
-                this.annotatedElements.add(var1)
-            }
-        }
-
-        var1.accept(this, var2)
-        return this.annotatedElements
-    }
-}
-
 fun scanForAnnotation(typeElement: TypeElement, annotation: Class<*>): MutableSet<Element> {
     val annotationType = elementUtils.getTypeElement(annotation.canonicalName)
-    val injectElements = mutableSetOf<Element>()
-    val scanner = AnnotationSetScanner(processingEnvironment, injectElements)
+    val scanner = AnnotationSetScanner(processingEnvironment, mutableSetOf())
     return scanner.scan(typeElement, annotationType)
 }
 
@@ -125,27 +90,13 @@ fun RoundEnvironment.rootElementsWithInjectedDependencies(
 
             // first 3 supertypes for @Inject dependencies
             var superclass = typeElement.superclass
-            message("startCheck: $typeElement")
             while (superclass.isAllowForScan()) {
-                message("   check: $superclass")
-                if (!checkedSuperclasses.add(superclass.toString())) {
-                    message("   already checked: $superclass")
-                    break
-                }
+                if (!checkedSuperclasses.add(superclass.toString())) break
                 val superclassType = superclass.asTypeElement()
                 if (addRootDependencyIfNeed(superclassType, targetDependencies, rootTypeElements)) {
                     superclass = superclassType.superclass
                 }
             }
-//            var index = 0
-//            while (index < 3) {
-//                if (!superclass.isAllowForScan()) break
-//                val superclassType = superclass.asTypeElement()
-//                if (addRootDependencyIfNeed(superclassType, targetDependencies, rootTypeElements)) {
-//                    superclass = superclassType.superclass
-//                }
-//                index++
-//            }
         }
 
         val dependencies = targetDependencies.getOrPut(key) { mutableSetOf() }
@@ -176,37 +127,6 @@ fun addRootDependencyIfNeed(
     return true
 }
 
-fun RoundEnvironment.findDependenciesInParents(
-    targetDependencies: MutableMap<String, MutableSet<Element>>,
-    rootTypeElements: MutableList<TypeElement>) {
-
-    val uniqueRootTypeElements = mutableSetOf<String>()
-
-    for (childElement in getElementsAnnotatedWith(injectParentDependenciesJavaType)) {
-        val typeElement = childElement.asTypeElement()
-        var superclass = typeElement.superclass
-        var isDependenciesFound = false
-        while (superclass.isAllowForScan()) {
-            if (uniqueRootTypeElements.contains(superclass.toString())) continue
-            val superclassTypeElement = superclass.asTypeElement()
-
-            val found = scanForAnnotation(superclassTypeElement, injectJavaType)
-
-            val dependencies = targetDependencies.getOrPut(superclass.toString()) { mutableSetOf() }
-            dependencies.addAll(found)
-            if (dependencies.isNotEmpty()) {
-                rootTypeElements.add(superclassTypeElement)
-                isDependenciesFound = true
-            }
-            superclass = superclassTypeElement.superclass
-        }
-
-        if (isDependenciesFound && !rootTypeElements.contains(typeElement)) {
-            rootTypeElements.add(typeElement)
-            targetDependencies.getOrPut(typeElement.asMapKey()) { mutableSetOf() }
-        }
-    }
-}
 
 fun mapToTargetWithDependencies(
     dependencyResolver: DependencyResolver,

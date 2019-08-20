@@ -196,3 +196,8 @@ fun throwsConstructorHasUnsupportedParameters(element: Element) {
 fun throwsDidNotFindSuitableConstructor(element: Element) {
     throw ProcessorException("Cant find suitable constructors ${element.enclosingElement}").setElement(element)
 }
+
+@Throws(ProcessorException::class)
+fun throwTargetMustBePublic(element: Element) {
+    throw ProcessorException("${element.asTypeString()} must be public.").setElement(element)
+}
