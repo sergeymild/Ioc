@@ -69,6 +69,7 @@ class DependencyResolver(
 
 
         var isSingleton = dependencyTypeElement.isSingleton()
+        var isLocalScoped = dependencyTypeElement.isLocalScoped()
 
 
         val named = named
@@ -83,6 +84,7 @@ class DependencyResolver(
         possibleImplementation?.let {
             dependencyTypeElement = it.originalType.asTypeElement()
             isSingleton = it.isSingleton || isSingleton
+            isLocalScoped = it.isLocal || isLocalScoped
         }
 
         // return cached singleton
@@ -119,7 +121,8 @@ class DependencyResolver(
             isLazy = isLazy,
             isWeak = isWeak,
             isSingleton = methodProvider?.isSingleton ?: isSingleton,
-            isViewModel = isViewModel)
+            isViewModel = isViewModel,
+            isLocal = isLocalScoped)
 
 
         dependency.methodProvider = methodProvider

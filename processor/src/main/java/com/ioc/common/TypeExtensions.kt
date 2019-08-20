@@ -144,6 +144,12 @@ fun mapToTargetWithDependencies(
         for (injectElement in injectElements) {
             if (injectElement.kind == ElementKind.CONSTRUCTOR) continue
             val resolved = dependencyResolver.resolveDependency(injectElement, target = targetType)
+            if (resolved.isLocal) {
+                val getterName = findDependencyGetter(injectElement)
+                    .orElse { throwsGetterIsNotFound(injectElement) }
+                    .toGetterName()
+                targetType.localScopeDependencies[resolved.originalTypeString] = getterName
+            }
             dependencies.add(resolved)
         }
     }
@@ -249,6 +255,10 @@ fun CharSequence.titleize(): String {
 
 fun Element.isSingleton(): Boolean {
     return isHasAnnotation(singletonJavaType)
+}
+
+fun Element.isLocalScoped(): Boolean {
+    return isHasAnnotation(localScopeJavaType)
 }
 
 fun Element.isWeak(): Boolean {

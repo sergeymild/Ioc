@@ -51,7 +51,8 @@ class DependencyTypesFinder(
                 implementations.add(DependencyModel(
                     dependency = element,
                     originalType = implementationType,
-                    isSingleton = implementationType.isSingleton()
+                    isSingleton = implementationType.isSingleton(),
+                    isLocal = implementationType.isLocalScoped()
                 ))
                 throwsMoreThanOneDependencyFoundIfNeed(element, named, implementations.map { it.originalTypeString })
             }
