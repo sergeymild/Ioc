@@ -3969,40 +3969,6 @@ class FieldInjectionTest {
 
     @Test
     @Throws(Exception::class)
-    fun failNestedClassMustBePublic() {
-
-        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
-            """
-                package test;
-                $importInjectAnnotation
-                public class Activity {
-                    
-                    class Nested {
-                        @Inject
-                        public SimpleDependency simpleDependency;
-                    }
-                
-                }
-            """.trimIndent())
-
-
-        val simpleDependency = JavaFileObjects.forSourceLines("test.SimpleDependency",
-            "package test;",
-            "",
-            "public class SimpleDependency {",
-            "}")
-
-        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-            .that(listOf(activityFile, simpleDependency))
-            .processedWith(IProcessor())
-            .failsToCompile()
-            .withErrorContaining("test.Activity.Nested must be public.")
-            .`in`(activityFile)
-            .onLine(5)
-    }
-
-    @Test
-    @Throws(Exception::class)
     fun findNestedClass() {
 
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",

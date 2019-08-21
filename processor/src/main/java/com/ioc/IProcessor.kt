@@ -136,10 +136,6 @@ open class IProcessor : AbstractProcessor() {
         createSingletons(projectSingletons.values)
         generateInjectableSpecs(targetsWithDependencies)
 
-        if (targetTypes.isNotEmpty()) {
-            TargetFactorySpec.createSpec(targetTypes).writeClass("com.ioc")
-        }
-
         return true
     }
 
