@@ -10,27 +10,24 @@ abstract class TargetFactory {
     protected static Map<Class<?>, Class<?>> map = new HashMap<>(100);
     protected static Map<Class<?>, Method> cachedInjectMethods = new HashMap<>(100);
 
-    private static <T> Class<?> findInjectionClass(final T target) {
-        Class<?> clazz = target.getClass();
-        while (true) {
-            try {
-                return Class.forName(clazz.getCanonicalName().concat("Injector"));
-            } catch (ClassNotFoundException ignored) {
-                clazz = clazz.getSuperclass();
-                if (clazz == null || clazz.getCanonicalName().hashCode() == objectHashCode)
-                    throw new IocException("Can't find Injector class for " + target.getClass().getSimpleName());
-            }
-        }
-    }
-
     private static <T> Method provideInjectMethod(final T target) {
 
         try {
             Class<?> targetClass = target.getClass();
             Class<?> targetInjectionClass = map.get(targetClass);
             if (targetInjectionClass == null) {
-                targetInjectionClass = findInjectionClass(target);
-                map.put(targetClass, targetInjectionClass);
+
+                while (true) {
+                    try {
+                        targetInjectionClass = Class.forName(targetClass.getCanonicalName().concat("Injector"));
+                        map.put(targetClass, targetInjectionClass);
+                        break;
+                    } catch (ClassNotFoundException ignored) {
+                        targetClass = targetClass.getSuperclass();
+                        if (targetClass == null || targetClass.getCanonicalName().hashCode() == objectHashCode)
+                            throw new IocException("Can't find Injector class for " + target.getClass().getSimpleName());
+                    }
+                }
             }
 
             Method targetInjectMethod = cachedInjectMethods.get(targetInjectionClass);
