@@ -37,6 +37,11 @@ fun isModuleKotlinObject(typeElement: TypeElement): Boolean {
     return Flag.Class.IS_OBJECT.invoke(kmClass.flags)
 }
 
+fun isKotlinCompanionObject(typeElement: TypeElement): Boolean {
+    val kmClass = KotlinUtil.kmClassOf(typeElement) ?: return false
+    return Flag.Class.IS_COMPANION_OBJECT.invoke(kmClass.flags)
+}
+
 fun Element?.isSupportedType(): Boolean {
     this ?: return false
     if (asType().kind == TypeKind.ARRAY) return false

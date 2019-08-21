@@ -6,29 +6,31 @@ import java.util.HashMap;
 import java.util.Map;
 
 abstract class TargetFactory {
-    private static final String GENERATED_CLASS = "com.ioc.TargetFactoryImplementation";
-    protected static Map<Class<?>, Class<?>> map;
-    protected static HashMap<Class<?>, Method> cachedInjectMethods;
+    private static final int objectHashCode = Object.class.getCanonicalName().hashCode();
+    protected static Map<Class<?>, Class<?>> map = new HashMap<>(100);
+    protected static Map<Class<?>, Method> cachedInjectMethods = new HashMap<>(100);
 
-    private static boolean isLoaded;
-
-    private static void load() {
-        if (isLoaded) return;
-        try {
-            Class.forName(GENERATED_CLASS);
-            isLoaded = true;
-        } catch (ClassNotFoundException e) {
-            throw new IocException("Can't load class TargetFactoryImplementation");
+    private static <T> Class<?> findInjectionClass(final T target) {
+        Class<?> clazz = target.getClass();
+        while (true) {
+            try {
+                return Class.forName(clazz.getCanonicalName().concat("Injector"));
+            } catch (ClassNotFoundException ignored) {
+                clazz = clazz.getSuperclass();
+                if (clazz == null || clazz.getCanonicalName().hashCode() == objectHashCode)
+                    throw new IocException("Can't find Injector class for " + target.getClass().getSimpleName());
+            }
         }
     }
 
     private static <T> Method provideInjectMethod(final T target) {
-        load();
+
         try {
             Class<?> targetClass = target.getClass();
             Class<?> targetInjectionClass = map.get(targetClass);
             if (targetInjectionClass == null) {
-                throw new IocException(String.format("Can't find target injection class for %s type.", targetClass));
+                targetInjectionClass = findInjectionClass(target);
+                map.put(targetClass, targetInjectionClass);
             }
 
             Method targetInjectMethod = cachedInjectMethods.get(targetInjectionClass);
@@ -45,9 +47,7 @@ abstract class TargetFactory {
     static <T> void inject(final T target) {
         try {
             provideInjectMethod(target).invoke(null, target);
-        } catch (IllegalAccessException e) {
-            throw new IocException(e);
-        } catch (InvocationTargetException e) {
+        } catch (IllegalAccessException | InvocationTargetException e) {
             throw new IocException(e);
         }
     }

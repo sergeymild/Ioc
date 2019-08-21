@@ -9,65 +9,43 @@ import com.example.mylibrary.MyLibraryActivity
 import com.ios.injector.R
 
 
-object Module {
-    @Dependency
-    fun provideExampleDependencyString(): String {
-        return "example"
+
+
+//interface Test {
+//    companion object {
+//        @Inject
+//        lateinit var myLibraryActivity: MyLibraryActivity
+//        init {
+//            Ioc.inject(this)
+//        }
+//    }
+//}
+//
+//
+//interface Test2 {
+//    companion object {
+//        @Inject
+//        lateinit var myLibraryActivity: MyLibraryActivity
+//        init {
+//            Ioc.inject(this)
+//        }
+//    }
+//}
+
+class MainActivity : AppCompatActivity() {
+
+    companion object {
+        @Inject
+        lateinit var myLibraryActivity: MyLibraryActivity
+        init {
+            Ioc.inject(this)
+        }
     }
 
-    @Dependency
-    fun prefs(): Preferences? = null
-}
-
-interface IParent {
-    fun s(): String
-}
-
-class Parent @Inject constructor(private val s: String) {
-
-
-}
-
-open class ParentActivity: CommonActivity() {
-    @Inject
-    lateinit var parent: Parent
-}
-
-open class AnotherParentActivity: ParentActivity() {
-    @Inject
-    lateinit var string: String
-}
-
-open class OneMoreParentActivity: ParentActivity() {
-    @Inject
-    lateinit var string: String
-}
-
-open class TwoMoreParentActivity: OneMoreParentActivity() {
-    @Inject
-    lateinit var string2: String
-}
-
-open class FourMoreParentActivity: ThreeMoreParentActivity() {
-    @Inject
-    lateinit var string3: String
-}
-
-open class ThreeMoreParentActivity: OneMoreParentActivity() {
-    @Inject
-    lateinit var string2: String
-}
-
-
-class MainActivity : ParentActivity() {
-
-    @Inject
-    lateinit var myLibraryActivity: MyLibraryActivity
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        Ioc.inject(this)
 
 
 

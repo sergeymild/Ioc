@@ -6,6 +6,8 @@ import com.ioc.IProcessor.Companion.processingEnvironment
 import com.ioc.scanner.AnnotationSetScanner
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.TypeName
+import kotlinx.metadata.Flag
+import kotlinx.metadata.Flag.Class.IS_COMPANION_OBJECT
 import java.util.*
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.element.*
@@ -136,6 +138,9 @@ fun mapToTargetWithDependencies(
     val targetsWithDependencies = mutableMapOf<TargetType, MutableList<DependencyModel>>()
 
     for (targetTypeElement in rootTypeElements) {
+        if (isKotlinCompanionObject(targetTypeElement)) {
+            throwCantInjectInCompanionObject(targetTypeElement)
+        }
         val targetType = createTarget(targetTypeElement, IProcessor.dependencyFinder)
 
         val dependencies = targetsWithDependencies.getOrPut(targetType) { mutableListOf() }
