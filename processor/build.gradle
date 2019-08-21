@@ -9,13 +9,13 @@ archivesBaseName = "ioc-processor"
 
 dependencies {
     implementation project(':core')
-    compileOnly 'javax.inject:javax.inject:1'
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation "com.squareup:javapoet:1.11.1"
     implementation "org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.1.0"
 
-    testImplementation("com.android.support.test.espresso:espresso-core:+")
-    testImplementation 'javax.inject:javax.inject:1'
+    testImplementation("com.android.support.test.espresso:espresso-core:+") {
+        exclude group: 'javax.inject'
+    }
     testCompile files('libs/support-annotations-25.3.1.jar')
     testImplementation 'junit:junit:4.12'
     testImplementation 'com.google.testing.compile:compile-testing:0.15'

@@ -6,18 +6,14 @@ import com.squareup.javapoet.ParameterizedTypeName
 import com.squareup.javapoet.TypeName
 import com.squareup.javapoet.TypeVariableName
 import java.lang.ref.WeakReference
-import javax.inject.Inject
-import javax.inject.Provider
-import javax.inject.Singleton
 
 val lifecyclePackage = "androidx.lifecycle"
 val iocLazyType = ClassName.get(IocLazy::class.java)
 val iocProviderType = ClassName.get(IocProvider::class.java)
-val iocType = ClassName.get(Ioc::class.java)
 val weakType = ClassName.get(WeakReference::class.java)
 val viewModelFactoryType = ClassName.bestGuess("$lifecyclePackage.ViewModelProvider.Factory")
-val keepAnnotation = ClassName.bestGuess("android.support.annotation.Keep")
-val nonNullAnnotation = ClassName.bestGuess("android.support.annotation.NonNull")
+val keepAnnotation = ClassName.bestGuess("androidx.annotation.Keep")
+val nonNullAnnotation = ClassName.bestGuess("androidx.annotation.NonNull")
 val viewModelProvidersType = ClassName.bestGuess("$lifecyclePackage.ViewModelProviders")
 val viewModelType = ClassName.bestGuess("$lifecyclePackage.ViewModel")
 val androidLiveDataObserver = ClassName.bestGuess("$lifecyclePackage.Observer")

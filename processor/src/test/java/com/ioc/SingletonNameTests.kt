@@ -4,23 +4,17 @@ import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertAbout
 import com.google.testing.compile.JavaFileObjects
 import com.google.testing.compile.JavaSourcesSubject
-import com.google.testing.compile.JavaSourcesSubjectFactory
 import com.google.testing.compile.JavaSourcesSubjectFactory.javaSources
-import com.ioc.Helpers.importType
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import java.util.*
-import javax.inject.Inject
-import javax.inject.Named
-import javax.inject.Singleton
 import javax.tools.JavaFileObject
 
 /**
  * Created by sergeygolishnikov on 14/08/2017.
  */
 @RunWith(JUnit4::class)
-class SingletonNameTests : BaseTest {
+class SingletonNameTests {
 
     @Test
     @Throws(Exception::class)
@@ -29,8 +23,7 @@ class SingletonNameTests : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class Activity {",
             "",
@@ -47,9 +40,9 @@ class SingletonNameTests : BaseTest {
         val release = JavaFileObjects.forSourceLines("test.CrashlyticsLogger",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Singleton::class.java.import(),
-            Dependency::class.java.import(),
+            importInjectAnnotation,
+            importSingletonAnnotation,
+            importDependencyAnnotation,
             "",
             "@Dependency",
             "@Singleton",
@@ -59,8 +52,8 @@ class SingletonNameTests : BaseTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import $keep;",
-            "import $nonNull;",
+            importKeepAnnotation,
+            importNonNullAnnotation,
             "",
             "@Keep",
             "public final class ActivityInjector {",
@@ -84,7 +77,7 @@ class SingletonNameTests : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            importType(Inject::class.java),
+            importInjectAnnotation,
             "",
             "public class Activity {",
             "",
@@ -95,9 +88,9 @@ class SingletonNameTests : BaseTest {
         val moduleFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            importType(com.ioc.Dependency::class.java),
-            importType(Singleton::class.java),
-            importType(Inject::class.java),
+            importDependencyAnnotation,
+            importSingletonAnnotation,
+            importInjectAnnotation,
             "",
             "@Dependency",
             "@Singleton",
@@ -116,9 +109,9 @@ class SingletonNameTests : BaseTest {
         val release = JavaFileObjects.forSourceLines("test.CrashlyticsLogger",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Singleton::class.java.import(),
-            Dependency::class.java.import(),
+            importInjectAnnotation,
+            importSingletonAnnotation,
+            importDependencyAnnotation,
             "",
             "@Dependency",
             "@Singleton",
@@ -128,8 +121,8 @@ class SingletonNameTests : BaseTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.DependencyModelSingleton",
             "package test;",
             "",
-            "import $keep",
-            "import $iocLazy",
+            importKeepAnnotation,
+            importIocLazy,
             "",
             "@Keep",
             "public final class DependencyModelSingleton extends IocLazy<DependencyModel> {",
@@ -158,7 +151,7 @@ class SingletonNameTests : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            "import $inject;",
+            importInjectAnnotation,
             "",
             "public class Activity {",
             "",
@@ -171,8 +164,8 @@ class SingletonNameTests : BaseTest {
         val moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
             "package test;",
             "",
-            "import $dependency;",
-            "import $singleton;",
+            importDependencyAnnotation,
+            importSingletonAnnotation,
             "",
             "public class ModuleClass {",
             "",
@@ -207,8 +200,8 @@ class SingletonNameTests : BaseTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import $keep;",
-            "import $nonNull;",
+            importKeepAnnotation,
+            importNonNullAnnotation,
             "",
             "@Keep",
             "public final class ActivityInjector {",
@@ -238,8 +231,7 @@ class SingletonNameTests : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class Activity {",
             "",
@@ -250,9 +242,9 @@ class SingletonNameTests : BaseTest {
         val release = JavaFileObjects.forSourceLines("test.CrashlyticsLogger",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Singleton::class.java.import(),
-            Dependency::class.java.import(),
+            importInjectAnnotation,
+            importSingletonAnnotation,
+            importDependencyAnnotation,
             "",
             "@Dependency",
             "@Singleton",
@@ -262,8 +254,8 @@ class SingletonNameTests : BaseTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import $keep",
-            "import $nonNull",
+            importKeepAnnotation,
+            importNonNullAnnotation,
             "",
             "@Keep",
             "public final class ActivityInjector {",

@@ -1,7 +1,5 @@
 package com.ioc
 
-import android.app.Activity
-import android.content.Context
 import com.google.common.truth.Truth
 import com.google.testing.compile.JavaFileObjects
 import com.google.testing.compile.JavaSourcesSubject
@@ -9,14 +7,13 @@ import com.google.testing.compile.JavaSourcesSubjectFactory.javaSources
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import javax.inject.Inject
 import javax.tools.JavaFileObject
 
 /**
  * Created by sergeygolishnikov on 28/12/2017.
  */
 @RunWith(JUnit4::class)
-class ScopesTest : BaseTest {
+class ScopesTest {
 
     @Test
     @Throws(Exception::class)
@@ -34,7 +31,7 @@ class ScopesTest : BaseTest {
 
         val sessionImpl = JavaFileObjects.forSourceLines("test.SessionImplementation",
             "package test;",
-            Dependency::class.java.import(),
+            importDependencyAnnotation,
             "@Dependency",
             "public class SessionImplementation implements Session {",
             "   SessionImplementation(BrowserUi browserUi, SecondScoped secondScoped) {}",
@@ -42,7 +39,7 @@ class ScopesTest : BaseTest {
 
         val logger = JavaFileObjects.forSourceLines("test.Logger",
             "package test;",
-            Dependency::class.java.import(),
+            importDependencyAnnotation,
             "@Dependency",
             "public class Logger {",
             "   Logger(BrowserUi browserUi) {}",
@@ -50,7 +47,7 @@ class ScopesTest : BaseTest {
 
         val browserUi = JavaFileObjects.forSourceLines("test.BrowserUi",
             "package test;",
-            Context::class.java.import(),
+            importAndroidContext,
 
             "public abstract class BrowserUi {",
             "   BrowserUi(Context context) {}",
@@ -58,8 +55,8 @@ class ScopesTest : BaseTest {
 
         val phoneBrowserUi = JavaFileObjects.forSourceLines("test.PhoneBrowserUi",
             "package test;",
-            Context::class.java.import(),
-            Dependency::class.java.import(),
+            importAndroidContext,
+            importDependencyAnnotation,
 
             "@Dependency",
             "public class PhoneBrowserUi extends BrowserUi {",
@@ -70,9 +67,9 @@ class ScopesTest : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.MainActivity",
             "package test;",
             "",
-            Inject::class.java.import(),
-            LocalScope::class.java.import(),
-            Activity::class.java.import(),
+            importInjectAnnotation,
+            importLocalScopeAnnotation,
+            importAndroidActivity,
             "",
             "public class MainActivity extends Activity {",
             "",
@@ -97,8 +94,8 @@ class ScopesTest : BaseTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.MainActivityInjector",
             "package test;",
             "",
-            "import $keep",
-            "import $nonNull",
+            importKeepAnnotation,
+            importNonNullAnnotation,
             "",
             "@Keep",
             "public final class MainActivityInjector {",
@@ -149,7 +146,7 @@ class ScopesTest : BaseTest {
 
         val autoCompleteListenerImpl = JavaFileObjects.forSourceLines("test.AutoCompleteListenerImpl",
             "package test;",
-            Dependency::class.java.import(),
+            importDependencyAnnotation,
             "@Dependency",
             "public class AutoCompleteListenerImpl implements AutoCompleteListener {",
             "   public AutoCompleteListenerImpl(AlohaBrowserUi browserUi) {}",
@@ -164,8 +161,8 @@ class ScopesTest : BaseTest {
 
         val logger = JavaFileObjects.forSourceLines("test.AddressBarListenerImpl",
             "package test;",
-            LocalScope::class.java.import(),
-            Inject::class.java.import(),
+            importLocalScopeAnnotation,
+            importInjectAnnotation,
             "public class AddressBarListenerImpl {",
             "   @Inject",
             "   public AutocompleteController controller;",
@@ -179,8 +176,8 @@ class ScopesTest : BaseTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.AddressBarListenerImplInjector",
             "package test;",
             "",
-            "import $keep",
-            "import $nonNull",
+            importKeepAnnotation,
+            importNonNullAnnotation,
             "",
             "@Keep",
             "public final class AddressBarListenerImplInjector {",
@@ -215,7 +212,7 @@ class ScopesTest : BaseTest {
 
         val secondScoped = JavaFileObjects.forSourceLines("test.SecondScoped",
             "package test;",
-            LocalScope::class.java.import(),
+            importLocalScopeAnnotation,
             "@LocalScope",
             "public class SecondScoped {",
             "   public SecondScoped(String scoped) {}",
@@ -223,7 +220,7 @@ class ScopesTest : BaseTest {
 
         val sessionImpl = JavaFileObjects.forSourceLines("test.SessionImplementation",
             "package test;",
-            Dependency::class.java.import(),
+            importDependencyAnnotation,
             "@Dependency",
             "public class SessionImplementation implements Session {",
             "   SessionImplementation(BrowserUi browserUi, SecondScoped secondScoped, String scopedString) {}",
@@ -231,7 +228,7 @@ class ScopesTest : BaseTest {
 
         val logger = JavaFileObjects.forSourceLines("test.Logger",
             "package test;",
-            Dependency::class.java.import(),
+            importDependencyAnnotation,
             "@Dependency",
             "public class Logger {",
             "   Logger(BrowserUi browserUi, String scopedString) {}",
@@ -239,8 +236,8 @@ class ScopesTest : BaseTest {
 
         val browserUi = JavaFileObjects.forSourceLines("test.BrowserUi",
             "package test;",
-            Context::class.java.import(),
-            LocalScope::class.java.import(),
+            importAndroidContext,
+            importLocalScopeAnnotation,
             "@LocalScope",
             "public abstract class BrowserUi {",
             "   BrowserUi(Context context) {}",
@@ -248,8 +245,8 @@ class ScopesTest : BaseTest {
 
         val moduleScoped = JavaFileObjects.forSourceLines("test.ModuleScoped",
             "package test;",
-            Dependency::class.java.import(),
-            LocalScope::class.java.import(),
+            importDependencyAnnotation,
+            importLocalScopeAnnotation,
             "public class ModuleScoped {",
             "   @LocalScope",
             "   @Dependency",
@@ -258,8 +255,8 @@ class ScopesTest : BaseTest {
 
         val phoneBrowserUi = JavaFileObjects.forSourceLines("test.PhoneBrowserUi",
             "package test;",
-            Context::class.java.import(),
-            Dependency::class.java.import(),
+            importAndroidContext,
+            importDependencyAnnotation,
 
             "@Dependency",
             "public class PhoneBrowserUi extends BrowserUi {",
@@ -270,9 +267,9 @@ class ScopesTest : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.MainActivity",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Activity::class.java.import(),
-            LocalScope::class.java.import(),
+            importInjectAnnotation,
+            importAndroidActivity,
+            importLocalScopeAnnotation,
             "",
             "public class MainActivity extends Activity {",
             "",
@@ -295,8 +292,8 @@ class ScopesTest : BaseTest {
             """
                 package test;
 
-                import android.support.annotation.Keep;
-                import android.support.annotation.NonNull;
+                $importKeepAnnotation
+                $importNonNullAnnotation
                 
                 @Keep
                 public final class MainActivityInjector {
@@ -360,7 +357,7 @@ class ScopesTest : BaseTest {
 
         val sessionImpl = JavaFileObjects.forSourceLines("test.SessionImplementation",
             "package test;",
-            Dependency::class.java.import(),
+            importDependencyAnnotation,
             "@Dependency",
             "public class SessionImplementation implements Session {",
             "   SessionImplementation(BrowserUi browserUi, AbstractDep scopedAbstractDep) {}",
@@ -368,7 +365,7 @@ class ScopesTest : BaseTest {
 
         val logger = JavaFileObjects.forSourceLines("test.Logger",
             "package test;",
-            Dependency::class.java.import(),
+            importDependencyAnnotation,
             "@Dependency",
             "public class Logger {",
             "   Logger(BrowserUi browserUi, AbstractDep scopedAbstractDep) {}",
@@ -376,8 +373,8 @@ class ScopesTest : BaseTest {
 
         val browserUi = JavaFileObjects.forSourceLines("test.BrowserUi",
             "package test;",
-            Context::class.java.import(),
-            LocalScope::class.java.import(),
+            importAndroidContext,
+            importLocalScopeAnnotation,
             "@LocalScope",
             "public abstract class BrowserUi {",
             "   BrowserUi(Context context) {}",
@@ -385,8 +382,8 @@ class ScopesTest : BaseTest {
 
         val moduleScoped = JavaFileObjects.forSourceLines("test.ModuleScoped",
             "package test;",
-            Dependency::class.java.import(),
-            LocalScope::class.java.import(),
+            importDependencyAnnotation,
+            importLocalScopeAnnotation,
             "public interface ModuleScoped {",
             "   @LocalScope",
             "   @Dependency",
@@ -395,8 +392,8 @@ class ScopesTest : BaseTest {
 
         val phoneBrowserUi = JavaFileObjects.forSourceLines("test.PhoneBrowserUi",
             "package test;",
-            Context::class.java.import(),
-            Dependency::class.java.import(),
+            importAndroidContext,
+            importDependencyAnnotation,
 
             "@Dependency",
             "public class PhoneBrowserUi extends BrowserUi {",
@@ -407,8 +404,8 @@ class ScopesTest : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.MainActivity",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Activity::class.java.import(),
+            importInjectAnnotation,
+            importAndroidActivity,
             "",
             "public class MainActivity extends Activity {",
             "",
@@ -428,8 +425,8 @@ class ScopesTest : BaseTest {
             """
                 package test;
 
-                import android.support.annotation.Keep;
-                import android.support.annotation.NonNull;
+                $importKeepAnnotation
+                $importNonNullAnnotation
                 
                 @Keep
                 public final class MainActivityInjector {

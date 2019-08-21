@@ -14,7 +14,6 @@ Add this dependencies to your project's `build.gradle`.
 ```
 compile 'com.github.sergeymild.ioc:core:1.1'
 kapt 'com.github.sergeymild.ioc:processor:1.1'
-compile 'javax.inject:javax.inject:1'
 ```
 
 Ioc uses the [javax.inject.Inject](https://docs.oracle.com/javaee/7/api/javax/inject/Inject.html) annotation to identify which constructors and fields it is interested in.

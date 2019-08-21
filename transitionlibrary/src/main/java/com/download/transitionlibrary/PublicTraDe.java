@@ -1,8 +1,9 @@
 package com.download.transitionlibrary;
 
+import com.ioc.Inject;
 import com.ioc.Ioc;
 
-import javax.inject.Inject;
+
 
 public class PublicTraDe {
     @Inject

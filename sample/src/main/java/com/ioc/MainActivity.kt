@@ -7,7 +7,7 @@ import com.example.common.CommonActivity
 import com.example.common.Preferences
 import com.example.mylibrary.MyLibraryActivity
 import com.ios.injector.R
-import javax.inject.Inject
+
 
 object Module {
     @Dependency

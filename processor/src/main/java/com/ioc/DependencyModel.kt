@@ -108,6 +108,6 @@ class DependencyModel constructor(
     }
 
     override fun toString(): String {
-        return "type: $dependencyTypeString - originalType: $originalTypeString"
+        return "named: $named type: $dependencyTypeString - originalType: $originalTypeString"
     }
 }

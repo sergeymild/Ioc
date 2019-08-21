@@ -8,7 +8,6 @@ import com.squareup.javapoet.MethodSpec
 import com.squareup.javapoet.TypeName
 import java.util.*
 import javax.annotation.processing.*
-import javax.inject.Singleton
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
@@ -19,7 +18,6 @@ import javax.tools.Diagnostic
 import kotlin.properties.Delegates
 
 
-@SupportedAnnotationTypes("javax.inject.*")
 open class IProcessor : AbstractProcessor() {
     lateinit var dependencyResolver: DependencyResolver
 
@@ -38,6 +36,14 @@ open class IProcessor : AbstractProcessor() {
 
     override fun getSupportedSourceVersion(): SourceVersion? {
         return SourceVersion.latestSupported()
+    }
+
+    override fun getSupportedAnnotationTypes(): Set<String> {
+        return setOf(
+            Inject::class.java.canonicalName,
+            Singleton::class.java.canonicalName,
+            Dependency::class.java.canonicalName
+        )
     }
 
     override fun init(processingEnv: ProcessingEnvironment) {
@@ -167,6 +173,7 @@ open class IProcessor : AbstractProcessor() {
             val emptyModuleMethodToInject = mutableListOf<DependencyModel>()
             val fromDifferentModuleInject = mutableListOf<InjectMethod>()
             for (dependency in sorted) {
+
                 if (dependency.isSingleton) {
                     singletonsToInject.add(dependency)
                     continue

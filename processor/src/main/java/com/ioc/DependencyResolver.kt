@@ -2,7 +2,6 @@ package com.ioc
 
 import com.ioc.IProcessor.Companion.projectSingletons
 import com.ioc.common.*
-import javax.inject.Inject
 import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.TypeElement
@@ -73,16 +72,14 @@ class DependencyResolver(
         isLocalScoped = dependencyElement.isLocalScoped() || isLocalScoped
         isLocalScoped = dependencyTypeElement.isLocalScoped() || isLocalScoped
 
-
         val named = named
             ?: qualifierFinder.getQualifier(element)
             ?: qualifierFinder.getQualifier(dependencyElement)
             ?: qualifierFinder.getQualifier(dependencyTypeElement)
 
-        var possibleImplementation: DependencyModel? = null
-        if (dependencyTypeElement.isInterface() || dependencyTypeElement.isAbstract()) {
-            possibleImplementation = dependencyTypesFinder.findImplementationFromAbstractModuleMethodProviderOrFromClassWithDependencyAnnotation(dependencyElement, named)
-        }
+        val possibleImplementation: DependencyModel? =
+            dependencyTypesFinder.findImplementationFromAbstractModuleMethodProviderOrFromClassWithDependencyAnnotation(dependencyElement, named)
+
         possibleImplementation?.let {
             dependencyTypeElement = it.originalType.asTypeElement()
             isSingleton = it.isSingleton || isSingleton

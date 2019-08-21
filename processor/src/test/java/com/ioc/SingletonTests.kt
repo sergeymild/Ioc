@@ -7,17 +7,13 @@ import com.google.testing.compile.JavaSourcesSubjectFactory
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import javax.inject.Inject
-import javax.inject.Named
-import javax.inject.Provider
-import javax.inject.Singleton
 import javax.tools.JavaFileObject
 
 /**
  * Created by sergeygolishnikov on 14/08/2017.
  */
 @RunWith(JUnit4::class)
-class SingletonTests : BaseTest {
+class SingletonTests {
     @Test
     @Throws(Exception::class)
     fun classNamedAsArgumentNamedDebugNescafe() {
@@ -25,8 +21,7 @@ class SingletonTests : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class Activity {",
             "",
@@ -37,12 +32,12 @@ class SingletonTests : BaseTest {
         val presenter = JavaFileObjects.forSourceLines("test.MainPresenter",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
+            importQualifierAnnotation,
             "",
             "public class MainPresenter {",
             "   @Inject",
-            "   MainPresenter(@Named(\"release\") DependencyModel dependency) {}",
+            "   MainPresenter(@Qualifier(\"release\") DependencyModel dependency) {}",
             "}")
 
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
@@ -54,37 +49,37 @@ class SingletonTests : BaseTest {
         val release = JavaFileObjects.forSourceLines("test.ReleaseModel",
             "package test;",
             "",
-            Named::class.java.import(),
-            Inject::class.java.import(),
-            Singleton::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importInjectAnnotation,
+            importSingletonAnnotation,
+            importDependencyAnnotation,
             "",
-            "@Named(\"release\")",
+            "@Qualifier(\"release\")",
             "@Singleton",
             "@Dependency",
             "public class ReleaseModel implements DependencyModel {",
             "   @Inject",
-            "   ReleaseModel(@Named(\"cappuccino\") Coffee coffee) {}",
+            "   ReleaseModel(@Qualifier(\"cappuccino\") Coffee coffee) {}",
             "}")
 
         val debug = JavaFileObjects.forSourceLines("test.DebugModel",
             "package test;",
             "",
-            Named::class.java.import(),
-            Inject::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importInjectAnnotation,
+            importDependencyAnnotation,
             "",
-            "@Named(\"debug\")",
+            "@Qualifier(\"debug\")",
             "@Dependency",
             "public class DebugModel implements DependencyModel {",
             "   @Inject",
-            "   DebugModel(@Named(\"nescafe\") Coffee coffee) {}",
+            "   DebugModel(@Qualifier(\"nescafe\") Coffee coffee) {}",
             "}")
 
         val coffee = JavaFileObjects.forSourceLines("test.Coffee",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public interface Coffee {",
             "}")
@@ -92,10 +87,10 @@ class SingletonTests : BaseTest {
         val cappuccino = JavaFileObjects.forSourceLines("test.Cappuccino",
             "package test;",
             "",
-            Named::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importDependencyAnnotation,
             "",
-            "@Named(\"cappuccino\")",
+            "@Qualifier(\"cappuccino\")",
             "@Dependency",
             "public class Cappuccino implements Coffee {",
             "   public Cappuccino() {};",
@@ -104,10 +99,10 @@ class SingletonTests : BaseTest {
         val nescafe = JavaFileObjects.forSourceLines("test.Nescafe",
             "package test;",
             "",
-            Named::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importDependencyAnnotation,
             "",
-            "@Named(\"nescafe\")",
+            "@Qualifier(\"nescafe\")",
             "@Dependency",
             "public class Nescafe implements Coffee {",
             "   public Nescafe() {};",
@@ -117,8 +112,8 @@ class SingletonTests : BaseTest {
             """
             package test;
 
-            import android.support.annotation.Keep;
-            import com.ioc.IocLazy;
+            $importKeepAnnotation
+            $importIocLazy
             
             @Keep
             public final class ReleaseModelSingleton extends IocLazy<ReleaseModel> {
@@ -150,8 +145,8 @@ class SingletonTests : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
+            importQualifierAnnotation,
             "",
             "public class Activity {",
             "",
@@ -162,12 +157,12 @@ class SingletonTests : BaseTest {
         val presenter = JavaFileObjects.forSourceLines("test.MainPresenter",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
+            importQualifierAnnotation,
             "",
             "public class MainPresenter {",
             "   @Inject",
-            "   MainPresenter(@Named(\"release\") DependencyModel dependency) {}",
+            "   MainPresenter(@Qualifier(\"release\") DependencyModel dependency) {}",
             "}")
 
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
@@ -179,37 +174,37 @@ class SingletonTests : BaseTest {
         val release = JavaFileObjects.forSourceLines("test.ReleaseModel",
             "package test;",
             "",
-            Named::class.java.import(),
-            Inject::class.java.import(),
-            Singleton::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importInjectAnnotation,
+            importSingletonAnnotation,
+            importDependencyAnnotation,
             "",
-            "@Named(\"release\")",
+            "@Qualifier(\"release\")",
             "@Singleton",
             "@Dependency",
             "public class ReleaseModel implements DependencyModel {",
             "   @Inject",
-            "   ReleaseModel(@Named(\"nescafe\") Coffee coffee) {}",
+            "   ReleaseModel(@Qualifier(\"nescafe\") Coffee coffee) {}",
             "}")
 
         val debug = JavaFileObjects.forSourceLines("test.DebugModel",
             "package test;",
             "",
-            Named::class.java.import(),
-            Inject::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importInjectAnnotation,
+            importDependencyAnnotation,
             "",
-            "@Named(\"debug\")",
+            "@Qualifier(\"debug\")",
             "@Dependency",
             "public class DebugModel implements DependencyModel {",
             "   @Inject",
-            "   DebugModel(@Named(\"cappuccino\") Coffee coffee) {}",
+            "   DebugModel(@Qualifier(\"cappuccino\") Coffee coffee) {}",
             "}")
 
         val coffee = JavaFileObjects.forSourceLines("test.Coffee",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public interface Coffee {",
             "}")
@@ -217,10 +212,10 @@ class SingletonTests : BaseTest {
         val cappuccino = JavaFileObjects.forSourceLines("test.Cappuccino",
             "package test;",
             "",
-            Named::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importDependencyAnnotation,
             "",
-            "@Named(\"cappuccino\")",
+            "@Qualifier(\"cappuccino\")",
             "@Dependency",
             "public class Cappuccino implements Coffee {",
             "   public Cappuccino() {};",
@@ -229,11 +224,11 @@ class SingletonTests : BaseTest {
         val nescafe = JavaFileObjects.forSourceLines("test.Nescafe",
             "package test;",
             "",
-            Named::class.java.import(),
-            Inject::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importInjectAnnotation,
+            importDependencyAnnotation,
             "",
-            "@Named(\"nescafe\")",
+            "@Qualifier(\"nescafe\")",
             "@Dependency",
             "public class Nescafe implements Coffee {",
             "   @Inject",
@@ -243,7 +238,7 @@ class SingletonTests : BaseTest {
         val sugar = JavaFileObjects.forSourceLines("test.Sugar",
             "package test;",
             "",
-            Named::class.java.import(),
+            importQualifierAnnotation,
             "",
             "public class Sugar {",
             "   public Sugar() {};",
@@ -253,8 +248,8 @@ class SingletonTests : BaseTest {
             """
             package test;
 
-            import android.support.annotation.Keep;
-            import com.ioc.IocLazy;
+            $importKeepAnnotation
+            $importIocLazy
             
             @Keep
             public final class ReleaseModelSingleton extends IocLazy<ReleaseModel> {
@@ -287,7 +282,7 @@ class SingletonTests : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            "import $inject;",
+            importInjectAnnotation,
             "",
             "public class Activity {",
             "",
@@ -298,7 +293,7 @@ class SingletonTests : BaseTest {
         val presenter = JavaFileObjects.forSourceLines("test.MainPresenter",
             "package test;",
             "",
-            "import $singleton;",
+            importSingletonAnnotation,
             "",
             "@Singleton",
             "public class MainPresenter {",
@@ -308,7 +303,7 @@ class SingletonTests : BaseTest {
         val release = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "import $singleton;",
+            importSingletonAnnotation,
             "",
             "@Singleton",
             "public class DependencyModel {",
@@ -318,8 +313,8 @@ class SingletonTests : BaseTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.MainPresenterSingleton",
             """
             package test;
-            import $keep
-            import $iocLazy
+            $importKeepAnnotation
+            $importIocLazy
             @Keep
             public final class MainPresenterSingleton extends IocLazy<MainPresenter> {
                private static MainPresenterSingleton instance;
@@ -349,8 +344,8 @@ class SingletonTests : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
+            importQualifierAnnotation,
             "",
             "public class Activity {",
             "",
@@ -369,7 +364,7 @@ class SingletonTests : BaseTest {
         val cookieManager = JavaFileObjects.forSourceLines("test.CookieManagerWorker",
             "package test;",
             "",
-            Singleton::class.java.import(),
+            importSingletonAnnotation,
             "",
             "@Singleton",
             "public class CookieManagerWorker {",
@@ -390,7 +385,7 @@ class SingletonTests : BaseTest {
 
         val settings = JavaFileObjects.forSourceLines("test.Settings",
             "package test;",
-            Dependency::class.java.import(),
+            importDependencyAnnotation,
             "@Dependency",
             "public class Settings implements PrivacySettings, ThemeSettings {",
             "}")
@@ -399,8 +394,8 @@ class SingletonTests : BaseTest {
             """
             package test;
 
-            import android.support.annotation.Keep;
-            import com.ioc.IocLazy;
+            $importKeepAnnotation
+            $importIocLazy
             
             @Keep
             public final class CookieManagerWorkerSingleton extends IocLazy<CookieManagerWorker> {
@@ -434,8 +429,8 @@ class SingletonTests : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
+            importQualifierAnnotation,
             "",
             "public class Activity {",
             "",
@@ -449,7 +444,7 @@ class SingletonTests : BaseTest {
         val cookieManager = JavaFileObjects.forSourceLines("test.WebMusicManager",
             "package test;",
             "",
-            Singleton::class.java.import(),
+            importSingletonAnnotation,
             "",
             "@Singleton",
             "public class WebMusicManager {",
@@ -471,7 +466,7 @@ class SingletonTests : BaseTest {
 
         val settings = JavaFileObjects.forSourceLines("test.Settings",
             "package test;",
-            Dependency::class.java.import(),
+            importDependencyAnnotation,
             "@Dependency",
             "public class Settings implements PrivacySettings {",
             "}")
@@ -480,8 +475,8 @@ class SingletonTests : BaseTest {
             """
             package test;
 
-            import android.support.annotation.Keep;
-            import com.ioc.IocLazy;
+            $importKeepAnnotation
+            $importIocLazy
             
             @Keep
             public final class WebMusicManagerSingleton extends IocLazy<WebMusicManager> {
@@ -514,8 +509,8 @@ class SingletonTests : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
+            importQualifierAnnotation,
             "",
             "public class Activity {",
             "",
@@ -526,8 +521,8 @@ class SingletonTests : BaseTest {
         val presenter = JavaFileObjects.forSourceLines("test.MainPresenter",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Lazy::class.java.import(),
+            importInjectAnnotation,
+            importLazy,
             "",
             "public class MainPresenter {",
             "   @Inject",
@@ -537,7 +532,7 @@ class SingletonTests : BaseTest {
         val singletonDependency = JavaFileObjects.forSourceLines("test.SingletonDependency",
             "package test;",
             "",
-            Singleton::class.java.import(),
+            importSingletonAnnotation,
             "",
             "@Singleton",
             "public class SingletonDependency {",
@@ -546,7 +541,7 @@ class SingletonTests : BaseTest {
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class DependencyModel {",
             "   @Inject",
@@ -557,9 +552,9 @@ class SingletonTests : BaseTest {
             """
             package test;
 
-            import android.support.annotation.Keep;
-            import android.support.annotation.NonNull;
-            import com.ioc.IocLazy;
+            $importKeepAnnotation
+            $importNonNullAnnotation
+            $importIocLazy
             
             @Keep
             public final class ActivityInjector {
@@ -595,8 +590,8 @@ class SingletonTests : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
+            importQualifierAnnotation,
             "",
             "public class Activity {",
             "",
@@ -607,8 +602,8 @@ class SingletonTests : BaseTest {
         val presenter = JavaFileObjects.forSourceLines("test.MainPresenter",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Provider::class.java.import(),
+            importInjectAnnotation,
+            importProvider,
             "",
             "public class MainPresenter {",
             "   @Inject",
@@ -618,7 +613,7 @@ class SingletonTests : BaseTest {
         val singletonDependency = JavaFileObjects.forSourceLines("test.SingletonDependency",
             "package test;",
             "",
-            Singleton::class.java.import(),
+            importSingletonAnnotation,
             "",
             "@Singleton",
             "public class SingletonDependency {",
@@ -627,7 +622,7 @@ class SingletonTests : BaseTest {
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class DependencyModel {",
             "   @Inject",
@@ -638,8 +633,8 @@ class SingletonTests : BaseTest {
             """
             package test;
 
-            import android.support.annotation.Keep;
-            import android.support.annotation.NonNull;
+            $importKeepAnnotation
+            $importNonNullAnnotation
             import com.ioc.IocProvider;
             
             @Keep
@@ -681,8 +676,8 @@ class SingletonTests : BaseTest {
         val defaultLogger = JavaFileObjects.forSourceLines("test.DefaultLogger",
             "package test;",
             "",
-            "import $singleton;",
-            "import $dependency;",
+            importSingletonAnnotation,
+            importDependencyAnnotation,
             "",
             "@Singleton",
             "@Dependency",
@@ -708,7 +703,7 @@ class SingletonTests : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            "import $inject;",
+            importInjectAnnotation,
             "",
             "public class Activity {",
             "",
@@ -724,8 +719,8 @@ class SingletonTests : BaseTest {
             """
             package test;
 
-            import android.support.annotation.Keep;
-            import android.support.annotation.NonNull;
+            $importKeepAnnotation
+            $importNonNullAnnotation
             
             @Keep
             public final class ActivityInjector {
@@ -766,7 +761,7 @@ class SingletonTests : BaseTest {
         val parentFile = JavaFileObjects.forSourceLines("test.Parent",
             "package test;",
             "",
-            "import $inject;",
+            importInjectAnnotation,
             "",
             "public abstract class Parent <T extends ExampleInterface> {",
             "   @Inject",
@@ -776,8 +771,8 @@ class SingletonTests : BaseTest {
         val childFile = JavaFileObjects.forSourceLines("test.Child",
             "package test;",
             "",
-            "import $inject;",
-            Helpers.importType(List::class.java),
+            importInjectAnnotation,
+            importList,
             "",
             "public abstract class Child <T extends ExampleInterface> extends Parent<T> {",
             "   @Inject",
@@ -787,10 +782,10 @@ class SingletonTests : BaseTest {
         val moduleFile = JavaFileObjects.forSourceLines("test.Module",
             "package test;",
             "",
-            Helpers.importType(Dependency::class.java),
-            Helpers.importType(Singleton::class.java),
-            Helpers.importType(Metadata::class.java),
-            Helpers.importType(List::class.java),
+            importDependencyAnnotation,
+            importSingletonAnnotation,
+            importKotlinMetadataAnnotation,
+            importList,
             "",
             "@Metadata(mv = {1, 1, 15}, bv = {1, 0, 3}, k = 1, d1 = {\"\\u0000\\u0012\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0002\\b\\u0002\\n\\u0002\\u0018\\u0002\\n\\u0000\\bÆ\\u0002\\u0018\\u00002\\u00020\\u0001B\\u0007\\b\\u0002¢\\u0006\\u0002\\u0010\\u0002J\\b\\u0010\\u0003\\u001a\\u00020\\u0004H\\u0007¨\\u0006\\u0005\"}, d2 = {\"Ltest/Module;\", \"\", \"()V\", \"getCountryService\", \"Ltest/CountryService;\", \"sample_debug\"})",
             "public final class Module {",
@@ -812,9 +807,9 @@ class SingletonTests : BaseTest {
             """
             package com.ioc;
 
-            import android.support.annotation.Keep;
+            $importKeepAnnotation
             import java.lang.String;
-            import java.util.List;
+            $importList
             import test.Module;
             
             @Keep
@@ -844,7 +839,7 @@ class SingletonTests : BaseTest {
 
         val singletonModule = JavaFileObjects.forSourceLines("test.SingletonModule",
             "package test;",
-            "import $singleton;",
+            importSingletonAnnotation,
             "public class SingletonModule {",
             "   @Singleton",
             "   public static Object fromModule() { return null; }",
@@ -865,7 +860,7 @@ class SingletonTests : BaseTest {
 
         val singletonModule = JavaFileObjects.forSourceLines("test.SingletonModule",
             "package test;",
-            "import $singleton;",
+            importSingletonAnnotation,
             "public class SingletonModule {",
             "   @Singleton",
             "   public static void fromModule() { return null; }",
@@ -887,7 +882,7 @@ class SingletonTests : BaseTest {
         val singletonClass = JavaFileObjects.forSourceLines("test.SingletonClass",
             "package test;",
             "",
-            "import $singleton;",
+            importSingletonAnnotation,
             "",
             "@Singleton",
             "class SingletonClass {}")

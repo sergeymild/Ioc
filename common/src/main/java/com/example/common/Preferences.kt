@@ -2,7 +2,8 @@ package com.example.common
 
 import androidx.appcompat.app.AppCompatActivity
 import com.ioc.Dependency
-import javax.inject.Inject
+import com.ioc.Inject
+
 
 open class CommonActivity: AppCompatActivity() {
     @Inject
