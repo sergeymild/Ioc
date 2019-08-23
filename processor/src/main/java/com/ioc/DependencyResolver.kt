@@ -58,7 +58,7 @@ class DependencyResolver(
         val isWeak = dependencyElement.isWeak()
         val isLazy = dependencyElement.isLazy()
         if (isProvider || isWeak || isLazy) {
-            dependencyElement = dependencyElement.getGenericFirstType()
+            dependencyElement = dependencyElement.getGenericFirstType().asElement()
         }
 
         var dependencyTypeElement = dependencyElement.asTypeElement()

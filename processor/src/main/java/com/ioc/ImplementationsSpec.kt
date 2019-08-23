@@ -157,15 +157,15 @@ class ImplementationsSpec constructor(
             val methods = mutableListOf<InjectMethod>()
             for (dataObserver in target.dataObservers) {
 
-                val liveDataTypeName = dataObserver.observingType.simpleName.toString()
+                val liveDataTypeName = dataObserver.observingType.asElement().simpleName.toString()
                 val viewModelName = dataObserver.viewModel.simpleName.toString()
 
-                val observerType = ParameterizedTypeName.get(androidLiveDataObserver, dataObserver.observingType.asTypeName())
+                val observerType = ParameterizedTypeName.get(androidLiveDataObserver, ClassName.get(dataObserver.observingType))
                 val observerClassSpec = TypeSpec.anonymousClassBuilder("")
                     .superclass(observerType)
                     .addMethod(MethodSpec.methodBuilder("onChanged")
                         .addModifiers(Modifier.PUBLIC)
-                        .addParameter(dataObserver.observingType.asTypeName(), "observingData")
+                        .addParameter(ClassName.get(dataObserver.observingType), "observingData")
                         .addStatement("target.\$N(\$N)", dataObserver.observerMethod.simpleName, "observingData")
                         .build())
                     .build()
