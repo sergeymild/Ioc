@@ -75,7 +75,8 @@ fun findDataObservers(element: TypeElement): List<TargetDataObserver> {
             val liveDataGeneric = viewModelLiveDataField.getGenericFirstType()
             for (observerMethod in observerMethods) {
                 val observerMethodNamed = qualifierFinder.getQualifier(observerMethod) ?: "unset"
-                if (observerMethod.firstParameter().toString() == liveDataGeneric.toString() && liveDataNamed == observerMethodNamed) {
+                if (observerMethod.firstParameter().toString().replace("? extends ", "") == liveDataGeneric.toString().replace("? extends ", "") &&
+                    liveDataNamed == observerMethodNamed) {
                     targetDataObservers.add(TargetDataObserver(
                         viewModel = viewModelType,
                         targetViewModelField = findDependencyGetter(viewModel).orElse { throwsSetterIsNotFound(viewModel) },
