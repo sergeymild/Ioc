@@ -1,8 +1,10 @@
 package com.ioc
 
 
+import android.content.Context
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import com.download.media.views.speeddial.models.SpeedDialModel
 import com.download.media.views.speeddial.viewmodel.MainViewModel
 import com.example.common.CommonActivity
@@ -12,6 +14,25 @@ import com.ios.injector.R
 
 
 
+class WebViewCoordinatorView(context: Context)
+
+class Fra: Fragment() {
+
+    @Inject
+    lateinit var webViewCoordinatorView: WebViewCoordinatorView
+
+    @LocalScope
+    fun context(): Context? = null
+}
+
+
+class MainView {
+    @Inject
+    lateinit var webViewCoordinatorView: WebViewCoordinatorView
+
+    @LocalScope
+    val localContext: Context? = null
+}
 
 
 

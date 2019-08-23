@@ -188,8 +188,9 @@ open class IProcessor : AbstractProcessor() {
                 val named = if (dependency.named != null) dependency.named!! else ""
                 val key = "$named${dependency.originalTypeString}"
                 val isTargetUsedAsDependency = isTargetUsedWhileCreateDependency(target.key, dependency)
+                val isDependencyPresentInLocalScope = isDependencyPresentInLocalScope(target.key, dependency)
 
-                if (cachedGeneratedMethods.containsKey(key)) {
+                if (!isDependencyPresentInLocalScope && cachedGeneratedMethods.containsKey(key)) {
                     val cache = cachedGeneratedMethods.getValue(key)
                     val methodCode = cache.methodSpec.code
                     if (isTargetUsedAsDependency) {
@@ -232,6 +233,20 @@ open class IProcessor : AbstractProcessor() {
             if (target.isSubtype(dep.dependency, dep.originalType) ||
                 target.isLocalScope(dep.dependency, dep.originalType) ||
                 dep.isViewModel) {
+                return true
+            }
+            queue.addAll(dep.dependencies)
+        }
+        return false
+    }
+
+    private fun isDependencyPresentInLocalScope(target: TargetType, dependency: DependencyModel): Boolean {
+        val queue = LinkedList<DependencyModel>()
+
+        queue.addAll(dependency.dependencies)
+        while (queue.isNotEmpty()) {
+            val dep = queue.pop()
+            if (target.isLocalScope(dep.dependency, dep.originalType)) {
                 return true
             }
             queue.addAll(dep.dependencies)

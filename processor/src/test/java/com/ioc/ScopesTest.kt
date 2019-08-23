@@ -462,4 +462,97 @@ class ScopesTest {
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
     }
+
+    @Test
+    @Throws(Exception::class)
+    fun multipleInjection() {
+
+        val context = JavaFileObjects.forSourceLines("test.Context",
+            "package test;",
+            "public class Context {",
+            "}")
+
+        val session = JavaFileObjects.forSourceLines("test.Session",
+            "package test;",
+            "public class Session {",
+            "   Session(Context context) {}",
+            "}")
+
+        val secondScoped = JavaFileObjects.forSourceLines("test.SecondScoped",
+            "package test;",
+            importInjectAnnotation,
+            importLocalScopeAnnotation,
+            "public class SecondScoped {",
+            "   @Inject",
+            "   public Session session;",
+            "   @LocalScope",
+            "   public Context context() { return null; }",
+            "}")
+
+        val thirdScoped = JavaFileObjects.forSourceLines("test.ThirdScoped",
+            "package test;",
+            importInjectAnnotation,
+            importLocalScopeAnnotation,
+            "public class ThirdScoped {",
+            "   @Inject",
+            "   public Session session;",
+            "   @LocalScope",
+            "   public Context localContext;",
+            "}")
+
+
+        val injectedFile1 = JavaFileObjects.forSourceLines("test.ThirdScopedInjector",
+            """
+                package test;
+
+                import androidx.annotation.Keep;
+                import androidx.annotation.NonNull;
+                
+                @Keep
+                public final class ThirdScopedInjector {
+                  @Keep
+                  public static final void inject(@NonNull final ThirdScoped target) {
+                    target.session = provideSession(target);
+                  }
+                
+                  private static final Session provideSession(@NonNull final ThirdScoped target) {
+                    Session session = new Session(target.localContext);
+                    return session;
+                  }
+                }
+            """.trimIndent())
+
+        val injectedFile2 = JavaFileObjects.forSourceLines("test.SecondScopedInjector",
+            """
+                package test;
+
+                import androidx.annotation.Keep;
+                import androidx.annotation.NonNull;
+                
+                @Keep
+                public final class SecondScopedInjector {
+                  @Keep
+                  public static final void inject(@NonNull final SecondScoped target) {
+                    target.session = provideSession(target);
+                  }
+                
+                  private static final Session provideSession(@NonNull final SecondScoped target) {
+                    Session session = new Session(target.context());
+                    return session;
+                  }
+                }
+            """.trimIndent())
+
+        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(context, secondScoped, thirdScoped, session))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile1)
+
+        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(context, secondScoped, thirdScoped, session))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile2)
+    }
 }

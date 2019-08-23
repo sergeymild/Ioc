@@ -1,5 +1,6 @@
 package com.ioc
 
+import com.ioc.common.message
 import com.ioc.common.singletonClassName
 import com.ioc.common.singletonClassPackage
 import com.squareup.javapoet.ClassName
