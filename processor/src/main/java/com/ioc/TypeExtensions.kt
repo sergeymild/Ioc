@@ -73,14 +73,19 @@ fun findDataObservers(element: TypeElement): List<TargetDataObserver> {
         for (viewModelLiveDataField in viewModelLiveDataFields) {
             val liveDataNamed = qualifierFinder.getQualifier(viewModelLiveDataField) ?: "unset"
             val liveDataGeneric = viewModelLiveDataField.getGenericFirstType()
+            val liveDataGenericString = liveDataGeneric.toString().replace("? extends ", "")
             for (observerMethod in observerMethods) {
                 val observerMethodNamed = qualifierFinder.getQualifier(observerMethod) ?: "unset"
-                if (observerMethod.firstParameter().toString().replace("? extends ", "") == liveDataGeneric.toString().replace("? extends ", "") &&
-                    liveDataNamed == observerMethodNamed) {
+                val observerMethodParameter = observerMethod.firstParameter()
+                var observerMethodParameterString = observerMethodParameter.toString()
+                if (observerMethodParameter.kind.isPrimitive) observerMethodParameterString = TypeName.get(observerMethodParameter).box().toString()
+                observerMethodParameterString = observerMethodParameterString.replace("? extends ", "")
+
+                if (observerMethodParameterString == liveDataGenericString && liveDataNamed == observerMethodNamed) {
                     targetDataObservers.add(TargetDataObserver(
                         viewModel = viewModelType,
                         targetViewModelField = findDependencyGetter(viewModel).orElse { throwsSetterIsNotFound(viewModel) },
-                        viewModelLiveDataField = findDependencyGetterFromTypeOrSuperType(viewModelLiveDataField),
+                        viewModelLiveDataField = findDependencyGetterFromTypeOrSuperType(viewModelLiveDataField, liveDataNamed),
                         observingType = liveDataGeneric,
                         observerMethod = observerMethod,
                         observeType = observerMethod.getAnnotation(DataObserver::class.java).value

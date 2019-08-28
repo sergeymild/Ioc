@@ -178,7 +178,7 @@ class ImplementationsSpec constructor(
                     observeTypeString = "target.\$N.\$N.observeForever(\$L)"
                 }
                 methods.add(InjectMethod(MethodSpec
-                    .methodBuilder("observe${dataObserver.liveDataName()}${liveDataTypeName}From$viewModelName")
+                    .methodBuilder("observe${dataObserver.liveDataName()}${liveDataTypeName}From${viewModelName}By${dataObserver.observerMethod.simpleName.titleize()}")
                     .addModifiers(Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
                     .addParameter(targetParameter(target.className))
                     .addStatement(observeTypeString,

@@ -3,6 +3,7 @@ package com.ioc.common
 import com.ioc.*
 import com.ioc.IProcessor.Companion.elementUtils
 import com.ioc.IProcessor.Companion.processingEnvironment
+import com.ioc.IProcessor.Companion.qualifierFinder
 import com.ioc.scanner.AnnotationSetScanner
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.TypeName
@@ -412,19 +413,22 @@ fun collectSuperTypes(typeElement: TypeElement?, includeSelf: Boolean = false): 
 }
 
 @Throws(ProcessorException::class)
-fun findDependencyGetterFromTypeOrSuperType(element: Element): Element {
+fun findDependencyGetterFromTypeOrSuperType(element: Element, named: String?): Element {
     if (element.isPublic()) return element
-    val supertypes = collectSuperTypes(element.asTypeElement(), includeSelf = true)
-    val genericType = element.getGenericFirstOrSelfType()
-    message("00: ${genericType}")
+//    val supertypes = collectSuperTypes(element.asTypeElement(), includeSelf = true)
+//    val genericType = element.getGenericFirstOrSelfType()
     for (method in element.enclosingElement.methods()) {
-        val returnType = method.returnType.asElement().toString()
-        if (supertypes.any { IProcessor.types.erasure(it).toString() == returnType }) {
-            val typeArguments = method.returnType.typeArguments()
-            if (typeArguments.isNotEmpty() && typeArguments.size == 1 && typeArguments[0].toString() == genericType.toString()) {
-                return method
-            }
+        if (method.simpleName.toString() == "get${element.simpleName.titleize()}") {
+            return method
         }
+//        val returnType = method.returnType.asElement().toString()
+//        if (supertypes.any { IProcessor.types.erasure(it).toString() == returnType }) {
+//            val typeArguments = method.returnType.typeArguments()
+//            if (typeArguments.isNotEmpty() && typeArguments.size == 1 && typeArguments[0].toString() == genericType.toString()) {
+//                val methodQualifier = qualifierFinder.getQualifier(method) ?: return method
+//                if (methodQualifier == named) return method
+//            }
+//        }
     }
     throw exceptionGetterIsNotFound(element)
 }
