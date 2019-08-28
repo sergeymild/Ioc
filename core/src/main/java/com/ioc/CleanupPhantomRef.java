@@ -6,7 +6,6 @@ package com.ioc;
 
 import java.lang.ref.PhantomReference;
 import java.lang.ref.ReferenceQueue;
-import java.util.function.Consumer;
 
 /**
  * A {@link PhantomReference} that has a {@link #cleanup}-function and a {@link #value}. However,
@@ -20,13 +19,13 @@ import java.util.function.Consumer;
 final class CleanupPhantomRef<T, V> extends PhantomReference<T> {
     private final V value;
 
-    /** Calls the cleanup action by passing value to the Consumer. */
+    /** Calls the onCleared action by passing value to the Consumer. */
     void runCleanup() {
         System.out.println("--------------");
         System.out.println("runCleanup " + value);
         System.out.println("--------------");
-        if (value instanceof Cleanup) {
-            ((Cleanup) value).cleanup();
+        if (value instanceof Cleanable) {
+            ((Cleanable) value).onCleared();
         }
     }
 

@@ -8,7 +8,12 @@ import javax.inject.Singleton
 class LazyDep(val dep: Dep)
 
 @Singleton
-class Dep
+class Dep: Cleanable {
+    override fun onCleared() {
+
+    }
+
+}
 
 class Parent(val lazyDep: Lazy<LazyDep>, val dep: Dep)
 

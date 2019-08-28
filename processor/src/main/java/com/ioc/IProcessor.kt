@@ -18,6 +18,7 @@ import javax.lang.model.type.MirroredTypesException
 import javax.lang.model.type.TypeKind
 import javax.lang.model.type.TypeMirror
 import javax.lang.model.util.ElementFilter
+import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
 import javax.tools.Diagnostic
 import kotlin.properties.Delegates
@@ -38,6 +39,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         val methodsWithDependencyAnnotation = mutableListOf<ExecutableElement>()
         var singletons = mutableMapOf<String, MutableList<DependencyModel>>()
         var messager: Messager by Delegates.notNull()
+        var elementUtils: Elements by Delegates.notNull()
         var dependencyFinder: DependencyTypesFinder by Delegates.notNull()
         val qualifierFinder = QualifierFinder()
         lateinit var types: Types
@@ -94,6 +96,7 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
         super.init(processingEnv)
         filer = processingEnv.filer
         messager = processingEnv.messager
+        elementUtils = processingEnv.elementUtils
     }
 
 
@@ -242,13 +245,14 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
 
         if (singletons.isNotEmpty()) {
             val typeSpec = TypeSpec.classBuilder("SingletonsClear")
+                    .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
             val codeBlock = CodeBlock.builder()
             for (singleton in singletons) {
                 val name = "${singleton.typeElement.simpleName.capitalize()}Singleton"
-                codeBlock.addStatement("\$T.clear()", ClassName.bestGuess("${singleton.packageName}.$name"))
+                codeBlock.addStatement("\$T.onCleared()", ClassName.bestGuess("${singleton.packageName}.$name"))
             }
 
-            typeSpec.addMethod(MethodSpec.methodBuilder("clear")
+            typeSpec.addMethod(MethodSpec.methodBuilder("clearSingletons")
                     .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                     .addCode(codeBlock.build())
                     .build())
