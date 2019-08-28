@@ -19,7 +19,7 @@ public final class ScopeFactory {
 //    private static final ScopeThread thread = new ScopeThread();
 
     @NonNull
-    private final static ScopeFactory INSTANCE = new ScopeFactory();
+    private static ScopeFactory INSTANCE = new ScopeFactory();
     @NonNull
     // scope root
     //   scopeName
@@ -63,5 +63,10 @@ public final class ScopeFactory {
         Object o = values.get(valueName);
         if (o != null) return (T) o;
         return null;
+    }
+
+    public static void clear() {
+        INSTANCE.scopes.clear();
+        INSTANCE = null;
     }
 }

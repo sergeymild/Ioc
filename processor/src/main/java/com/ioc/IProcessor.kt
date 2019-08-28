@@ -7,9 +7,7 @@ import com.ioc.ImplementationsSpec.Companion.wrapInLazyIfNeed
 import com.ioc.ImplementationsSpec.Companion.wrapInProviderIfNeed
 import com.ioc.ImplementationsSpec.Companion.wrapInWakIfNeed
 import com.ioc.common.*
-import com.squareup.javapoet.JavaFile
-import com.squareup.javapoet.MethodSpec
-import com.squareup.javapoet.TypeSpec
+import com.squareup.javapoet.*
 import javax.annotation.processing.*
 import javax.inject.Inject
 import javax.inject.Scope
@@ -241,6 +239,22 @@ open class IProcessor : AbstractProcessor(), ErrorThrowable {
                     writeClassFile(it.packageName, it.typeSpec)
                     resetUniqueSingletons()
                 }
+
+        if (singletons.isNotEmpty()) {
+            val typeSpec = TypeSpec.classBuilder("SingletonsClear")
+            val codeBlock = CodeBlock.builder()
+            for (singleton in singletons) {
+                val name = "${singleton.typeElement.simpleName.capitalize()}Singleton"
+                codeBlock.addStatement("\$T.clear()", ClassName.bestGuess("${singleton.packageName}.$name"))
+            }
+
+            typeSpec.addMethod(MethodSpec.methodBuilder("clear")
+                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                    .addCode(codeBlock.build())
+                    .build())
+
+            writeClassFile("com.ioc", typeSpec.build())
+        }
 
         for (scopeAnnotation in roundEnv.getElementsAnnotatedWith(Scope::class.java)) {
             for (scopedElement in roundEnv.getElementsAnnotatedWith(scopeAnnotation.asTypeElement())) {

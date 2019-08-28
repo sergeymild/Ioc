@@ -32,6 +32,7 @@ class NewSingletonSpec(private val dependencyModel: SingletonWrapper,
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
                 .addAnnotation(keepAnnotation)
                 .addMethod(generateMethod())
+                .addMethod(generateClearMethod())
                 .addField(dependencyModel.className, "singleton", Modifier.PRIVATE, Modifier.STATIC)
                 .addField(FieldSpec.builder(ClassName.bestGuess(name), "instance", Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
                         .initializer("new \$N()", name)
@@ -65,6 +66,16 @@ class NewSingletonSpec(private val dependencyModel: SingletonWrapper,
         }
 
         builder.addStatement("return singleton")
+
+        return builder.build()
+    }
+
+
+    private fun generateClearMethod(): MethodSpec {
+        val builder = MethodSpec.methodBuilder("clear")
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+                .addAnnotation(keepAnnotation)
+                .addStatement("singleton = null")
 
         return builder.build()
     }

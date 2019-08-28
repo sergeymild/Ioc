@@ -7,7 +7,6 @@ group='com.ioc'
 archivesBaseName = "ioc-processor"
 
 dependencies {
-    implementation project(':core')
     compileOnly 'javax.inject:javax.inject:1'
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation "com.squareup:javapoet:1.9.0"
@@ -21,6 +20,8 @@ dependencies {
     testImplementation 'com.google.truth:truth:0.37'
     testImplementation group: 'com.google.android', name: 'android', version: '4.1.1.4'
     testImplementation "io.reactivex.rxjava2:rxjava:2.1.12"
+    //implementation project(':core')
+    compileOnly files('/Users/sergeigolishnikov/development/ioc/core/build/libs/ioc-core.jar')
 }
 
 shadowJar {
