@@ -59,16 +59,11 @@ class NewSingletonSpec(private val dependency: DependencyModel) {
     }
 
     private fun generateClearMethod(): MethodSpec {
-        val cleanUp = IProcessor.elementUtils.getTypeElement(Cleanable::class.java.canonicalName)
-
         val builder = MethodSpec.methodBuilder("clear")
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL, Modifier.STATIC)
                 .addAnnotation(keepAnnotation)
 
-        if (IProcessor.types.isSubtype(dependency.dependency.asType(), cleanUp.asType())) {
-            builder.addStatement("instance.onCleared()")
-        }
-
+        builder.addStatement("instance.onCleared()")
         builder.addStatement("instance = null")
 
         return builder.build()

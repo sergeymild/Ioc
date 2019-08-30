@@ -119,24 +119,34 @@ class SingletonNameTests {
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.DependencyModelSingleton",
-            "package test;",
-            "",
-            importKeepAnnotation,
-            importIocLazy,
-            "",
-            "@Keep",
-            "public final class DependencyModelSingleton extends IocLazy<DependencyModel> {",
-            "   private static DependencyModelSingleton instance;",
-            "",
-            "   public static final DependencyModel getInstance() {",
-            "       if (instance == null) instance = new DependencyModelSingleton();",
-            "       return instance.get();",
-            "   }",
-            "",
-            "   protected final DependencyModel initialize() {",
-            "       return new DependencyModel(CrashlyticsLoggerSingleton.getInstance());",
-            "   }",
-            "}")
+            """
+                package test;
+
+                import androidx.annotation.Keep;
+                import androidx.annotation.Nullable;
+                import com.ioc.IocLazy;
+                
+                @Keep
+                public final class DependencyModelSingleton extends IocLazy<DependencyModel> {
+                  @Nullable
+                  private static DependencyModelSingleton instance;
+                
+                  public static final DependencyModel getInstance() {
+                    if (instance == null) instance = new DependencyModelSingleton();
+                    return instance.get();
+                  }
+                
+                  protected final DependencyModel initialize() {
+                    return new DependencyModel(CrashlyticsLoggerSingleton.getInstance());
+                  }
+                
+                  @Keep
+                  public static final void clear() {
+                    instance.onCleared();
+                    instance = null;
+                  }
+                }
+            """.trimIndent())
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
             .that(listOf(activityFile, dependencyFile, moduleFile, release))
