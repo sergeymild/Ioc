@@ -13,45 +13,24 @@ import com.example.mylibrary.MyLibraryActivity
 import com.ios.injector.R
 
 
+@Singleton
+class TeS: Cleanable {
+    override fun onCleared() {
 
-class WebViewCoordinatorView(context: Context)
+    }
 
-class Fra: Fragment() {
-
-    @Inject
-    lateinit var webViewCoordinatorView: WebViewCoordinatorView
-
-    @LocalScope
-    fun context(): Context? = null
 }
-
-
-class MainView {
-    @Inject
-    lateinit var webViewCoordinatorView: WebViewCoordinatorView
-
-    @LocalScope
-    val localContext: Context? = null
-}
-
-
 
 class MainActivity : AppCompatActivity() {
 
     @Inject
-    lateinit var viewModel: MainViewModel
+    lateinit var viewModel: TeS
 
-    @DataObserver
-    fun didFavoritesDataChanged(data: List<SpeedDialModel>) {
-
-    }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        viewModel.favoritesLiveData
 
 //        try {
 //            Class.forName("androidx.test.espresso.Espresso")
