@@ -665,35 +665,25 @@ class ModuleTests {
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ParentDependencySingleton",
-            """
-                package test;
-
-                import androidx.annotation.Keep;
-                import androidx.annotation.Nullable;
-                import com.ioc.IocLazy;
-                
-                @Keep
-                public final class ParentDependencySingleton extends IocLazy<ParentDependency> {
-                  @Nullable
-                  private static ParentDependencySingleton instance;
-                
-                  public static final ParentDependency getInstance() {
-                    if (instance == null) instance = new ParentDependencySingleton();
-                    return instance.get();
-                  }
-                
-                  protected final ParentDependency initialize() {
-                    DependencyModel dependencyModel = new DependencyModel();
-                    return ModuleClass.getDependency(dependencyModel);
-                  }
-                
-                  @Keep
-                  public static final void clear() {
-                    instance.onCleared();
-                    instance = null;
-                  }
-                }
-            """.trimIndent())
+            "package test;",
+            "",
+            importKeepAnnotation,
+            importIocLazy,
+            "",
+            "@Keep",
+            "public final class ParentDependencySingleton extends IocLazy<ParentDependency> {",
+            "   private static ParentDependencySingleton instance;",
+            "",
+            "   public static final ParentDependency getInstance() {",
+            "       if (instance == null) instance = new ParentDependencySingleton();",
+            "       return instance.get();",
+            "   }",
+            "",
+            "   protected final ParentDependency initialize() {",
+            "       DependencyModel dependencyModel = new DependencyModel();",
+            "       return ModuleClass.getDependency(dependencyModel);",
+            "   }",
+            "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
             .that(listOf(activityFile, moduleFile, dependencyFile, parentDependencyFile))
@@ -938,35 +928,25 @@ class ModuleTests {
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ParentDependencySingleton",
-            """
-                package test;
-
-                import androidx.annotation.Keep;
-                import androidx.annotation.Nullable;
-                import com.ioc.IocLazy;
-                
-                @Keep
-                public final class ParentDependencySingleton extends IocLazy<ParentDependency> {
-                  @Nullable
-                  private static ParentDependencySingleton instance;
-                
-                  public static final ParentDependency getInstance() {
-                    if (instance == null) instance = new ParentDependencySingleton();
-                    return instance.get();
-                  }
-                
-                  protected final ParentDependency initialize() {
-                    DependencyModel dependencyModel = ModuleClass.dependency();
-                    return ModuleClass.getParentDependency(dependencyModel);
-                  }
-                
-                  @Keep
-                  public static final void clear() {
-                    instance.onCleared();
-                    instance = null;
-                  }
-                }
-            """.trimIndent())
+            "package test;",
+            "",
+            importKeepAnnotation,
+            importIocLazy,
+            "",
+            "@Keep",
+            "public final class ParentDependencySingleton extends IocLazy<ParentDependency> {",
+            "   private static ParentDependencySingleton instance;",
+            "",
+            "   public static final ParentDependency getInstance() {",
+            "       if (instance == null) instance = new ParentDependencySingleton();",
+            "       return instance.get();",
+            "   }",
+            "",
+            "   protected final ParentDependency initialize() {",
+            "       DependencyModel dependencyModel = ModuleClass.dependency();",
+            "       return ModuleClass.getParentDependency(dependencyModel);",
+            "   }",
+            "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
             .that(listOf(activityFile, moduleFile, dependencyFile, parentDependencyFile))
@@ -1009,35 +989,25 @@ class ModuleTests {
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ParentDependencySingleton",
-            """
-                package test;
-
-                import androidx.annotation.Keep;
-                import androidx.annotation.Nullable;
-                import com.ioc.IocLazy;
-                
-                @Keep
-                public final class ParentDependencySingleton extends IocLazy<ParentDependency> {
-                  @Nullable
-                  private static ParentDependencySingleton instance;
-                
-                  public static final ParentDependency getInstance() {
-                    if (instance == null) instance = new ParentDependencySingleton();
-                    return instance.get();
-                  }
-                
-                  protected final ParentDependency initialize() {
-                    DependencyModel dependencyModel = new DependencyModel();
-                    return new ParentDependency(dependencyModel);
-                  }
-                
-                  @Keep
-                  public static final void clear() {
-                    instance.onCleared();
-                    instance = null;
-                  }
-                }
-            """.trimIndent())
+            "package test;",
+            "",
+            importKeepAnnotation,
+            importIocLazy,
+            "",
+            "@Keep",
+            "public final class ParentDependencySingleton extends IocLazy<ParentDependency> {",
+            "   private static ParentDependencySingleton instance;",
+            "",
+            "   public static final ParentDependency getInstance() {",
+            "       if (instance == null) instance = new ParentDependencySingleton();",
+            "       return instance.get();",
+            "   }",
+            "",
+            "   protected final ParentDependency initialize() {",
+            "       DependencyModel dependencyModel = new DependencyModel();",
+            "       return new ParentDependency(dependencyModel);",
+            "   }",
+            "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
             .that(listOf(activityFile, dependencyFile, parentDependencyFile))
@@ -1136,35 +1106,24 @@ class ModuleTests {
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ParentDependencySingleton",
-            """
-                package test;
-
-                import androidx.annotation.Keep;
-                import androidx.annotation.Nullable;
-                import com.ioc.IocLazy;
-                
-                @Keep
-                public final class ParentDependencySingleton extends IocLazy<ParentDependency> {
-                  @Nullable
-                  private static ParentDependencySingleton instance;
-                
-                  public static final ParentDependency getInstance() {
-                    if (instance == null) instance = new ParentDependencySingleton();
-                    return instance.get();
-                  }
-                
-                  protected final ParentDependency initialize() {
-                    DependencyModel dependencyModel = new DependencyModel();
-                    return new ParentDependency(dependencyModel);
-                  }
-                
-                  @Keep
-                  public static final void clear() {
-                    instance.onCleared();
-                    instance = null;
-                  }
-                }
-            """.trimIndent())
+            "package test;",
+            "",
+            importKeepAnnotation,
+            importIocLazy,
+            "",
+            "@Keep",
+            "public final class ParentDependencySingleton extends IocLazy<ParentDependency> {",
+            "   private static ParentDependencySingleton instance;",
+            "   public static final ParentDependency getInstance() {",
+            "       if (instance == null) instance = new ParentDependencySingleton();",
+            "       return instance.get();",
+            "   }",
+            "",
+            "   protected final ParentDependency initialize() {",
+            "       DependencyModel dependencyModel = new DependencyModel();",
+            "       return new ParentDependency(dependencyModel);",
+            "   }",
+            "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
             .that(listOf(activityFile, dependencyFile, parentDependencyFile))
@@ -1273,35 +1232,25 @@ class ModuleTests {
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ParentDependencySingleton",
-            """
-                package test;
-
-                import androidx.annotation.Keep;
-                import androidx.annotation.Nullable;
-                import com.ioc.IocLazy;
-                
-                @Keep
-                public final class ParentDependencySingleton extends IocLazy<ParentDependency> {
-                  @Nullable
-                  private static ParentDependencySingleton instance;
-                
-                  public static final ParentDependency getInstance() {
-                    if (instance == null) instance = new ParentDependencySingleton();
-                    return instance.get();
-                  }
-                
-                  protected final ParentDependency initialize() {
-                    DependencyModel dependencyModel = new DependencyModel();
-                    return new ParentDependency(dependencyModel,Singleton2Singleton.getInstance());
-                  }
-                
-                  @Keep
-                  public static final void clear() {
-                    instance.onCleared();
-                    instance = null;
-                  }
-                }
-            """.trimIndent())
+            "package test;",
+            "",
+            importKeepAnnotation,
+            importIocLazy,
+            "",
+            "@Keep",
+            "public final class ParentDependencySingleton extends IocLazy<ParentDependency> {",
+            "   private static ParentDependencySingleton instance;",
+            "",
+            "   public static final ParentDependency getInstance() {",
+            "       if (instance == null) instance = new ParentDependencySingleton();",
+            "       return instance.get();",
+            "   }",
+            "",
+            "   protected final ParentDependency initialize() {",
+            "       DependencyModel dependencyModel = new DependencyModel();",
+            "       return new ParentDependency(dependencyModel,Singleton2Singleton.getInstance());",
+            "   }",
+            "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
             .that(listOf(activityFile, dependencyFile, singletonFile, parentDependencyFile))
@@ -1355,35 +1304,25 @@ class ModuleTests {
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ParentDependencySingleton",
-            """
-                package test;
-
-                import androidx.annotation.Keep;
-                import androidx.annotation.Nullable;
-                import com.ioc.IocLazy;
-                
-                @Keep
-                public final class ParentDependencySingleton extends IocLazy<ParentDependency> {
-                  @Nullable
-                  private static ParentDependencySingleton instance;
-                
-                  public static final ParentDependency getInstance() {
-                    if (instance == null) instance = new ParentDependencySingleton();
-                    return instance.get();
-                  }
-                
-                  protected final ParentDependency initialize() {
-                    DependencyModel dependencyModel = new DependencyModel();
-                    return new ParentDependency(dependencyModel,Singleton2Singleton.getInstance());
-                  }
-                
-                  @Keep
-                  public static final void clear() {
-                    instance.onCleared();
-                    instance = null;
-                  }
-                }
-            """.trimIndent())
+            "package test;",
+            "",
+            importKeepAnnotation,
+            importIocLazy,
+            "",
+            "@Keep",
+            "public final class ParentDependencySingleton extends IocLazy<ParentDependency> {",
+            "   private static ParentDependencySingleton instance;",
+            "",
+            "   public static final ParentDependency getInstance() {",
+            "       if (instance == null) instance = new ParentDependencySingleton();",
+            "       return instance.get();",
+            "   }",
+            "",
+            "   protected final ParentDependency initialize() {",
+            "       DependencyModel dependencyModel = new DependencyModel();",
+            "       return new ParentDependency(dependencyModel,Singleton2Singleton.getInstance());",
+            "   }",
+            "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
             .that(listOf(activityFile, dependencyFile, singletonFile, parentDependencyFile))
@@ -1577,36 +1516,26 @@ class ModuleTests {
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.GetCountryServiceSingleton",
-            """
-                package test;
-
-                import androidx.annotation.Keep;
-                import androidx.annotation.Nullable;
-                import com.ioc.IocLazy;
-                
-                @Keep
-                public final class GetCountryServiceSingleton extends IocLazy<GetCountryService> {
-                  @Nullable
-                  private static GetCountryServiceSingleton instance;
-                
-                  public static final GetCountryService getInstance() {
-                    if (instance == null) instance = new GetCountryServiceSingleton();
-                    return instance.get();
-                  }
-                
-                  protected final GetCountryService initialize() {
-                    Retrofit retrofit = new Retrofit();
-                    CountryService countryService = ModuleFile.getService(retrofit);
-                    return new GetCountryService(countryService);
-                  }
-                
-                  @Keep
-                  public static final void clear() {
-                    instance.onCleared();
-                    instance = null;
-                  }
-                }
-            """.trimIndent())
+            "package test;",
+            "",
+            importKeepAnnotation,
+            importIocLazy,
+            "",
+            "@Keep",
+            "public final class GetCountryServiceSingleton extends IocLazy<GetCountryService> {",
+            "   private static GetCountryServiceSingleton instance;",
+            "",
+            "   public static final GetCountryService getInstance() {",
+            "       if (instance == null) instance = new GetCountryServiceSingleton();",
+            "       return instance.get();",
+            "   }",
+            "",
+            "   protected final GetCountryService initialize() {",
+            "       Retrofit retrofit = new Retrofit();",
+            "       CountryService countryService = ModuleFile.getService(retrofit);",
+            "       return new GetCountryService(countryService);",
+            "   }",
+            "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
             .that(listOf<JavaFileObject>(activityFile, retrofitFile, countryServiceFile, getCountryServiceFile, moduleFile))

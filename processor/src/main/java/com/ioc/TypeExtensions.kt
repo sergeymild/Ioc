@@ -58,6 +58,11 @@ fun Element.methods(): List<ExecutableElement> {
     return ElementFilter.methodsIn(enclosedElements)
 }
 
+fun Element.dependencyMethods(): List<ExecutableElement> {
+    return ElementFilter.methodsIn(enclosedElements)
+        .filter { it.isHasAnnotation(Dependency::class.java) }
+}
+
 fun findDataObservers(element: TypeElement): List<TargetDataObserver> {
     val targetDataObservers = mutableListOf<TargetDataObserver>()
     val observerMethods = element.methods { it.isHasAnnotation(DataObserver::class.java) }.toMutableList()
@@ -73,19 +78,14 @@ fun findDataObservers(element: TypeElement): List<TargetDataObserver> {
         for (viewModelLiveDataField in viewModelLiveDataFields) {
             val liveDataNamed = qualifierFinder.getQualifier(viewModelLiveDataField) ?: "unset"
             val liveDataGeneric = viewModelLiveDataField.getGenericFirstType()
-            val liveDataGenericString = liveDataGeneric.toString().replace("? extends ", "")
             for (observerMethod in observerMethods) {
                 val observerMethodNamed = qualifierFinder.getQualifier(observerMethod) ?: "unset"
-                val observerMethodParameter = observerMethod.firstParameter()
-                var observerMethodParameterString = observerMethodParameter.toString()
-                if (observerMethodParameter.kind.isPrimitive) observerMethodParameterString = TypeName.get(observerMethodParameter).box().toString()
-                observerMethodParameterString = observerMethodParameterString.replace("? extends ", "")
-
-                if (observerMethodParameterString == liveDataGenericString && liveDataNamed == observerMethodNamed) {
+                if (observerMethod.firstParameter().toString().replace("? extends ", "") == liveDataGeneric.toString().replace("? extends ", "") &&
+                    liveDataNamed == observerMethodNamed) {
                     targetDataObservers.add(TargetDataObserver(
                         viewModel = viewModelType,
                         targetViewModelField = findDependencyGetter(viewModel).orElse { throwsSetterIsNotFound(viewModel) },
-                        viewModelLiveDataField = findDependencyGetterFromTypeOrSuperType(viewModelLiveDataField, liveDataNamed),
+                        viewModelLiveDataField = findDependencyGetterFromTypeOrSuperType(viewModelLiveDataField),
                         observingType = liveDataGeneric,
                         observerMethod = observerMethod,
                         observeType = observerMethod.getAnnotation(DataObserver::class.java).value

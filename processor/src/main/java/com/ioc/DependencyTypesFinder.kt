@@ -110,7 +110,7 @@ class DependencyTypesFinder(
             if (type.isSingleton && returnType.isAbstract() && qualifierFinder.getQualifier(provider) != null)
                 throwsSingletonMethodAbstractReturnType(provider)
             implementations.add(type)
-            throwsMoreThanOneDependencyFoundIfNeed(element, named, implementations.map { it.name })
+            throwsMoreThanOneDependencyFoundIfNeed(element, named, implementations.map { "${it.module.simpleName}.${it.name}" })
         }
 
         return implementations.firstOrNull()

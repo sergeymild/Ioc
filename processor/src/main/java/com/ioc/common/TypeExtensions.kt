@@ -3,12 +3,9 @@ package com.ioc.common
 import com.ioc.*
 import com.ioc.IProcessor.Companion.elementUtils
 import com.ioc.IProcessor.Companion.processingEnvironment
-import com.ioc.IProcessor.Companion.qualifierFinder
 import com.ioc.scanner.AnnotationSetScanner
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.TypeName
-import kotlinx.metadata.Flag
-import kotlinx.metadata.Flag.Class.IS_COMPANION_OBJECT
 import java.util.*
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.element.*
@@ -71,6 +68,28 @@ fun scanForAnnotation(typeElement: TypeElement, annotation: Class<*>): MutableSe
     val annotationType = elementUtils.getTypeElement(annotation.canonicalName)
     val scanner = AnnotationSetScanner(processingEnvironment, mutableSetOf())
     return scanner.scan(typeElement, annotationType)
+}
+
+fun RoundEnvironment.collectModuleMethods(classesWithDependencyAnnotation: MutableList<Element>, methodsWithDependencyAnnotation: MutableList<ExecutableElement>) {
+    val dependencies = getElementsAnnotatedWith(Dependency::class.java)
+
+    val queue = LinkedList<Element>(dependencies)
+
+    while (queue.isNotEmpty()) {
+        val dependency = queue.pop()
+        if (dependency.isNotMethodAndInterface() && !classesWithDependencyAnnotation.contains(dependency)) {
+            classesWithDependencyAnnotation.add(dependency)
+        } else if (dependency.isMethod() && !methodsWithDependencyAnnotation.contains(dependency)) {
+            methodsWithDependencyAnnotation.add(dependency.asMethod())
+        }
+
+        if (!dependency.isMethod()) continue
+
+        val superTypes = collectSuperTypes(dependency.enclosingElement.asTypeElement(), false)
+        for (superType in superTypes) {
+            queue.addAll(superType.asTypeElement().dependencyMethods())
+        }
+    }
 }
 
 fun RoundEnvironment.rootElementsWithInjectedDependencies(
@@ -413,22 +432,19 @@ fun collectSuperTypes(typeElement: TypeElement?, includeSelf: Boolean = false): 
 }
 
 @Throws(ProcessorException::class)
-fun findDependencyGetterFromTypeOrSuperType(element: Element, named: String?): Element {
+fun findDependencyGetterFromTypeOrSuperType(element: Element): Element {
     if (element.isPublic()) return element
-//    val supertypes = collectSuperTypes(element.asTypeElement(), includeSelf = true)
-//    val genericType = element.getGenericFirstOrSelfType()
+    val supertypes = collectSuperTypes(element.asTypeElement(), includeSelf = true)
+    val genericType = element.getGenericFirstOrSelfType()
+    message("00: ${genericType}")
     for (method in element.enclosingElement.methods()) {
-        if (method.simpleName.toString() == "get${element.simpleName.titleize()}") {
-            return method
+        val returnType = method.returnType.asElement().toString()
+        if (supertypes.any { IProcessor.types.erasure(it).toString() == returnType }) {
+            val typeArguments = method.returnType.typeArguments()
+            if (typeArguments.isNotEmpty() && typeArguments.size == 1 && typeArguments[0].toString() == genericType.toString()) {
+                return method
+            }
         }
-//        val returnType = method.returnType.asElement().toString()
-//        if (supertypes.any { IProcessor.types.erasure(it).toString() == returnType }) {
-//            val typeArguments = method.returnType.typeArguments()
-//            if (typeArguments.isNotEmpty() && typeArguments.size == 1 && typeArguments[0].toString() == genericType.toString()) {
-//                val methodQualifier = qualifierFinder.getQualifier(method) ?: return method
-//                if (methodQualifier == named) return method
-//            }
-//        }
     }
     throw exceptionGetterIsNotFound(element)
 }

@@ -1572,34 +1572,24 @@ class FieldInjectionTest {
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.LoggerSingleton",
-            """
-                package test;
-
-                import androidx.annotation.Keep;
-                import androidx.annotation.Nullable;
-                import com.ioc.IocLazy;
-                
-                @Keep
-                public final class LoggerSingleton extends IocLazy<Logger> {
-                  @Nullable
-                  private static LoggerSingleton instance;
-                
-                  public static final Logger getInstance() {
-                    if (instance == null) instance = new LoggerSingleton();
-                    return instance.get();
-                  }
-                
-                  protected final Logger initialize() {
-                    return new Logger(AmplitudeSingleton.getInstance(),AmplitudeSingleton.getInstance());
-                  }
-                
-                  @Keep
-                  public static final void clear() {
-                    instance.onCleared();
-                    instance = null;
-                  }
-                }
-            """.trimIndent())
+            "package test;",
+            "",
+            importKeepAnnotation,
+            importIocLazy,
+            "",
+            "@Keep",
+            "public final class LoggerSingleton extends IocLazy<Logger> {",
+            "   private static LoggerSingleton instance;",
+            "",
+            "   public static final Logger getInstance() {",
+            "       if (instance == null) instance = new LoggerSingleton();",
+            "       return instance.get();",
+            "   }",
+            "",
+            "   protected final Logger initialize() {",
+            "       return new Logger(AmplitudeSingleton.getInstance(),AmplitudeSingleton.getInstance());",
+            "   }",
+            "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
             .that(listOf<JavaFileObject>(activityFile, loggerFile, superParentFile, parentFile, moduleFile))
@@ -1684,34 +1674,24 @@ class FieldInjectionTest {
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.DownloadsNavigationLoggerSingleton",
-            """
-                package test;
-
-                import androidx.annotation.Keep;
-                import androidx.annotation.Nullable;
-                import com.ioc.IocLazy;
-                
-                @Keep
-                public final class DownloadsNavigationLoggerSingleton extends IocLazy<DownloadsNavigationLogger> {
-                  @Nullable
-                  private static DownloadsNavigationLoggerSingleton instance;
-                
-                  public static final DownloadsNavigationLogger getInstance() {
-                    if (instance == null) instance = new DownloadsNavigationLoggerSingleton();
-                    return instance.get();
-                  }
-                
-                  protected final DownloadsNavigationLogger initialize() {
-                    return new DownloadsNavigationLogger(AmplitudeServiceSingleton.getInstance(),AmplitudeServiceSingleton.getInstance());
-                  }
-                
-                  @Keep
-                  public static final void clear() {
-                    instance.onCleared();
-                    instance = null;
-                  }
-                }
-            """.trimIndent())
+            "package test;",
+            "",
+            importKeepAnnotation,
+            importIocLazy,
+            "",
+            "@Keep",
+            "public final class DownloadsNavigationLoggerSingleton extends IocLazy<DownloadsNavigationLogger> {",
+            "   private static DownloadsNavigationLoggerSingleton instance;",
+            "",
+            "   public static final DownloadsNavigationLogger getInstance() {",
+            "       if (instance == null) instance = new DownloadsNavigationLoggerSingleton();",
+            "       return instance.get();",
+            "   }",
+            "",
+            "   protected final DownloadsNavigationLogger initialize() {",
+            "       return new DownloadsNavigationLogger(AmplitudeServiceSingleton.getInstance(),AmplitudeServiceSingleton.getInstance());",
+            "   }",
+            "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
             .that(listOf(activityFile, preferencesFile, amplitudeLoggerFile, superParentFile, baseFile, parentFile, moduleFile))
@@ -2118,35 +2098,25 @@ class FieldInjectionTest {
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.PreferencesSingleton",
-            """
-                package test;
-
-                import androidx.annotation.Keep;
-                import androidx.annotation.Nullable;
-                import com.ioc.IocLazy;
-                
-                @Keep
-                public final class PreferencesSingleton extends IocLazy<Preferences> {
-                  @Nullable
-                  private static PreferencesSingleton instance;
-                
-                  public static final Preferences getInstance() {
-                    if (instance == null) instance = new PreferencesSingleton();
-                    return instance.get();
-                  }
-                
-                  protected final Preferences initialize() {
-                    Context context = ContextModule.context();
-                    return new Preferences(context);
-                  }
-                
-                  @Keep
-                  public static final void clear() {
-                    instance.onCleared();
-                    instance = null;
-                  }
-                }
-            """.trimIndent())
+            "package test;",
+            "",
+            importKeepAnnotation,
+            importIocLazy,
+            "",
+            "@Keep",
+            "public final class PreferencesSingleton extends IocLazy<Preferences> {",
+            "   private static PreferencesSingleton instance;",
+            "",
+            "   public static final Preferences getInstance() {",
+            "       if (instance == null) instance = new PreferencesSingleton();",
+            "       return instance.get();",
+            "   }",
+            "",
+            "   protected final Preferences initialize() {",
+            "       Context context = ContextModule.context();",
+            "       return new Preferences(context);",
+            "   }",
+            "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
             .that(listOf<JavaFileObject>(activityFile, speedDialDisplayedEventLogger, preferences, amplitudeDefaultLogger, restModule, controllerFile))
@@ -3714,34 +3684,24 @@ class FieldInjectionTest {
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.DownloadsNavigationLoggerSingleton",
-            """
-                package test;
-
-                import androidx.annotation.Keep;
-                import androidx.annotation.Nullable;
-                import com.ioc.IocLazy;
-                
-                @Keep
-                public final class DownloadsNavigationLoggerSingleton extends IocLazy<DownloadsNavigationLogger> {
-                  @Nullable
-                  private static DownloadsNavigationLoggerSingleton instance;
-                
-                  public static final DownloadsNavigationLogger getInstance() {
-                    if (instance == null) instance = new DownloadsNavigationLoggerSingleton();
-                    return instance.get();
-                  }
-                
-                  protected final DownloadsNavigationLogger initialize() {
-                    return new DownloadsNavigationLogger(AmplitudeServiceSingleton.getInstance());
-                  }
-                
-                  @Keep
-                  public static final void clear() {
-                    instance.onCleared();
-                    instance = null;
-                  }
-                }
-            """.trimIndent())
+            "package test;",
+            "",
+            importKeepAnnotation,
+            importIocLazy,
+            "",
+            "@Keep",
+            "public final class DownloadsNavigationLoggerSingleton extends IocLazy<DownloadsNavigationLogger> {",
+            "   private static DownloadsNavigationLoggerSingleton instance;",
+            "",
+            "   public static final DownloadsNavigationLogger getInstance() {",
+            "       if (instance == null) instance = new DownloadsNavigationLoggerSingleton();",
+            "       return instance.get();",
+            "   }",
+            "",
+            "   protected final DownloadsNavigationLogger initialize() {",
+            "       return new DownloadsNavigationLogger(AmplitudeServiceSingleton.getInstance());",
+            "   }",
+            "}")
 
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
             .that(listOf(activityFile, amplitudeLoggerFile, superParentFile, baseFile, moduleFile))

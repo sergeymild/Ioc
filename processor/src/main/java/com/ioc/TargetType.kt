@@ -30,12 +30,6 @@ class TargetDataObserver(
 
         return viewModelLiveDataField.asTypeElement().simpleName.toString()
     }
-
-    override fun toString(): String {
-        return "viewModelLiveDataField: $viewModelLiveDataField, observerMethod=$observerMethod\n"
-    }
-
-
 }
 
 fun TargetType?.isSubtype(

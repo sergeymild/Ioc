@@ -1,31 +1,37 @@
 package com.ioc
 
 
-import android.content.Context
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
 import com.download.media.views.speeddial.models.SpeedDialModel
-import com.download.media.views.speeddial.viewmodel.MainViewModel
-import com.example.common.CommonActivity
-import com.example.common.Preferences
-import com.example.mylibrary.MyLibraryActivity
+import com.example.mylibrary.BottomAdHolderFactory
+import com.example.mylibrary.Library
 import com.ios.injector.R
 
+class M
 
-@Singleton
-class TeS: Cleanable {
-    override fun onCleared() {
 
-    }
-
+object MainModule: Library() {
+    @Dependency
+    fun sd() = SpeedDialModel()
 }
+
+
+object SecondModule: Library() {
+    @Dependency
+    fun sd() = M()
+}
+
 
 class MainActivity : AppCompatActivity() {
 
-    @Inject
-    lateinit var viewModel: TeS
 
+    @Inject
+    lateinit var bottomAdHolderFactory: BottomAdHolderFactory
+    @Inject
+    lateinit var speedDialModel: SpeedDialModel
+    @Inject
+    lateinit var m: M
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
