@@ -74,20 +74,35 @@ fun RoundEnvironment.collectModuleMethods(classesWithDependencyAnnotation: Mutab
     val dependencies = getElementsAnnotatedWith(Dependency::class.java)
 
     val queue = LinkedList<Element>(dependencies)
+    val checked = mutableSetOf<String>()
+
+    val moduleMethodsSet = mutableSetOf<String>()
+    val dependencySet = mutableSetOf<String>()
 
     while (queue.isNotEmpty()) {
         val dependency = queue.pop()
-        if (dependency.isNotMethodAndInterface() && !classesWithDependencyAnnotation.contains(dependency)) {
+
+        if (dependency.isNotMethodAndInterface() && dependencySet.add(dependency.asTypeString())) {
             classesWithDependencyAnnotation.add(dependency)
-        } else if (dependency.isMethod() && !methodsWithDependencyAnnotation.contains(dependency)) {
-            methodsWithDependencyAnnotation.add(dependency.asMethod())
+        } else if (dependency.isMethod()) {
+            val method = dependency.asMethod()
+            if (moduleMethodsSet.add(method.asTypeString())) {
+                methodsWithDependencyAnnotation.add(method)
+            } else {
+                val tyString = method.asTypeString()
+                val addedMethod = methodsWithDependencyAnnotation.firstOrNull { it.asTypeString() == tyString }
+                throw ProcessorException("Trying add method `${dependency.enclosingElement.simpleName}.${dependency.simpleName}()` witch already added from: `${addedMethod?.enclosingElement?.simpleName}.${addedMethod?.simpleName}()`").setElement(dependency)
+            }
         }
 
         if (!dependency.isMethod()) continue
 
+        if (!checked.add(dependency.enclosingElement.asTypeString())) continue
+
         val superTypes = collectSuperTypes(dependency.enclosingElement.asTypeElement(), false)
         for (superType in superTypes) {
-            queue.addAll(superType.asTypeElement().dependencyMethods())
+            if (checked.add(superType.toString()))
+                queue.addAll(superType.asTypeElement().dependencyMethods())
         }
     }
 }
@@ -155,31 +170,35 @@ fun mapToTargetWithDependencies(
     targetDependencies: MutableMap<String, MutableSet<Element>>,
     rootTypeElements: MutableList<TypeElement>
 ): Map<TargetType, MutableList<DependencyModel>> {
-    val targetsWithDependencies = mutableMapOf<TargetType, MutableList<DependencyModel>>()
+    try {
+        val targetsWithDependencies = mutableMapOf<TargetType, MutableList<DependencyModel>>()
 
-    for (targetTypeElement in rootTypeElements) {
-        if (isKotlinCompanionObject(targetTypeElement)) {
-            throwCantInjectInCompanionObject(targetTypeElement)
-        }
-        val targetType = createTarget(targetTypeElement, IProcessor.dependencyFinder)
-
-        val dependencies = targetsWithDependencies.getOrPut(targetType) { mutableListOf() }
-
-        val injectElements = targetDependencies.getValue(targetTypeElement.asMapKey())
-        for (injectElement in injectElements) {
-            if (injectElement.kind == ElementKind.CONSTRUCTOR) continue
-            val resolved = dependencyResolver.resolveDependency(injectElement, target = targetType)
-            if (resolved.isLocal) {
-                val getterName = findDependencyGetter(injectElement)
-                    .orElse { throwsGetterIsNotFound(injectElement) }
-                    .toGetterName()
-                targetType.localScopeDependencies[resolved.originalTypeString] = getterName
+        for (targetTypeElement in rootTypeElements) {
+            if (isKotlinCompanionObject(targetTypeElement)) {
+                throwCantInjectInCompanionObject(targetTypeElement)
             }
-            dependencies.add(resolved)
-        }
-    }
+            val targetType = createTarget(targetTypeElement, IProcessor.dependencyFinder)
 
-    return targetsWithDependencies
+            val dependencies = targetsWithDependencies.getOrPut(targetType) { mutableListOf() }
+
+            val injectElements = targetDependencies.getValue(targetTypeElement.asMapKey())
+            for (injectElement in injectElements) {
+                if (injectElement.kind == ElementKind.CONSTRUCTOR) continue
+                val resolved = dependencyResolver.resolveDependency(injectElement, target = targetType)
+                if (resolved.isLocal) {
+                    val getterName = findDependencyGetter(injectElement)
+                        .orElse { throwsGetterIsNotFound(injectElement) }
+                        .toGetterName()
+                    targetType.localScopeDependencies[resolved.originalTypeString] = getterName
+                }
+                dependencies.add(resolved)
+            }
+        }
+
+        return targetsWithDependencies
+    } catch (e: Throwable) {
+        throw e
+    }
 }
 
 fun methodsWithDependencyAnnotation(): List<ExecutableElement> {
@@ -196,7 +215,16 @@ fun Element.isNotMethodAndInterface(): Boolean {
 }
 
 fun TypeMirror.isNotValid(): Boolean {
-    return toString() == objectJavaType.canonicalName
+    try {
+        toString()
+    } catch (e: Throwable) {
+        if (e::class.java.canonicalName.contains("com.sun.tools.javac.code.Symbol.CompletionFailure")) {
+            return false
+            //throw ProcessorException("Class ${method.returnType} is not accessible for: ${ele}, maybe you forgot add module witch contains it.")
+        }
+    }
+    return toString() == "none"
+        || toString() == objectJavaType.canonicalName
         || kind == TypeKind.NONE
         || kind == TypeKind.PACKAGE
         || kind == TypeKind.NULL
@@ -436,7 +464,6 @@ fun findDependencyGetterFromTypeOrSuperType(element: Element): Element {
     if (element.isPublic()) return element
     val supertypes = collectSuperTypes(element.asTypeElement(), includeSelf = true)
     val genericType = element.getGenericFirstOrSelfType()
-    message("00: ${genericType}")
     for (method in element.enclosingElement.methods()) {
         val returnType = method.returnType.asElement().toString()
         if (supertypes.any { IProcessor.types.erasure(it).toString() == returnType }) {

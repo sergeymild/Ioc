@@ -65,6 +65,7 @@ class DependencyTypesFinder(
         for (method in methodsWithDependencyAnnotation()) {
             if (!method.isAbstract()) continue
             val type = method.returnType.asTypeElement()
+
             if (!isSubtype(element, type, named)) continue
 
             validateAbstractModuleMethodProvider(method)

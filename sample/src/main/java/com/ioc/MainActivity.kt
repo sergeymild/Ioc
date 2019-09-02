@@ -17,10 +17,7 @@ object MainModule: Library() {
 }
 
 
-object SecondModule: Library() {
-    @Dependency
-    fun sd() = M()
-}
+
 
 
 class MainActivity : AppCompatActivity() {

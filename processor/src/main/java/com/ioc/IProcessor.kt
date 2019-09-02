@@ -60,10 +60,12 @@ open class IProcessor : AbstractProcessor() {
         classesWithDependencyAnnotation.clear()
         methodsWithDependencyAnnotation.clear()
 
-        roundEnv.collectModuleMethods(classesWithDependencyAnnotation, methodsWithDependencyAnnotation)
-
         measure("Ioc Annotation Processing") {
             try {
+                dependencyFinder = DependencyTypesFinder(qualifierFinder)
+                dependencyResolver = DependencyResolver(qualifierFinder, dependencyFinder)
+
+                roundEnv.collectModuleMethods(classesWithDependencyAnnotation, methodsWithDependencyAnnotation)
                 return newParse(roundEnv)
             } catch (e: ProcessorException) {
                 messager.printMessage(Diagnostic.Kind.ERROR, e.message, e.element)
@@ -81,8 +83,6 @@ open class IProcessor : AbstractProcessor() {
 
     @Throws(Throwable::class)
     fun newParse(roundEnv: RoundEnvironment): Boolean {
-        dependencyFinder = DependencyTypesFinder(qualifierFinder)
-        dependencyResolver = DependencyResolver(qualifierFinder, dependencyFinder)
         dependencyFinder.dependencyResolver = dependencyResolver
 
         val targetDependencies = mutableMapOf<String, MutableSet<Element>>()
