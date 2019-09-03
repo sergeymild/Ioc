@@ -1,12 +1,16 @@
+plugins {
+    id 'digital.wup.android-maven-publish' version '3.6.2'
+}
+
 apply plugin: 'java'
-apply plugin: 'com.github.dcendents.android-maven' // ADD THIS
 
 group='com.ioc'
-archivesBaseName = "ioc-core"
+archivesBaseName = "core"
 
 repositories {
     jcenter()
     maven { url "${rootProject.ext.sdk}/extras/android/m2repository" }
+    mavenCentral()
 }
 
 dependencies {
@@ -17,3 +21,28 @@ dependencies {
 
 sourceCompatibility = "1.7"
 targetCompatibility = "1.7"
+
+
+def props = new Properties()
+props.load(new FileInputStream(file("../publish.properties")))
+publishing {
+
+    repositories {
+        maven {
+            credentials {
+                username props.getProperty("username")
+                password props.getProperty("password")
+            }
+            url props.getProperty("url")
+            name props.getProperty("name")
+        }
+    }
+    publications {
+        mavenAar(MavenPublication) {
+            groupId = group
+            artifactId = archivesBaseName
+            version = "$baseVersion"
+            from components.java
+        }
+    }
+}
