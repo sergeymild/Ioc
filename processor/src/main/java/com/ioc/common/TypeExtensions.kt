@@ -10,6 +10,7 @@ import java.util.*
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.element.*
 import javax.lang.model.type.DeclaredType
+import javax.lang.model.type.MirroredTypesException
 import javax.lang.model.type.TypeKind
 import javax.lang.model.type.TypeMirror
 
@@ -70,8 +71,38 @@ fun scanForAnnotation(typeElement: TypeElement, annotation: Class<*>): MutableSe
     return scanner.scan(typeElement, annotationType)
 }
 
-fun RoundEnvironment.collectModuleMethods(classesWithDependencyAnnotation: MutableList<Element>, methodsWithDependencyAnnotation: MutableList<ExecutableElement>) {
-    val dependencies = getElementsAnnotatedWith(Dependency::class.java)
+fun RoundEnvironment.collectModuleMethods(
+    classesWithDependencyAnnotation: MutableList<Element>,
+    methodsWithDependencyAnnotation: MutableList<ExecutableElement>) {
+    val dependencies = getElementsAnnotatedWith(Dependency::class.java).toMutableList()
+
+    val dependenciesSet = mutableSetOf<String>()
+    dependencies.forEach { dependenciesSet.add(it.asTypeString()) }
+    val modules = getElementsAnnotatedWith(Module::class.java)
+    for (module in modules) {
+        if (module.kind != ElementKind.ANNOTATION_TYPE) {
+            for (method in module.dependencyMethods()) {
+                if (dependenciesSet.add(method.asTypeString())) dependencies.add(method)
+            }
+        }
+
+        try {
+            val moduleAnnotation = module.getAnnotation(Module::class.java)
+            for (kClass in moduleAnnotation.value) {
+                message(kClass)
+            }
+        } catch (e: MirroredTypesException) {
+            for (typeMirror in e.typeMirrors) {
+                val typeElement = typeMirror.asTypeElement()
+                if (typeElement.kind == ElementKind.ANNOTATION_TYPE) continue
+                for (method in typeMirror.asTypeElement().dependencyMethods()) {
+                    if (dependenciesSet.add(method.asTypeString())) dependencies.add(method)
+                }
+            }
+        }
+    }
+
+
 
     val queue = LinkedList<Element>(dependencies)
     val checked = mutableSetOf<String>()

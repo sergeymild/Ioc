@@ -11,7 +11,8 @@ import com.ios.injector.R
 class M
 
 
-object MainModule: Library() {
+@Module(value = [Library::class])
+object MainModule {
     @Dependency
     fun sd() = SpeedDialModel()
 }
