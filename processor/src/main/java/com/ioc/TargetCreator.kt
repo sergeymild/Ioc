@@ -7,7 +7,6 @@ fun createTarget(element: TypeElement, dependencyFinder: DependencyTypesFinder):
     val type = TargetType(element)
 
     type.postInitialization = postInitializationMethod(element)
-    type.dataObservers = findDataObservers(element)
     type.supertypes.addAll(dependencyFinder.collectSuperTypes(type.element))
 
     type.asTargetDependencies.add(element.asType().toString())

@@ -1,6 +1,5 @@
 package com.ioc
 
-import com.ioc.ImplementationsSpec.Companion.addDataObservers
 import com.ioc.ImplementationsSpec.Companion.dependencyInjectionCode
 import com.ioc.ImplementationsSpec.Companion.provideInjectionMethod
 import com.ioc.common.*
@@ -205,7 +204,6 @@ open class IProcessor : AbstractProcessor() {
                 cachedGeneratedMethods[key] = CachedMethod(targetInjectionTypeName(target.key), builtMethod)
             }
 
-            methods.addAll(addDataObservers(target.key))
             val typeSpec = ImplementationsSpec(target.key, methods).inject(singletonsToInject, emptyConstructorToInject, emptyModuleMethodToInject, fromDifferentModuleInject)
             typeSpec.writeClass(targetInjectionPackage(target.key))
         }

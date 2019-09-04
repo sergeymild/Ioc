@@ -3,6 +3,7 @@ package com.ioc.common
 import com.ioc.*
 import com.ioc.IProcessor.Companion.elementUtils
 import com.ioc.IProcessor.Companion.processingEnvironment
+import com.ioc.IProcessor.Companion.qualifierFinder
 import com.ioc.scanner.AnnotationSetScanner
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.TypeName
@@ -76,34 +77,6 @@ fun RoundEnvironment.collectModuleMethods(
     methodsWithDependencyAnnotation: MutableList<ExecutableElement>) {
     val dependencies = getElementsAnnotatedWith(Dependency::class.java).toMutableList()
 
-    val dependenciesSet = mutableSetOf<String>()
-    dependencies.forEach { dependenciesSet.add(it.asTypeString()) }
-    val modules = getElementsAnnotatedWith(Module::class.java)
-    for (module in modules) {
-        if (module.kind != ElementKind.ANNOTATION_TYPE) {
-            for (method in module.dependencyMethods()) {
-                if (dependenciesSet.add(method.asTypeString())) dependencies.add(method)
-            }
-        }
-
-        try {
-            val moduleAnnotation = module.getAnnotation(Module::class.java)
-            for (kClass in moduleAnnotation.value) {
-                message(kClass)
-            }
-        } catch (e: MirroredTypesException) {
-            for (typeMirror in e.typeMirrors) {
-                val typeElement = typeMirror.asTypeElement()
-                if (typeElement.kind == ElementKind.ANNOTATION_TYPE) continue
-                for (method in typeMirror.asTypeElement().dependencyMethods()) {
-                    if (dependenciesSet.add(method.asTypeString())) dependencies.add(method)
-                }
-            }
-        }
-    }
-
-
-
     val queue = LinkedList<Element>(dependencies)
     val checked = mutableSetOf<String>()
 
@@ -113,16 +86,17 @@ fun RoundEnvironment.collectModuleMethods(
     while (queue.isNotEmpty()) {
         val dependency = queue.pop()
 
-        if (dependency.isNotMethodAndInterface() && dependencySet.add(dependency.asTypeString())) {
+        val name = qualifierFinder.getModuleMethodQualifier(dependency)
+        if (dependency.isNotMethodAndInterface() && dependencySet.add(name)) {
             classesWithDependencyAnnotation.add(dependency)
         } else if (dependency.isMethod()) {
             val method = dependency.asMethod()
-            if (moduleMethodsSet.add(method.asTypeString())) {
+            if (moduleMethodsSet.add(name)) {
                 methodsWithDependencyAnnotation.add(method)
             } else {
                 val tyString = method.asTypeString()
                 val addedMethod = methodsWithDependencyAnnotation.firstOrNull { it.asTypeString() == tyString }
-                throw ProcessorException("Trying add method `${dependency.enclosingElement.simpleName}.${dependency.simpleName}()` witch already added from: `${addedMethod?.enclosingElement?.simpleName}.${addedMethod?.simpleName}()`").setElement(dependency)
+                throw ProcessorException("Trying add method `${dependency.enclosingElement.simpleName}.${dependency.simpleName}()` witch already added from: `${addedMethod?.enclosingElement?.simpleName}.${addedMethod?.simpleName}()`").setElement(dependency.enclosingElement)
             }
         }
 

@@ -19,7 +19,6 @@ val ioc = Ioc::class.java.canonicalName.toString()
 val iosProvider = IocProvider::class.java.canonicalName.toString()
 val iocLazy = IocLazy::class.java.canonicalName.toString()
 val iocLocalScope = LocalScope::class.java.canonicalName.toString()
-val iocDataObserver = DataObserver::class.java.canonicalName.toString()
 val named = Qualifier::class.java.canonicalName.toString()
 
 val importKotlinMetadataAnnotation = "import ${Metadata::class.java.canonicalName};"
