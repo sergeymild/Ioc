@@ -198,6 +198,16 @@ fun throwsDidNotFindSuitableConstructor(element: Element) {
 }
 
 @Throws(ProcessorException::class)
+fun throwTargetMustBePublic(element: Element) {
+    throw ProcessorException("${element.asTypeString()} must be public.").setElement(element)
+}
+
+@Throws(ProcessorException::class)
+fun throwAmbiguousImplementationsFound(element: Element, found: Element) {
+    throw ProcessorException("Ambiguous dependency $element is class by itself but also found $found try to add @Qualifier annotation.").setElement(element)
+}
+
+@Throws(ProcessorException::class)
 fun throwCantInjectInCompanionObject(element: Element) {
     throw ProcessorException("Can't inject in companion object $element").setElement(element)
 }

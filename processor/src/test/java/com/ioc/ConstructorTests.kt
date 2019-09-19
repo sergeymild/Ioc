@@ -319,27 +319,37 @@ class ConstructorTests {
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ManagerSingleton",
-            "package test;",
-            "",
-            importKeepAnnotation,
-            importIocLazy,
-            "",
-            "@Keep",
-            "public final class ManagerSingleton extends IocLazy<Manager> {",
-            "   private static ManagerSingleton instance;",
-            "",
-            "   public static final Manager getInstance() {",
-            "       if (instance == null) instance = new ManagerSingleton();",
-            "       return instance.get();",
-            "   }",
-            "",
-            "   protected final Manager initialize() {",
-            "       DbMapperImpl dbMapper = new DbMapperImpl();",
-            "       DbMapperImpl dbMapper2 = new DbMapperImpl();",
-            "       DbRepository dbRepository = new DbRepository(dbMapper2);",
-            "       return new Manager(dbMapper, dbRepository);",
-            "   }",
-            "}")
+            """
+                package test;
+
+                $importKeepAnnotation
+                $importNullableAnnotation
+                $importIocLazy
+                
+                @Keep
+                public final class ManagerSingleton extends IocLazy<Manager> {
+                  @Nullable
+                  private static ManagerSingleton instance;
+                
+                  public static final Manager getInstance() {
+                    if (instance == null) instance = new ManagerSingleton();
+                    return instance.get();
+                  }
+                
+                  protected final Manager initialize() {
+                    DbMapperImpl dbMapper = new DbMapperImpl();
+                    DbMapperImpl dbMapper2 = new DbMapperImpl();
+                    DbRepository dbRepository = new DbRepository(dbMapper2);
+                    return new Manager(dbMapper,dbRepository);
+                  }
+                
+                  @Keep
+                  public static final void clear() {
+                    instance.onCleared();
+                    instance = null;
+                  }
+                }
+            """.trimIndent())
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
             .that(listOf(dbMapper, dbMapperImpl, dbRepository, managerFile, activityFile))
