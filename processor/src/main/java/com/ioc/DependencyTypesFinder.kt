@@ -65,6 +65,7 @@ class DependencyTypesFinder(
         for (method in methodsWithDependencyAnnotation()) {
             if (!method.isAbstract()) continue
             val type = method.returnType.asTypeElement()
+
             if (!isSubtype(element, type, named)) continue
 
             validateAbstractModuleMethodProvider(method)
@@ -110,7 +111,7 @@ class DependencyTypesFinder(
             if (type.isSingleton && returnType.isAbstract() && qualifierFinder.getQualifier(provider) != null)
                 throwsSingletonMethodAbstractReturnType(provider)
             implementations.add(type)
-            throwsMoreThanOneDependencyFoundIfNeed(element, named, implementations.map { it.name })
+            throwsMoreThanOneDependencyFoundIfNeed(element, named, implementations.map { "${it.module.simpleName}.${it.name}" })
         }
 
         return implementations.firstOrNull()

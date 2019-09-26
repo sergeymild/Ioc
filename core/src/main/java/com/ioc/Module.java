@@ -5,20 +5,15 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Created by sergeygolishnikov on 02/01/2018.
+ * Created by sergeygolishnikov on 10/07/2017.
  */
-
-@Target({ METHOD })
+@Target({ TYPE })
 @Retention(RUNTIME)
 @Documented
-public @interface DataObserver {
-
-    ObserveType value() default ObserveType.LIFECYCLE;
-
-    enum ObserveType {
-        LIFECYCLE, FOREVER
-    }
+public @interface Module {
+    Class<?>[] value();
 }

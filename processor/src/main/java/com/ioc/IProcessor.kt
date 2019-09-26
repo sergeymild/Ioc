@@ -1,16 +1,15 @@
 package com.ioc
 
-import com.ioc.ImplementationsSpec.Companion.addDataObservers
 import com.ioc.ImplementationsSpec.Companion.dependencyInjectionCode
 import com.ioc.ImplementationsSpec.Companion.provideInjectionMethod
 import com.ioc.common.*
-import com.squareup.javapoet.*
+import com.squareup.javapoet.MethodSpec
+import com.squareup.javapoet.TypeName
 import java.util.*
 import javax.annotation.processing.*
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
-import javax.lang.model.element.Modifier
 import javax.lang.model.element.TypeElement
 import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
@@ -60,21 +59,12 @@ open class IProcessor : AbstractProcessor() {
         classesWithDependencyAnnotation.clear()
         methodsWithDependencyAnnotation.clear()
 
-        val dependencies = roundEnv.getElementsAnnotatedWith(Dependency::class.java)
-
-        for (dependency in dependencies) {
-            if (dependency.isNotMethodAndInterface()) {
-                classesWithDependencyAnnotation.add(dependency)
-                continue
-            }
-
-            if (dependency.isMethod()) {
-                methodsWithDependencyAnnotation.add(dependency as ExecutableElement)
-            }
-        }
-
         measure("Ioc Annotation Processing") {
             try {
+                dependencyFinder = DependencyTypesFinder(qualifierFinder)
+                dependencyResolver = DependencyResolver(qualifierFinder, dependencyFinder)
+
+                roundEnv.collectModuleMethods(classesWithDependencyAnnotation, methodsWithDependencyAnnotation)
                 return newParse(roundEnv)
             } catch (e: ProcessorException) {
                 messager.printMessage(Diagnostic.Kind.ERROR, e.message, e.element)
@@ -92,8 +82,6 @@ open class IProcessor : AbstractProcessor() {
 
     @Throws(Throwable::class)
     fun newParse(roundEnv: RoundEnvironment): Boolean {
-        dependencyFinder = DependencyTypesFinder(qualifierFinder)
-        dependencyResolver = DependencyResolver(qualifierFinder, dependencyFinder)
         dependencyFinder.dependencyResolver = dependencyResolver
 
         val targetDependencies = mutableMapOf<String, MutableSet<Element>>()
@@ -154,22 +142,6 @@ open class IProcessor : AbstractProcessor() {
             val spec = NewSingletonSpec(singleton)
             spec.createSpec().writeClass(singletonClassPackage(singleton))
         }
-
-        if (singletons.isEmpty()) return
-
-        val typeSpec = TypeSpec.classBuilder("SingletonsClear")
-                .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-        val codeBlock = CodeBlock.builder()
-        for (singleton in singletons) {
-            val name = singletonClassName(singleton)
-            codeBlock.addStatement("\$T.clear()", ClassName.bestGuess("${singletonClassPackage(singleton)}.$name"))
-        }
-
-        typeSpec.addMethod(MethodSpec.methodBuilder("clearSingletons")
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .addCode(codeBlock.build())
-                .build())
-        typeSpec.build().writeClass("com.ioc")
     }
 
     class CachedMethod(val classTypeName: TypeName, val methodSpec: MethodSpec)
@@ -232,7 +204,6 @@ open class IProcessor : AbstractProcessor() {
                 cachedGeneratedMethods[key] = CachedMethod(targetInjectionTypeName(target.key), builtMethod)
             }
 
-            methods.addAll(addDataObservers(target.key))
             val typeSpec = ImplementationsSpec(target.key, methods).inject(singletonsToInject, emptyConstructorToInject, emptyModuleMethodToInject, fromDifferentModuleInject)
             typeSpec.writeClass(targetInjectionPackage(target.key))
         }

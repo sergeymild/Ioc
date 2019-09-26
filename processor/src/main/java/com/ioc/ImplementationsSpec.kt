@@ -153,43 +153,6 @@ class ImplementationsSpec constructor(
             return builder
         }
 
-        fun addDataObservers(target: TargetType): List<InjectMethod> {
-            val methods = mutableListOf<InjectMethod>()
-            for (dataObserver in target.dataObservers) {
-
-                val liveDataTypeName = dataObserver.observingType.asElement().simpleName.toString()
-                val viewModelName = dataObserver.viewModel.simpleName.toString()
-
-                val observerType = ParameterizedTypeName.get(androidLiveDataObserver, ClassName.get(dataObserver.observingType))
-                val observerClassSpec = TypeSpec.anonymousClassBuilder("")
-                    .superclass(observerType)
-                    .addMethod(MethodSpec.methodBuilder("onChanged")
-                        .addModifiers(Modifier.PUBLIC)
-                        .addParameter(ClassName.get(dataObserver.observingType), "observingData")
-                        .addStatement("target.\$N(\$N)", dataObserver.observerMethod.simpleName, "observingData")
-                        .build())
-                    .build()
-
-
-                var lifecycleOwner = "target"
-                if (target.isAndroidXFragment()) lifecycleOwner = "target.getViewLifecycleOwner()"
-                var observeTypeString = "target.\$N.\$N.observe($lifecycleOwner, \$L)"
-                if (dataObserver.observeType == DataObserver.ObserveType.FOREVER) {
-                    observeTypeString = "target.\$N.\$N.observeForever(\$L)"
-                }
-                methods.add(InjectMethod(MethodSpec
-                    .methodBuilder("observe${dataObserver.liveDataName()}${liveDataTypeName}From${viewModelName}By${dataObserver.observerMethod.simpleName.titleize()}")
-                    .addModifiers(Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
-                    .addParameter(targetParameter(target.className))
-                    .addStatement(observeTypeString,
-                        dataObserver.targetViewModelField.toString(),
-                        dataObserver.viewModelLiveDataField.toString(),
-                        observerClassSpec)
-                    .build(), false, null, target.className))
-            }
-
-            return methods
-        }
     }
 
 }

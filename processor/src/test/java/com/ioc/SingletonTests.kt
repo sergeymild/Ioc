@@ -112,13 +112,11 @@ class SingletonTests {
             """
             package test;
 
-            import androidx.annotation.Keep;
-            import androidx.annotation.Nullable;
-            import com.ioc.IocLazy;
+            $importKeepAnnotation
+            $importIocLazy
             
             @Keep
             public final class ReleaseModelSingleton extends IocLazy<ReleaseModel> {
-              @Nullable
               private static ReleaseModelSingleton instance;
             
               public static final ReleaseModel getInstance() {
@@ -129,12 +127,6 @@ class SingletonTests {
               protected final ReleaseModel initialize() {
                 Cappuccino coffee = new Cappuccino();
                 return new ReleaseModel(coffee);
-              }
-            
-              @Keep
-              public static final void clear() {
-                instance.onCleared();
-                instance = null;
               }
             }
         """.trimIndent())
@@ -256,13 +248,11 @@ class SingletonTests {
             """
             package test;
 
-            import androidx.annotation.Keep;
-            import androidx.annotation.Nullable;
-            import com.ioc.IocLazy;
+            $importKeepAnnotation
+            $importIocLazy
             
             @Keep
             public final class ReleaseModelSingleton extends IocLazy<ReleaseModel> {
-              @Nullable
               private static ReleaseModelSingleton instance;
             
               public static final ReleaseModel getInstance() {
@@ -274,12 +264,6 @@ class SingletonTests {
                 Sugar sugar = new Sugar();
                 Nescafe coffee = new Nescafe(sugar);
                 return new ReleaseModel(coffee);
-              }
-            
-              @Keep
-              public static final void clear() {
-                instance.onCleared();
-                instance = null;
               }
             }
         """.trimIndent())
@@ -329,30 +313,20 @@ class SingletonTests {
         val injectedFile = JavaFileObjects.forSourceLines("test.MainPresenterSingleton",
             """
             package test;
-
-            import androidx.annotation.Keep;
-            import androidx.annotation.Nullable;
-            import com.ioc.IocLazy;
-            
+            $importKeepAnnotation
+            $importIocLazy
             @Keep
             public final class MainPresenterSingleton extends IocLazy<MainPresenter> {
-              @Nullable
-              private static MainPresenterSingleton instance;
+               private static MainPresenterSingleton instance;
             
-              public static final MainPresenter getInstance() {
-                if (instance == null) instance = new MainPresenterSingleton();
-                return instance.get();
-              }
+               public static final MainPresenter getInstance() {
+                   if (instance == null) instance = new MainPresenterSingleton();
+                   return instance.get();
+               }
             
-              protected final MainPresenter initialize() {
-                return new MainPresenter(DependencyModelSingleton.getInstance());
-              }
-            
-              @Keep
-              public static final void clear() {
-                instance.onCleared();
-                instance = null;
-              }
+               protected final MainPresenter initialize() {
+                   return new MainPresenter(DependencyModelSingleton.getInstance());
+               }
             }
         """.trimIndent())
 
@@ -420,13 +394,11 @@ class SingletonTests {
             """
             package test;
 
-            import androidx.annotation.Keep;
-            import androidx.annotation.Nullable;
-            import com.ioc.IocLazy;
+            $importKeepAnnotation
+            $importIocLazy
             
             @Keep
             public final class CookieManagerWorkerSingleton extends IocLazy<CookieManagerWorker> {
-              @Nullable
               private static CookieManagerWorkerSingleton instance;
             
               public static final CookieManagerWorker getInstance() {
@@ -438,12 +410,6 @@ class SingletonTests {
                 Settings privacySettings = new Settings();
                 Settings themeSettings = new Settings();
                 return new CookieManagerWorker(privacySettings,themeSettings);
-              }
-            
-              @Keep
-              public static final void clear() {
-                instance.onCleared();
-                instance = null;
               }
             }
         """.trimIndent())
@@ -509,13 +475,11 @@ class SingletonTests {
             """
             package test;
 
-            import androidx.annotation.Keep;
-            import androidx.annotation.Nullable;
-            import com.ioc.IocLazy;
+            $importKeepAnnotation
+            $importIocLazy
             
             @Keep
             public final class WebMusicManagerSingleton extends IocLazy<WebMusicManager> {
-              @Nullable
               private static WebMusicManagerSingleton instance;
             
               public static final WebMusicManager getInstance() {
@@ -527,12 +491,6 @@ class SingletonTests {
                 Settings privacySettings = new Settings();
                 Session session = new Session(privacySettings);
                 return new WebMusicManager(session);
-              }
-            
-              @Keep
-              public static final void clear() {
-                instance.onCleared();
-                instance = null;
               }
             }
         """.trimIndent())
@@ -849,15 +807,13 @@ class SingletonTests {
             """
             package com.ioc;
 
-            import androidx.annotation.Keep;
-            import androidx.annotation.Nullable;
+            $importKeepAnnotation
             import java.lang.String;
-            import java.util.List;
+            $importList
             import test.Module;
             
             @Keep
             public final class ListSingleton extends IocLazy<List<String>> {
-              @Nullable
               private static ListSingleton instance;
             
               public static final List<String> getInstance() {
@@ -867,12 +823,6 @@ class SingletonTests {
             
               protected final List<String> initialize() {
                 return Module.INSTANCE.provideExampleDependencyList();
-              }
-            
-              @Keep
-              public static final void clear() {
-                instance.onCleared();
-                instance = null;
               }
             }
         """.trimIndent())

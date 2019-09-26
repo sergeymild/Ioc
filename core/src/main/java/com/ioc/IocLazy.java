@@ -3,9 +3,9 @@ package com.ioc;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-public abstract class IocLazy<T> implements Lazy<T>, Cleanable {
+public abstract class IocLazy<T> implements Lazy<T> {
     @Nullable
-    T value;
+    protected T value;
 
     @Override
     public boolean isInitialized() {
@@ -21,13 +21,5 @@ public abstract class IocLazy<T> implements Lazy<T>, Cleanable {
         if (isInitialized()) return value;
         value = initialize();
         return value;
-    }
-
-    @Override
-    public void onCleared() {
-        if (value instanceof Cleanable) {
-            ((Cleanable) value).onCleared();
-        }
-        value = null;
     }
 }

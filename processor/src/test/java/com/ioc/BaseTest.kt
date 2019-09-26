@@ -19,7 +19,6 @@ val ioc = Ioc::class.java.canonicalName.toString()
 val iosProvider = IocProvider::class.java.canonicalName.toString()
 val iocLazy = IocLazy::class.java.canonicalName.toString()
 val iocLocalScope = LocalScope::class.java.canonicalName.toString()
-val iocDataObserver = DataObserver::class.java.canonicalName.toString()
 val named = Qualifier::class.java.canonicalName.toString()
 
 val importKotlinMetadataAnnotation = "import ${Metadata::class.java.canonicalName};"
@@ -48,7 +47,6 @@ val importLocalScopeAnnotation = "import ${LocalScope::class.java.canonicalName}
 val importPostInitializationAnnotation = "import ${PostInitialization::class.java.canonicalName};"
 val importKeepAnnotation = "import androidx.annotation.Keep;"
 val importNonNullAnnotation = "import androidx.annotation.NonNull;"
-val importNullableAnnotation = "import androidx.annotation.Nullable;"
 val importQualifierAnnotation = "import ${Qualifier::class.java.canonicalName};"
 val importViewModelAnnotation = "import ${ViewModel::class.java.canonicalName};"
 

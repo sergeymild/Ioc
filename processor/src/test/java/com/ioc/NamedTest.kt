@@ -108,6 +108,7 @@ class NamedTest {
             "   @Dependency",
             "   public static DependencyModel production() { return null; }",
             "   @Dependency",
+            "   @Qualifier(\"release\")",
             "   public static DependencyModel debug() { return null; }",
             "}")
 
@@ -1410,5 +1411,54 @@ class NamedTest {
             .withErrorContaining("`test.Module.debug()` annotated with @Singleton must returns implementation not abstract type")
             .`in`(module)
             .onLine(10)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun failAddTheSameMethod() {
+
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            "package test;",
+            "",
+            importInjectAnnotation,
+            importQualifierAnnotation,
+            "",
+            "public class Activity {",
+            "",
+            "   @Inject",
+            "   public DependencyModel dependency;",
+            "}")
+
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+            "package test;",
+            "",
+            importQualifierAnnotation,
+            "",
+            "public class DependencyModel {",
+            "   public DependencyModel() {};",
+            "}")
+
+        val moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
+            "package test;",
+            "",
+            importDependencyAnnotation,
+            importQualifierAnnotation,
+            "",
+            "public class ModuleFile {",
+            "",
+            "   @Dependency",
+            "   public static DependencyModel production() { return null; }",
+            "   @Dependency",
+            "   public static DependencyModel debug() { return null; }",
+            "}")
+
+
+        assertAbout(javaSources())
+            .that(listOf(activityFile, dependencyFile, moduleFile))
+            .processedWith(IProcessor())
+            .failsToCompile()
+            .withErrorContaining("Trying add method `ModuleFile.debug()` witch already added from: `ModuleFile.production()`")
+            .`in`(moduleFile)
+            .onLine(6)
     }
 }
