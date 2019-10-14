@@ -751,7 +751,7 @@ class SingletonTests {
     }
 
     @Test
-    fun kotlinModuleInSingleton() {
+    fun failOnSingletonGeneric() {
         val exampleInterface = JavaFileObjects.forSourceLines("test.ExampleInterface",
             "package test;",
             "",
@@ -803,35 +803,13 @@ class SingletonTests {
             "   }",
             "}")
 
-        val injectedFile = JavaFileObjects.forSourceLines("com.ioc.ListSingleton",
-            """
-            package com.ioc;
-
-            $importKeepAnnotation
-            import java.lang.String;
-            $importList
-            import test.Module;
-            
-            @Keep
-            public final class ListSingleton extends IocLazy<List<String>> {
-              private static ListSingleton instance;
-            
-              public static final List<String> getInstance() {
-                if (instance == null) instance = new ListSingleton();
-                return instance.get();
-              }
-            
-              protected final List<String> initialize() {
-                return Module.INSTANCE.provideExampleDependencyList();
-              }
-            }
-        """.trimIndent())
-
         Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(JavaSourcesSubjectFactory.javaSources())
             .that(listOf(moduleFile, exampleInterface, parentFile, childFile))
             .processedWith(IProcessor())
-            .compilesWithoutError()
-            .and().generatesSources(injectedFile)
+            .failsToCompile()
+            .withErrorContaining("Singleton with generic types doesn't support")
+            .`in`(childFile)
+            .onLine(8)
     }
 
     @Test

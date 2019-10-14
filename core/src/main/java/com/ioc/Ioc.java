@@ -9,7 +9,7 @@ public class Ioc {
         TargetFactory.inject(target);
     }
 
-    public static <T> T singleton(Class<T> tClass) {
-        return null;
+    public static <T> T singleton(Class<T> clazz) {
+        return SingletonFactory.provide(clazz);
     }
 }

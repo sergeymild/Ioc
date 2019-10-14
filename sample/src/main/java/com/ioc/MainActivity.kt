@@ -14,6 +14,7 @@ class M
 @Module(value = [Library::class])
 object MainModule {
     @Dependency
+    @Singleton
     fun sd() = SpeedDialModel()
 }
 

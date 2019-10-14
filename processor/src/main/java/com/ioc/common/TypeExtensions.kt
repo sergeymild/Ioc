@@ -46,6 +46,11 @@ fun Element.isConstructor(): Boolean {
     return kind == ElementKind.CONSTRUCTOR
 }
 
+fun Element.isGeneric(): Boolean {
+    if (!isSupportedType()) return false
+    return asType().asDeclared().typeArguments.isNotEmpty()
+}
+
 fun Element.getGenericFirstType(): TypeMirror {
     if (!isSupportedType()) throw ProcessorException("Unsupported type $simpleName").setElement(this)
     return asType().getGenericFirstType()

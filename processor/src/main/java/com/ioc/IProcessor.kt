@@ -3,14 +3,15 @@ package com.ioc
 import com.ioc.ImplementationsSpec.Companion.dependencyInjectionCode
 import com.ioc.ImplementationsSpec.Companion.provideInjectionMethod
 import com.ioc.common.*
-import com.squareup.javapoet.MethodSpec
-import com.squareup.javapoet.TypeName
+import com.squareup.javapoet.*
 import java.util.*
 import javax.annotation.processing.*
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
+import javax.lang.model.element.Modifier
 import javax.lang.model.element.TypeElement
+import javax.lang.model.type.TypeMirror
 import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
 import javax.tools.Diagnostic
@@ -87,9 +88,7 @@ open class IProcessor : AbstractProcessor() {
         val targetDependencies = mutableMapOf<String, MutableSet<Element>>()
         val rootTypeElements = mutableListOf<TypeElement>()
 
-        measure("rootElementsWithInjectedDependencies") {
-            roundEnv.rootElementsWithInjectedDependencies(targetDependencies, rootTypeElements)
-        }
+        roundEnv.rootElementsWithInjectedDependencies(targetDependencies, rootTypeElements)
 
         val targetsWithDependencies = mapToTargetWithDependencies(dependencyResolver, targetDependencies, rootTypeElements)
         val targetTypes = targetsWithDependencies.keys
@@ -142,6 +141,9 @@ open class IProcessor : AbstractProcessor() {
             val spec = NewSingletonSpec(singleton)
             spec.createSpec().writeClass(singletonClassPackage(singleton))
         }
+
+        if (singletons.isEmpty()) return
+        SingletonFactorySpec.createSpec(singletons).writeClass("com.ioc")
     }
 
     class CachedMethod(val classTypeName: TypeName, val methodSpec: MethodSpec)

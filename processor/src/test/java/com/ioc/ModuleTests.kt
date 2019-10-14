@@ -2631,77 +2631,12 @@ class ModuleTests {
             "   }",
             "}")
 
-        val injectedFile = JavaFileObjects.forSourceLines("test.ChildInjector",
-            "package test;",
-            "",
-            importKeepAnnotation,
-            importNonNullAnnotation,
-            "import com.ioc.ListSingleton;",
-            "",
-            "@Keep",
-            "public final class ChildInjector {",
-            "",
-            "   @Keep",
-            "   public static final void inject(@NonNull final Child target) {",
-            "       ParentInjector.inject(target);",
-            "       target.exampleList = ListSingleton.getInstance();",
-            "   }",
-            "}")
-
         assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
             .that(listOf(moduleFile, exampleInterface, parentFile, childFile))
             .processedWith(IProcessor())
-            .compilesWithoutError()
-            .and().generatesSources(injectedFile)
+            .failsToCompile()
+            .withErrorContaining("Singleton with generic types doesn't support")
+            .`in`(childFile)
+            .onLine(8)
     }
-
-//    @Test
-//    @Throws(Exception::class)
-//    fun failNotAllowedTypeDependency() {
-//        val db = JavaFileObjects.forSourceLines("android.util.DB",
-//            "package android.util;",
-//            "",
-//            "public interface DB {",
-//            "}")
-//
-//        val dbImpl = JavaFileObjects.forSourceLines("android.util.DBImpl",
-//            "package android.util;",
-//            "",
-//            "public class DBImpl implements DB {",
-//            "}")
-//
-//        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
-//            "package test;",
-//            "",
-//            importInjectAnnotation,
-//            "import android.util.DB;",
-//            "",
-//            "public class Activity {",
-//            "",
-//            "   @Inject",
-//            "   public DB db;",
-//            "}")
-//
-//        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
-//            "package test;",
-//            "",
-//            importKeepAnnotation,
-//            importNonNullAnnotation,
-//            "",
-//            "@Keep",
-//            "public final class ActivityInjector {",
-//            "",
-//            "   @Keep",
-//            "   public static final void inject(@NonNull final Activity target) {",
-//            "       target.service = new CountryService();",
-//            "       target.someString = ModuleFile.NestedModule.getString();",
-//            "   }",
-//            "}")
-//
-//        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
-//            .that(listOf(activityFile, db, dbImpl))
-//            .processedWith(IProcessor())
-//            .compilesWithoutError()
-//            .and().generatesSources(injectedFile)
-//    }
 }

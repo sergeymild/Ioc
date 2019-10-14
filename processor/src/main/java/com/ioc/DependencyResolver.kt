@@ -133,6 +133,9 @@ class DependencyResolver(
         dependency.constructor = dependencyConstructor
 
         if (dependency.isSingleton) {
+            if (dependency.dependency.isGeneric()) {
+                throw ProcessorException("Singleton with generic types doesn't support").setElement(dependency.dependency)
+            }
             projectSingletons[dependency.originalTypeString] = dependency
         }
 
