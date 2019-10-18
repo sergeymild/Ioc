@@ -1,7 +1,5 @@
 package com.ioc;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,18 +8,7 @@ public abstract class SingletonFactory {
     static Map<Class<?>, Class<?>> map;
     static HashMap<Class<?>, Object> cachedSingletons;
 
-    protected static SingletonFactory instance;
     private static boolean isLoaded;
-
-    public static SingletonFactory getInstance() {
-        if (instance != null) return instance;
-        try {
-            Class.forName(GENERATED_CLASS);
-        } catch (ClassNotFoundException e) {
-            throw new IocException("Can't load class SingletonsFactoryImplementation");
-        }
-        return instance;
-    }
 
     private static void load() {
         if (isLoaded) return;
@@ -52,5 +39,14 @@ public abstract class SingletonFactory {
         } catch (InstantiationException e) {
             throw new IocException(e);
         }
+    }
+
+    public static void clear() {
+        for (Map.Entry<Class<?>, Object> entry : cachedSingletons.entrySet()) {
+            if (entry.getValue() instanceof Cleanable) {
+                ((Cleanable) entry.getValue()).onCleared();
+            }
+        }
+        cachedSingletons.clear();
     }
 }

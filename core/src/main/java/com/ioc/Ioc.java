@@ -12,4 +12,8 @@ public class Ioc {
     public static <T> T singleton(Class<T> clazz) {
         return SingletonFactory.provide(clazz);
     }
+
+    public static void clear() {
+        SingletonFactory.clear();
+    }
 }

@@ -13,10 +13,10 @@ interface SecondLo
 
 @Dependency
 @Singleton
-class Logger: FirstLo, SecondLo
+class Logger: FirstLo
 
-
-
+@Dependency
+fun getSec(firstLo: FirstLo): SecondLo? = null
 
 
 
@@ -25,10 +25,13 @@ class MainActivity : AppCompatActivity() {
 
 
     @Inject
+    @LocalScope
     lateinit var FirstLo: FirstLo
 
     @Inject
     lateinit var SecondLo: SecondLo
+
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {

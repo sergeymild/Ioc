@@ -215,7 +215,7 @@ open class IProcessor : AbstractProcessor() {
         if (dependency.isViewModel) return true
         if (target.isSubtype(dependency.dependency, dependency.originalType)) return true
         val queue = LinkedList<DependencyModel>()
-
+    
         queue.addAll(dependency.dependencies)
         while (queue.isNotEmpty()) {
             val dep = queue.pop()
