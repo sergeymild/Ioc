@@ -20,11 +20,9 @@ class NewSingletonSpec(private val dependency: DependencyModel) {
         val singletonName = singletonClassName(dependency)
         return TypeSpec.classBuilder(singletonName)
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-            .superclass(dependency.asLazyType())
+            .addSuperinterface(dependency.asProviderType())
             .addAnnotation(keepAnnotation)
-            .addMethod(getInstanceMethod(singletonName))
             .addMethod(initializeMethod())
-            .addField(FieldSpec.builder(ClassName.bestGuess(singletonName), "instance", Modifier.PRIVATE, Modifier.STATIC).build())
             .build()
     }
 
@@ -38,8 +36,8 @@ class NewSingletonSpec(private val dependency: DependencyModel) {
     }
 
     private fun initializeMethod(): MethodSpec {
-        val builder = MethodSpec.methodBuilder("initialize")
-            .addModifiers(Modifier.PROTECTED, Modifier.FINAL)
+        val builder = MethodSpec.methodBuilder("get")
+            .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
             .returns(dependency.originalClassName)
 
         val code = DependencyTree.get(dependency.dependencies)

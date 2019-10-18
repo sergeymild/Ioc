@@ -54,16 +54,17 @@ class SingletonNameTests {
             "",
             importKeepAnnotation,
             importNonNullAnnotation,
+            importIoc,
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
             "   public static final void inject(@NonNull final Activity target) {",
-            "     target.service = CrashlyticsLoggerSingleton.getInstance();",
+            "     target.service = Ioc.singleton(CrashlitycsService.class);",
             "   }",
             "}")
 
-        Truth.assertAbout(javaSources())
+        assertAbout(javaSources())
             .that(listOf(activityFile, release, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
@@ -122,19 +123,14 @@ class SingletonNameTests {
             "package test;",
             "",
             importKeepAnnotation,
-            importIocLazy,
+            importIoc,
+            importProvider,
             "",
             "@Keep",
-            "public final class DependencyModelSingleton extends IocLazy<DependencyModel> {",
-            "   private static DependencyModelSingleton instance;",
+            "public final class DependencyModelSingleton implements Provider<DependencyModel> {",
             "",
-            "   public static final DependencyModel getInstance() {",
-            "       if (instance == null) instance = new DependencyModelSingleton();",
-            "       return instance.get();",
-            "   }",
-            "",
-            "   protected final DependencyModel initialize() {",
-            "       return new DependencyModel(CrashlyticsLoggerSingleton.getInstance());",
+            "   public final DependencyModel get() {",
+            "       return new DependencyModel(Ioc.singleton(CrashlitycsService.class));",
             "   }",
             "}")
 
@@ -202,6 +198,7 @@ class SingletonNameTests {
             "",
             importKeepAnnotation,
             importNonNullAnnotation,
+            importIoc,
             "",
             "@Keep",
             "public final class ActivityInjector {",
@@ -212,7 +209,7 @@ class SingletonNameTests {
             "",
             "   public static final ParentDependency provideParentDependency() {",
             "       DependencyModel dependencyModel = ModuleClass.getDependency();",
-            "       ParentDependency parentDependency = ModuleClass.getParentDependency(dependencyModel,Dependency2Singleton.getInstance());",
+            "       ParentDependency parentDependency = ModuleClass.getParentDependency(dependencyModel,Ioc.singleton(Dependency2.class));",
             "       return parentDependency;",
             "   }",
             "}")
@@ -256,16 +253,17 @@ class SingletonNameTests {
             "",
             importKeepAnnotation,
             importNonNullAnnotation,
+            importIoc,
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
             "   public static final void inject(@NonNull final Activity target) {",
-            "     target.service = CrashlyticsLoggerSingleton.getInstance();",
+            "     target.service = Ioc.singleton(CrashlyticsLogger.class);",
             "   }",
             "}")
 
-        Truth.assertAbout(javaSources())
+        assertAbout(javaSources())
             .that(listOf(activityFile, release))
             .processedWith(IProcessor())
             .compilesWithoutError()

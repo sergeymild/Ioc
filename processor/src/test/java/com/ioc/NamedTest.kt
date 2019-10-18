@@ -1330,13 +1330,14 @@ class NamedTest {
             "",
             importKeepAnnotation,
             importNonNullAnnotation,
+            importIoc,
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
             "   public static final void inject(@NonNull final Activity target) {",
-            "       target.setDebugFromMethod(DebugDependencySingleton.getInstance());",
-            "       target.setReleaseFromMethod(ReleaseDependencySingleton.getInstance());",
+            "       target.setDebugFromMethod(Ioc.singleton(DebugDependency.class));",
+            "       target.setReleaseFromMethod(Ioc.singleton(ReleaseDependency.class));",
             "   }",
             "}")
 

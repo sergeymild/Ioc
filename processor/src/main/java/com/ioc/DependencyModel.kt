@@ -63,8 +63,15 @@ fun DependencyModel.asLazyType(): TypeName {
     return ParameterizedTypeName.get(iocLazyType, type)
 }
 
+fun DependencyModel.asProviderType(): TypeName {
+    val names = dependency.asType().typeArguments().map { ClassName.get(it) }.toTypedArray()
+    if (names.isEmpty()) return ParameterizedTypeName.get(ClassName.get(providerJavaType), originalClassName)
+    val type = ParameterizedTypeName.get(ClassName.get(originalType), *names)
+    return ParameterizedTypeName.get(ClassName.get(providerJavaType), type)
+}
+
 class DependencyModel constructor(
-    val dependency: Element,
+    var dependency: Element,
     val originalType: TypeElement,
     var fieldName: CharSequence = "",
     var isProvider: Boolean = false,

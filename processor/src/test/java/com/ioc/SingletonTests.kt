@@ -4,6 +4,7 @@ import com.google.common.truth.Truth
 import com.google.testing.compile.JavaFileObjects
 import com.google.testing.compile.JavaSourcesSubject
 import com.google.testing.compile.JavaSourcesSubjectFactory
+import com.ioc.common.singletonJavaType
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
@@ -113,18 +114,11 @@ class SingletonTests {
             package test;
 
             $importKeepAnnotation
-            $importIocLazy
+            $importProvider
             
             @Keep
-            public final class ReleaseModelSingleton extends IocLazy<ReleaseModel> {
-              private static ReleaseModelSingleton instance;
-            
-              public static final ReleaseModel getInstance() {
-                if (instance == null) instance = new ReleaseModelSingleton();
-                return instance.get();
-              }
-            
-              protected final ReleaseModel initialize() {
+            public final class ReleaseModelSingleton implements Provider<ReleaseModel> {
+              public final ReleaseModel get() {
                 Cappuccino coffee = new Cappuccino();
                 return new ReleaseModel(coffee);
               }
@@ -249,18 +243,12 @@ class SingletonTests {
             package test;
 
             $importKeepAnnotation
-            $importIocLazy
+            $importProvider
             
             @Keep
-            public final class ReleaseModelSingleton extends IocLazy<ReleaseModel> {
-              private static ReleaseModelSingleton instance;
+            public final class ReleaseModelSingleton implements Provider<ReleaseModel> {
             
-              public static final ReleaseModel getInstance() {
-                if (instance == null) instance = new ReleaseModelSingleton();
-                return instance.get();
-              }
-            
-              protected final ReleaseModel initialize() {
+              public final ReleaseModel get() {
                 Sugar sugar = new Sugar();
                 Nescafe coffee = new Nescafe(sugar);
                 return new ReleaseModel(coffee);
@@ -314,18 +302,13 @@ class SingletonTests {
             """
             package test;
             $importKeepAnnotation
-            $importIocLazy
+            $importIoc
+            $importProvider
             @Keep
-            public final class MainPresenterSingleton extends IocLazy<MainPresenter> {
-               private static MainPresenterSingleton instance;
+            public final class MainPresenterSingleton implements Provider<MainPresenter> {
             
-               public static final MainPresenter getInstance() {
-                   if (instance == null) instance = new MainPresenterSingleton();
-                   return instance.get();
-               }
-            
-               protected final MainPresenter initialize() {
-                   return new MainPresenter(DependencyModelSingleton.getInstance());
+               public final MainPresenter get() {
+                   return new MainPresenter(Ioc.singleton(DependencyModel.class));
                }
             }
         """.trimIndent())
@@ -395,18 +378,12 @@ class SingletonTests {
             package test;
 
             $importKeepAnnotation
-            $importIocLazy
+            $importProvider
             
             @Keep
-            public final class CookieManagerWorkerSingleton extends IocLazy<CookieManagerWorker> {
-              private static CookieManagerWorkerSingleton instance;
+            public final class CookieManagerWorkerSingleton implements Provider<CookieManagerWorker> {
             
-              public static final CookieManagerWorker getInstance() {
-                if (instance == null) instance = new CookieManagerWorkerSingleton();
-                return instance.get();
-              }
-            
-              protected final CookieManagerWorker initialize() {
+              public final CookieManagerWorker get() {
                 Settings privacySettings = new Settings();
                 Settings themeSettings = new Settings();
                 return new CookieManagerWorker(privacySettings,themeSettings);
@@ -476,18 +453,12 @@ class SingletonTests {
             package test;
 
             $importKeepAnnotation
-            $importIocLazy
+            $importProvider
             
             @Keep
-            public final class WebMusicManagerSingleton extends IocLazy<WebMusicManager> {
-              private static WebMusicManagerSingleton instance;
+            public final class WebMusicManagerSingleton implements Provider<WebMusicManager> {
             
-              public static final WebMusicManager getInstance() {
-                if (instance == null) instance = new WebMusicManagerSingleton();
-                return instance.get();
-              }
-            
-              protected final WebMusicManager initialize() {
+              public final WebMusicManager get() {
                 Settings privacySettings = new Settings();
                 Session session = new Session(privacySettings);
                 return new WebMusicManager(session);
@@ -554,6 +525,7 @@ class SingletonTests {
 
             $importKeepAnnotation
             $importNonNullAnnotation
+            $importIoc
             $importIocLazy
             
             @Keep
@@ -566,11 +538,11 @@ class SingletonTests {
               public static final MainPresenter provideMainPresenter() {
                 IocLazy<DependencyModel> lazyDependencyModel = new IocLazy<DependencyModel>() {
                   protected DependencyModel initialize() {
-                    DependencyModel dependencyModel = new DependencyModel(SingletonDependencySingleton.getInstance());
+                    DependencyModel dependencyModel = new DependencyModel(Ioc.singleton(SingletonDependency.class));
                     return dependencyModel;
                   }
                 };
-                MainPresenter mainPresenter = new MainPresenter(lazyDependencyModel,SingletonDependencySingleton.getInstance());
+                MainPresenter mainPresenter = new MainPresenter(lazyDependencyModel,Ioc.singleton(SingletonDependency.class));
                 return mainPresenter;
               }
             }
@@ -635,7 +607,8 @@ class SingletonTests {
 
             $importKeepAnnotation
             $importNonNullAnnotation
-            import com.ioc.IocProvider;
+            $importIoc
+            $importIocProvider
             
             @Keep
             public final class ActivityInjector {
@@ -647,11 +620,11 @@ class SingletonTests {
               public static final MainPresenter provideMainPresenter() {
                 IocProvider<DependencyModel> providerDependencyModel = new IocProvider<DependencyModel>() {
                   protected DependencyModel initialize() {
-                    DependencyModel dependencyModel = new DependencyModel(SingletonDependencySingleton.getInstance());
+                    DependencyModel dependencyModel = new DependencyModel(Ioc.singleton(SingletonDependency.class));
                     return dependencyModel;
                   }
                 };
-                MainPresenter mainPresenter = new MainPresenter(providerDependencyModel,SingletonDependencySingleton.getInstance());
+                MainPresenter mainPresenter = new MainPresenter(providerDependencyModel,Ioc.singleton(SingletonDependency.class));
                 return mainPresenter;
               }
             }
@@ -721,23 +694,24 @@ class SingletonTests {
 
             $importKeepAnnotation
             $importNonNullAnnotation
+            $importIoc
             
             @Keep
             public final class ActivityInjector {
               @Keep
               public static final void inject(@NonNull final Activity target) {
-                target.logger = DefaultLoggerSingleton.getInstance();
+                target.logger = Ioc.singleton(EventLogger.class);
                 target.context = provideContext();
                 target.db = provideDb();
               }
             
               public static final Context provideContext() {
-                Context context = new Context(DefaultLoggerSingleton.getInstance());
+                Context context = new Context(Ioc.singleton(EventLogger.class));
                 return context;
               }
             
               public static final Db provideDb() {
-                Db db = new Db(DefaultLoggerSingleton.getInstance());
+                Db db = new Db(Ioc.singleton(EventLogger.class));
                 return db;
               }
             }
@@ -873,5 +847,67 @@ class SingletonTests {
             .withErrorContaining("test.SingletonClass annotated with @Singleton must be public")
             .`in`(singletonClass)
             .onLine(6)
+    }
+
+    @Test
+    fun singletonWithFewInterfaces() {
+        val firstInterface = JavaFileObjects.forSourceLines("test.FirstInterface", """
+            package test;
+            
+            public interface FirstInterface {}
+        """.trimIndent())
+
+        val secondInterface = JavaFileObjects.forSourceLines("test.SecondInterface", """
+            package test;
+            
+            public interface SecondInterface {}
+        """.trimIndent())
+
+        val singleton = JavaFileObjects.forSourceLines("test.SingletonClass", """
+            package test;
+            
+            $importSingletonAnnotation
+            $importDependencyAnnotation
+            
+            @Singleton
+            @Dependency
+            public class SingletonClass implements FirstInterface, SecondInterface {}
+        """.trimIndent())
+
+        val activity = JavaFileObjects.forSourceLines("test.Activity", """
+            package test;
+            
+            $importInjectAnnotation
+
+            class Activity  {
+                @Inject
+                public FirstInterface firstInterface;
+                @Inject
+                public SecondInterface secondInterface;
+            }
+        """.trimIndent())
+
+        val injectFile = JavaFileObjects.forSourceLines("test.ActivityInjector", """
+            package test;
+            
+            $importKeepAnnotation
+            $importNonNullAnnotation
+            $importIoc
+
+            @Keep
+            public final class ActivityInjector  {
+                @Keep
+                public static final void inject(@NonNull final Activity target) {
+                    target.firstInterface = Ioc.singleton(FirstInterface.class);
+                    target.secondInterface = Ioc.singleton(SecondInterface.class);
+                }
+            }
+        """.trimIndent())
+
+        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(JavaSourcesSubjectFactory.javaSources())
+            .that(listOf(firstInterface, secondInterface, singleton, activity))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectFile)
     }
 }

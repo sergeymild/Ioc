@@ -39,6 +39,7 @@ val importProvider = "import ${Provider::class.java.canonicalName};"
 val importIocProvider = "import ${IocProvider::class.java.canonicalName};"
 val importLazy = "import ${Lazy::class.java.canonicalName};"
 val importIocLazy = "import ${IocLazy::class.java.canonicalName};"
+val importIoc = "import ${Ioc::class.java.canonicalName};"
 
 val importInjectAnnotation = "import ${Inject::class.java.canonicalName};"
 val importSingletonAnnotation = "import ${Singleton::class.java.canonicalName};"

@@ -84,11 +84,15 @@ class DependencyResolver(
             dependencyTypeElement = it.originalType.asTypeElement()
             isSingleton = it.isSingleton || isSingleton
             isLocalScoped = it.isLocal || isLocalScoped
+            if (isSingleton && !element.isPublic()) {
+                validateSingletonClass(element)
+            }
         }
 
         // return cached singleton
         projectSingletons[dependencyTypeElement.asTypeString()]?.let {
             return it.copy().also { m ->
+                m.dependency = dependencyElement
                 m.fieldName = fieldName
                 m.setterMethod = setterMethod
             }

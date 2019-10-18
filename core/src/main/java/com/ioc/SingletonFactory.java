@@ -8,7 +8,7 @@ import java.util.Map;
 public abstract class SingletonFactory {
     private static final String GENERATED_CLASS = "com.ioc.SingletonsFactoryImplementation";
     static Map<Class<?>, Class<?>> map;
-    static HashMap<Class<?>, Lazy<?>> cachedSingletons;
+    static HashMap<Class<?>, Object> cachedSingletons;
 
     protected static SingletonFactory instance;
     private static boolean isLoaded;
@@ -41,18 +41,15 @@ public abstract class SingletonFactory {
                 throw new IocException(String.format("Can't find singleton for %s type.", tClass));
             }
 
-            Lazy<?> instance = cachedSingletons.get(singleton);
+            Object instance = cachedSingletons.get(singleton);
             if (instance == null) {
-                Method methodInstance = singleton.getDeclaredMethod("getInstance");
-                instance = (Lazy<?>) methodInstance.invoke(singleton);
+                instance = ((Provider)singleton.newInstance()).get();
                 cachedSingletons.put(singleton, instance);
             }
-            return (T) instance.get();
-        } catch (NoSuchMethodException e) {
-            throw new IocException(e);
+            return (T) instance;
         } catch (IllegalAccessException e) {
             throw new IocException(e);
-        } catch (InvocationTargetException e) {
+        } catch (InstantiationException e) {
             throw new IocException(e);
         }
     }

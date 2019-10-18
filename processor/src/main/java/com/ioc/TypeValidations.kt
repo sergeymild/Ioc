@@ -78,7 +78,8 @@ fun validateIsAllowCanHaveViewModel(viewModel: Element, targetElement: TypeEleme
     throw ProcessorException("@Inject annotation is placed on `${viewModel.asType()}` class which declared not in either FragmentActivity or Fragment").setElement(viewModel)
 }
 
-fun validateSingletonClass(element: Element) {
+@Throws(ProcessorException::class)
+public inline fun validateSingletonClass(element: Element) {
     if (element.isClass() && !element.isPublic()) {
         throw ProcessorException("${element.asTypeString()} annotated with @Singleton must be public").setElement(element)
     }

@@ -9,6 +9,7 @@ import java.lang.ref.WeakReference
 
 val lifecyclePackage = "androidx.lifecycle"
 val iocLazyType = ClassName.get(IocLazy::class.java)
+val iocType = ClassName.get(Ioc::class.java)
 val iocProviderType = ClassName.get(IocProvider::class.java)
 val weakType = ClassName.get(WeakReference::class.java)
 val viewModelFactoryType = ClassName.bestGuess("$lifecyclePackage.ViewModelProvider.Factory")

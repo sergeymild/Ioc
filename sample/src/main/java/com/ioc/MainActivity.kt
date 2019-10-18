@@ -8,15 +8,14 @@ import com.example.mylibrary.BottomAdHolderFactory
 import com.example.mylibrary.Library
 import com.ios.injector.R
 
-class M
+interface FirstLo
+interface SecondLo
+
+@Dependency
+@Singleton
+class Logger: FirstLo, SecondLo
 
 
-@Module(value = [Library::class])
-object MainModule {
-    @Dependency
-    @Singleton
-    fun sd() = SpeedDialModel()
-}
 
 
 
@@ -26,17 +25,16 @@ class MainActivity : AppCompatActivity() {
 
 
     @Inject
-    lateinit var bottomAdHolderFactory: BottomAdHolderFactory
+    lateinit var FirstLo: FirstLo
+
     @Inject
-    lateinit var speedDialModel: SpeedDialModel
-    @Inject
-    lateinit var m: M
+    lateinit var SecondLo: SecondLo
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
+        Ioc.inject(this)
 //        try {
 //            Class.forName("androidx.test.espresso.Espresso")
 //            findViewById<TextView>(R.id.test_text).setText("Test")
