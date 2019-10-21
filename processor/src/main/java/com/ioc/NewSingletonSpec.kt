@@ -79,7 +79,7 @@ class NewSingletonSpec(private val dependencyModel: SingletonWrapper,
                 .addAnnotation(keepAnnotation)
 
         if (IProcessor.types.isSubtype(dependencyModel.typeElement.asType(), cleanUp.asType())) {
-            builder.addStatement("singleton.onCleared()")
+            builder.addStatement("if (singleton != null) singleton.onCleared()")
         }
 
         builder.addStatement("singleton = null")

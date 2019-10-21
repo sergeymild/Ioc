@@ -66,14 +66,14 @@ public final class ScopeFactory {
         return null;
     }
 
-    public static void clear() {
+    public static void clear(boolean logException) {
         INSTANCE.scopes.clear();
         try {
             Class<?> aClass = Class.forName("com.ioc.SingletonsClear");
             Method clear = aClass.getDeclaredMethod("clearSingletons");
             clear.invoke(null);
         } catch (Throwable e) {
-
+            if (logException) e.printStackTrace();
         }
     }
 }
