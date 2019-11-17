@@ -26,7 +26,13 @@ fun emptyConstructor(model: DependencyModel): CodeBlock {
 fun emptyModuleMethodProvide(model: DependencyModel): CodeBlock {
     val method = model.methodProvider!!
     var statementString = "\$T.\$N()"
-    if (method.isKotlinModule) statementString = "\$T.INSTANCE.\$N()"
+
+
+    if (method.isKotlinModule && method.name == "INSTANCE") {
+        return CodeBlock.of("\$T.INSTANCE", method.module)
+    } else if (method.isKotlinModule) {
+        return CodeBlock.of("\$T.INSTANCE.\$N()", method.module, method.name)
+    }
     return CodeBlock.of(statementString, method.module, method.name)
 }
 

@@ -4,32 +4,26 @@ package com.ioc
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.download.media.views.speeddial.models.SpeedDialModel
+import com.download.transitionlibrary.UpdateManager
 import com.example.mylibrary.BottomAdHolderFactory
 import com.example.mylibrary.Library
 import com.ios.injector.R
 
-interface FirstLo
-interface SecondLo
 
-@Dependency
-@Singleton
-class Logger: FirstLo
+object Modu {
 
-@Dependency
-fun getSec(firstLo: FirstLo): SecondLo? = null
-
-
-
+    interface Abs {
+        @Scan
+        @Dependency
+        fun updateManager(): UpdateManager
+    }
+}
 
 class MainActivity : AppCompatActivity() {
 
 
     @Inject
-    @LocalScope
-    lateinit var FirstLo: FirstLo
-
-    @Inject
-    lateinit var SecondLo: SecondLo
+    lateinit var updateManager: UpdateManager
 
 
 

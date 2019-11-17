@@ -41,10 +41,14 @@ public abstract class SingletonFactory {
         }
     }
 
-    public static void clear() {
+    public static void clear(boolean isDebug) {
         for (Map.Entry<Class<?>, Object> entry : cachedSingletons.entrySet()) {
             if (entry.getValue() instanceof Cleanable) {
-                ((Cleanable) entry.getValue()).onCleared();
+                try {
+                    ((Cleanable) entry.getValue()).onCleared();
+                } catch (Throwable e) {
+                    if (isDebug) e.printStackTrace();
+                }
             }
         }
         cachedSingletons.clear();

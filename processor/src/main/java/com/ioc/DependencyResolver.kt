@@ -104,6 +104,9 @@ class DependencyResolver(
         }
 
         // if we did't find any providers of this type, try to find constructors of concrete type
+        if (isKotlinObject(dependencyTypeElement)) {
+            methodProvider = ModuleMethodProvider("INSTANCE", dependencyTypeElement, isKotlinModule = true)
+        }
         val dependencyConstructor = if (methodProvider == null) findArgumentConstructor(dependencyTypeElement) else null
 
         var dependencies = cachedConstructorArguments.getOrDefault(dependencyTypeElement.asTypeString(), emptyList())

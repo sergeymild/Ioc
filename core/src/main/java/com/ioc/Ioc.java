@@ -13,7 +13,7 @@ public class Ioc {
         return SingletonFactory.provide(clazz);
     }
 
-    public static void clear() {
-        SingletonFactory.clear();
+    public static void clear(boolean isDebug) {
+        SingletonFactory.clear(isDebug);
     }
 }

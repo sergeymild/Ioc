@@ -1,9 +1,5 @@
 package com.ioc;
 
-/**
- * Created by sergeygolishnikov on 28/12/2017.
- */
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -16,6 +12,7 @@ import java.util.WeakHashMap;
  * Created by sergeygolishnikov on 08/11/2017.
  */
 
+@Deprecated
 public final class ScopeFactory {
 //    private static final ScopeThread thread = new ScopeThread();
 

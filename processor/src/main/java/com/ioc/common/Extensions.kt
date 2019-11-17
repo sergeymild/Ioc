@@ -32,7 +32,7 @@ inline fun measure(message: String, block: () -> Unit) {
 }
 
 
-fun isModuleKotlinObject(typeElement: TypeElement): Boolean {
+fun isKotlinObject(typeElement: TypeElement): Boolean {
     val kmClass = KotlinUtil.kmClassOf(typeElement) ?: return false
     return Flag.Class.IS_OBJECT.invoke(kmClass.flags)
 }

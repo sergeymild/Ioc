@@ -94,7 +94,7 @@ class DependencyTypesFinder(
         val implementations = mutableListOf<ModuleMethodProvider>()
         for (provider in methodsWithDependencyAnnotation()) {
             if (provider.isAbstract()) continue
-            val isKotlinModule = isModuleKotlinObject(provider.enclosingElement.asTypeElement())
+            val isKotlinModule = isKotlinObject(provider.enclosingElement.asTypeElement())
 
             validateModuleMethod(isKotlinModule, provider)
 

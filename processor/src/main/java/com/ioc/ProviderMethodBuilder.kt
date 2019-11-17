@@ -1,6 +1,7 @@
 package com.ioc
 
 import com.ioc.common.asClassName
+import com.ioc.common.message
 import com.squareup.javapoet.CodeBlock
 
 /**
@@ -35,6 +36,13 @@ object ProviderMethodBuilder {
         val names = model.dependencyNames()
 
         var statementString = "\$T \$N = \$T.\$N(\$L)"
+        if (method.isKotlinModule && method.name == "INSTANCE") {
+            builder.addStatement("\$T \$N = \$T.INSTANCE",
+                model.originalClassName,
+                model.generatedName,
+                method.module.asClassName())
+            return builder.build()
+        }
         if (method.isKotlinModule) statementString = "\$T \$N = \$T.INSTANCE.\$N(\$L)"
 
         builder.addStatement(statementString,
