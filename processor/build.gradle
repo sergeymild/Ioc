@@ -16,13 +16,12 @@ dependencies {
     testImplementation("com.android.support.test.espresso:espresso-core:+") {
         exclude group: 'javax.inject'
     }
-    testCompile files('libs/support-annotations-25.3.1.jar')
     testImplementation 'junit:junit:4.12'
     testImplementation 'com.google.testing.compile:compile-testing:0.15'
     testImplementation 'com.google.auto:auto-common:0.10'
     testImplementation 'com.google.truth:truth:0.37'
     testImplementation group: 'com.google.android', name: 'android', version: '4.1.1.4'
-    testImplementation "io.reactivex.rxjava2:rxjava:2.2.10"
+    testImplementation "io.reactivex.rxjava2:rxjava:2.2.12"
     testCompile "android.arch.lifecycle:viewmodel:1.1.1"
     implementation "android.arch.lifecycle:viewmodel:1.1.1"
 }

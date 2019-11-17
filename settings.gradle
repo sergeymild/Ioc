@@ -1,1 +1,1 @@
-include ':sample', ':core', ':processor', ':mylibrary', ':common', ':transitionlibrary'
+include ':sample', ':core', ':processor', ':mylibrary', ':common', ':transitionlibrary', ':withtests'
