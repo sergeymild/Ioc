@@ -23,7 +23,7 @@ buildscript {
     }
 }
 
-ext.baseVersion = "1.2.3"
+ext.baseVersion = "1.2.4"
 ext.libraryName = 'Ioc'
 
 def props = new Properties()

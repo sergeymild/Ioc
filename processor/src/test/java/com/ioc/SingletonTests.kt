@@ -910,4 +910,85 @@ class SingletonTests {
             .compilesWithoutError()
             .and().generatesSources(injectFile)
     }
+
+    @Test
+    fun singletonAnnotationOnImplementationInModuleMethod() {
+        val firstInterface = JavaFileObjects.forSourceLines("test.FirstInterface", """
+            package test;
+            public interface FirstInterface {}
+        """.trimIndent())
+
+        val secondInterface = JavaFileObjects.forSourceLines("test.SecondInterface", """
+            package test;
+            
+            public interface SecondInterface {}
+        """.trimIndent())
+
+        val singleton = JavaFileObjects.forSourceLines("test.SingletonClass", """
+            package test;
+            
+            $importSingletonAnnotation
+            $importDependencyAnnotation
+            
+            @Singleton
+            @Dependency
+            public class SingletonClass implements FirstInterface, SecondInterface {}
+        """.trimIndent())
+
+        val module = JavaFileObjects.forSourceLines("test.Module", """
+            package test;
+            
+            $importDependencyAnnotation
+
+            public interface Module {
+                @Dependency
+                FirstInterface firstInterface(SingletonClass singletonClass);
+                
+                @Dependency
+                SecondInterface secondInterface(SingletonClass singletonClass);
+            }
+        """.trimIndent())
+
+        val activity = JavaFileObjects.forSourceLines("test.Activity", """
+            package test;
+            
+            $importInjectAnnotation
+
+            class Activity  {
+                @Inject
+                public FirstInterface firstInterface;
+                @Inject
+                public SecondInterface secondInterface;
+            }
+        """.trimIndent())
+
+        val injectFile = JavaFileObjects.forSourceLines("com.ioc.SingletonsFactoryImplementation", """
+            package com.ioc;
+            
+            $importKeepAnnotation
+            import java.util.HashMap;
+            import test.FirstInterface;
+            import test.SecondInterface;
+            import test.SingletonClass;
+            import test.SingletonClassSingleton;
+
+            @Keep
+            final class SingletonsFactoryImplementation extends SingletonFactory  {
+                static {
+                    map = new HashMap<>(3);
+                    cachedSingletons = new HashMap<>(1);
+                    map.put(SingletonClass.class, SingletonClassSingleton.class);
+                    map.put(FirstInterface.class, SingletonClassSingleton.class);
+                    map.put(SecondInterface.class, SingletonClassSingleton.class);
+                }
+            }
+        """.trimIndent())
+
+        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(JavaSourcesSubjectFactory.javaSources())
+            .that(listOf(firstInterface, secondInterface, singleton, activity, module))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and()
+            .generatesSources(injectFile)
+    }
 }
