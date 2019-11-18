@@ -2610,4 +2610,247 @@ class ModuleTests {
             .`in`(childFile)
             .onLine(8)
     }
+
+    @Test
+    fun scanAnnotationWithoutDependencyOnModuleMethod() {
+        val firstInterface = JavaFileObjects.forSourceLines("test.FirstInterface", """
+            package test;
+            public class FirstInterface {}
+        """.trimIndent())
+
+        val classForScan = JavaFileObjects.forSourceLines("test.ClassForScan", """
+            package test;
+            
+            $importInjectAnnotation
+
+            public class ClassForScan {
+                @Inject
+                public FirstInterface firstInterface;
+            }
+        """.trimIndent())
+
+        val module = JavaFileObjects.forSourceLines("test.Module", """
+            package test;
+            
+            $importScanAnnotation
+
+            public interface Module {
+                @Scan
+                ClassForScan classForScan();
+            }
+        """.trimIndent())
+
+        val injectFile = JavaFileObjects.forSourceLines("test.ClassForScanInjector", """
+            package test;
+            
+            $importKeepAnnotation
+            $importNonNullAnnotation
+
+            @Keep
+            public final class ClassForScanInjector {
+                @Keep
+                public static final void inject(@NonNull final ClassForScan target) {
+                    target.firstInterface = new FirstInterface();
+                }
+            }
+        """.trimIndent())
+
+
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(firstInterface, classForScan, module))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and()
+            .generatesSources(injectFile)
+    }
+
+    @Test
+    fun failFindDependencyWithOnlyScanAnnotationWithoutDependencyOnModuleMethod() {
+        val firstInterface = JavaFileObjects.forSourceLines("test.FirstInterface", """
+            package test;
+            public class FirstInterface {}
+        """.trimIndent())
+
+        val classForScan = JavaFileObjects.forSourceLines("test.ClassForScan", """
+            package test;
+            
+            $importInjectAnnotation
+
+            public class ClassForScan {
+                private ClassForScan() {}
+            
+                @Inject
+                public FirstInterface firstInterface;
+            }
+        """.trimIndent())
+
+        val activity = JavaFileObjects.forSourceLines("test.Activity", """
+            package test;
+            
+            $importInjectAnnotation
+            
+            public class Activity {
+                @Inject
+                public ClassForScan classForScan;
+            }
+        """.trimIndent())
+
+        val module = JavaFileObjects.forSourceLines("test.Module", """
+            package test;
+            
+            $importScanAnnotation
+
+            public interface Module {
+                @Scan
+                ClassForScan classForScan();
+            }
+        """.trimIndent())
+
+
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(firstInterface, classForScan, module, activity))
+            .processedWith(IProcessor())
+            .failsToCompile()
+            .withErrorContaining("Cant find suitable constructors test.ClassForScan")
+            .`in`(classForScan)
+            .onLine(6)
+    }
+
+    @Test
+    fun findDependencyWithOnlyScanAnnotationWithoutDependencyOnModuleMethod() {
+        val firstInterface = JavaFileObjects.forSourceLines("test.FirstInterface", """
+            package test;
+            public class FirstInterface {}
+        """.trimIndent())
+
+        val classForScan = JavaFileObjects.forSourceLines("test.ClassForScan", """
+            package test;
+            
+            $importInjectAnnotation
+
+            public class ClassForScan {
+                private ClassForScan() {}
+            
+                @Inject
+                public FirstInterface firstInterface;
+            }
+        """.trimIndent())
+
+        val activity = JavaFileObjects.forSourceLines("test.Activity", """
+            package test;
+            
+            $importInjectAnnotation
+            
+            public class Activity {
+                @Inject
+                public ClassForScan classForScan;
+            }
+        """.trimIndent())
+
+        val module = JavaFileObjects.forSourceLines("test.Module", """
+            package test;
+            
+            $importScanAnnotation
+            $importDependencyAnnotation
+
+            public class Module {
+                @Scan
+                @Dependency
+                static ClassForScan classForScan() { return null; };
+            }
+        """.trimIndent())
+
+
+        val injectFile = JavaFileObjects.forSourceLines("test.ClassForScanInjector", """
+            package test;
+            
+            $importKeepAnnotation
+            $importNonNullAnnotation
+
+            @Keep
+            public final class ClassForScanInjector {
+                @Keep
+                public static final void inject(@NonNull final ClassForScan target) {
+                    target.firstInterface = new FirstInterface();
+                }
+            }
+        """.trimIndent())
+
+
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(firstInterface, classForScan, activity, module))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and()
+            .generatesSources(injectFile)
+    }
+
+    @Test
+    fun findDependencyWithOnlyScanAnnotationWithoutDependencyOnModuleMethod2() {
+        val firstInterface = JavaFileObjects.forSourceLines("test.FirstInterface", """
+            package test;
+            public class FirstInterface {}
+        """.trimIndent())
+
+        val classForScan = JavaFileObjects.forSourceLines("test.ClassForScan", """
+            package test;
+            
+            $importInjectAnnotation
+
+            public class ClassForScan {
+                private ClassForScan() {}
+            
+                @Inject
+                public FirstInterface firstInterface;
+            }
+        """.trimIndent())
+
+        val activity = JavaFileObjects.forSourceLines("test.Activity", """
+            package test;
+            
+            $importInjectAnnotation
+            
+            public class Activity {
+                @Inject
+                public ClassForScan classForScan;
+            }
+        """.trimIndent())
+
+        val module = JavaFileObjects.forSourceLines("test.Module", """
+            package test;
+            
+            $importScanAnnotation
+            $importDependencyAnnotation
+
+            public class Module {
+                @Scan
+                @Dependency
+                static ClassForScan classForScan() { return null; };
+            }
+        """.trimIndent())
+
+
+        val injectFile = JavaFileObjects.forSourceLines("test.ActivityInjector", """
+            package test;
+            
+            $importKeepAnnotation
+            $importNonNullAnnotation
+
+            @Keep
+            public final class ActivityInjector {
+                @Keep
+                public static final void inject(@NonNull final Activity target) {
+                    target.classForScan = Module.classForScan();
+                }
+            }
+        """.trimIndent())
+
+
+        assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(javaSources())
+            .that(listOf(firstInterface, classForScan, activity, module))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and()
+            .generatesSources(injectFile)
+    }
 }

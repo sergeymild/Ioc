@@ -58,9 +58,9 @@ fun validateMethodAnnotatedWithTarget(method: ExecutableElement) {
         throw ProcessorException("${method.enclosingElement.simpleName}.${method.simpleName} with @Scan must have no parameters.")
     }
 
-    if (!method.isAbstract()) {
-        throw ProcessorException("${method.enclosingElement.simpleName}.${method.simpleName} with @Scan must be abstract.")
-    }
+//    if (!method.isAbstract()) {
+//        throw ProcessorException("${method.enclosingElement.simpleName}.${method.simpleName} with @Scan must be abstract.")
+//    }
 
     if (method.returnType.kind == TypeKind.VOID) {
         throw ProcessorException("${method.enclosingElement.simpleName}.${method.simpleName} with @Scan must return type for scan")

@@ -13,7 +13,7 @@ import com.ios.injector.R
 object Modu {
 
     interface Abs {
-        @Scan
+        //@Scan
         @Dependency
         fun updateManager(): UpdateManager
     }

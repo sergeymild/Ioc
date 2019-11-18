@@ -150,8 +150,9 @@ fun RoundEnvironment.rootElementsWithInjectedDependencies(
     }
 
     // find all module methods with @Scan annotation
-    for (method in methodsWithDependencyAnnotation()) {
-        if (!method.isHasAnnotation(scanJavaType)) continue
+    val scanDependencies = getElementsAnnotatedWith(Scan::class.java)
+    for (element in scanDependencies) {
+        val method = element as ExecutableElement
         validateMethodAnnotatedWithTarget(method)
         addRootDependencyIfNeed(method.returnType.asTypeElement(), targetDependencies, rootTypeElements)
     }
@@ -162,7 +163,8 @@ fun RoundEnvironment.rootElementsWithInjectedDependencies(
 fun addRootDependencyIfNeed(
     typeElement: TypeElement,
     targetDependencies: MutableMap<String, MutableSet<Element>>,
-    rootTypeElements: MutableList<TypeElement>): Boolean {
+    rootTypeElements: MutableList<TypeElement>
+): Boolean {
 
     val key = typeElement.asMapKey()
     if (targetDependencies.containsKey(key)) return false
