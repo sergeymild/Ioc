@@ -308,7 +308,7 @@ class SingletonTests {
             public final class MainPresenterSingleton implements Provider<MainPresenter> {
             
                public final MainPresenter get() {
-                   return new MainPresenter(Ioc.singleton(DependencyModel.class));
+                   return new MainPresenter(Ioc.getSingleton(DependencyModel.class));
                }
             }
         """.trimIndent())
@@ -538,11 +538,11 @@ class SingletonTests {
               public static final MainPresenter provideMainPresenter() {
                 IocLazy<DependencyModel> lazyDependencyModel = new IocLazy<DependencyModel>() {
                   protected DependencyModel initialize() {
-                    DependencyModel dependencyModel = new DependencyModel(Ioc.singleton(SingletonDependency.class));
+                    DependencyModel dependencyModel = new DependencyModel(Ioc.getSingleton(SingletonDependency.class));
                     return dependencyModel;
                   }
                 };
-                MainPresenter mainPresenter = new MainPresenter(lazyDependencyModel,Ioc.singleton(SingletonDependency.class));
+                MainPresenter mainPresenter = new MainPresenter(lazyDependencyModel,Ioc.getSingleton(SingletonDependency.class));
                 return mainPresenter;
               }
             }
@@ -620,11 +620,11 @@ class SingletonTests {
               public static final MainPresenter provideMainPresenter() {
                 IocProvider<DependencyModel> providerDependencyModel = new IocProvider<DependencyModel>() {
                   protected DependencyModel initialize() {
-                    DependencyModel dependencyModel = new DependencyModel(Ioc.singleton(SingletonDependency.class));
+                    DependencyModel dependencyModel = new DependencyModel(Ioc.getSingleton(SingletonDependency.class));
                     return dependencyModel;
                   }
                 };
-                MainPresenter mainPresenter = new MainPresenter(providerDependencyModel,Ioc.singleton(SingletonDependency.class));
+                MainPresenter mainPresenter = new MainPresenter(providerDependencyModel,Ioc.getSingleton(SingletonDependency.class));
                 return mainPresenter;
               }
             }
@@ -700,18 +700,18 @@ class SingletonTests {
             public final class ActivityInjector {
               @Keep
               public static final void inject(@NonNull final Activity target) {
-                target.logger = Ioc.singleton(EventLogger.class);
+                target.logger = Ioc.getSingleton(EventLogger.class);
                 target.context = provideContext();
                 target.db = provideDb();
               }
             
               public static final Context provideContext() {
-                Context context = new Context(Ioc.singleton(EventLogger.class));
+                Context context = new Context(Ioc.getSingleton(EventLogger.class));
                 return context;
               }
             
               public static final Db provideDb() {
-                Db db = new Db(Ioc.singleton(EventLogger.class));
+                Db db = new Db(Ioc.getSingleton(EventLogger.class));
                 return db;
               }
             }
@@ -898,8 +898,8 @@ class SingletonTests {
             public final class ActivityInjector  {
                 @Keep
                 public static final void inject(@NonNull final Activity target) {
-                    target.firstInterface = Ioc.singleton(FirstInterface.class);
-                    target.secondInterface = Ioc.singleton(SecondInterface.class);
+                    target.firstInterface = Ioc.getSingleton(FirstInterface.class);
+                    target.secondInterface = Ioc.getSingleton(SecondInterface.class);
                 }
             }
         """.trimIndent())

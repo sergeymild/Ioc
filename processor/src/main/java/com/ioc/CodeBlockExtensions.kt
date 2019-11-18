@@ -15,7 +15,7 @@ val emptyCodBlock = CodeBlock.builder().build()
 fun iocGetSingleton(model: DependencyModel): CodeBlock {
     // if we have a named annotation prefer get implementation instead of interface
     val type: Element = if (model.named == null || model.named == "") model.dependency else model.originalType
-    return CodeBlock.builder().add("\$T.singleton(\$T.class)", iocType, type).build()
+    return CodeBlock.builder().add("\$T.getSingleton(\$T.class)", iocType, type).build()
 }
 
 fun emptyConstructor(model: DependencyModel): CodeBlock {

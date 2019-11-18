@@ -60,7 +60,7 @@ class SingletonNameTests {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public static final void inject(@NonNull final Activity target) {",
-            "     target.service = Ioc.singleton(CrashlitycsService.class);",
+            "     target.service = Ioc.getSingleton(CrashlitycsService.class);",
             "   }",
             "}")
 
@@ -130,7 +130,7 @@ class SingletonNameTests {
             "public final class DependencyModelSingleton implements Provider<DependencyModel> {",
             "",
             "   public final DependencyModel get() {",
-            "       return new DependencyModel(Ioc.singleton(CrashlitycsService.class));",
+            "       return new DependencyModel(Ioc.getSingleton(CrashlitycsService.class));",
             "   }",
             "}")
 
@@ -209,7 +209,7 @@ class SingletonNameTests {
             "",
             "   public static final ParentDependency provideParentDependency() {",
             "       DependencyModel dependencyModel = ModuleClass.getDependency();",
-            "       ParentDependency parentDependency = ModuleClass.getParentDependency(dependencyModel,Ioc.singleton(Dependency2.class));",
+            "       ParentDependency parentDependency = ModuleClass.getParentDependency(dependencyModel,Ioc.getSingleton(Dependency2.class));",
             "       return parentDependency;",
             "   }",
             "}")
@@ -259,7 +259,7 @@ class SingletonNameTests {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public static final void inject(@NonNull final Activity target) {",
-            "     target.service = Ioc.singleton(CrashlyticsLogger.class);",
+            "     target.service = Ioc.getSingleton(CrashlyticsLogger.class);",
             "   }",
             "}")
 

@@ -1073,7 +1073,7 @@ class FieldInjectionTest {
             "",
             "   public static final DependencyModel provideDependencyModel() {",
             "       Context context = ContextModule.context();",
-            "       DependencyModel dependencyModel = new DependencyModel(context,Ioc.singleton(Resource.class));",
+            "       DependencyModel dependencyModel = new DependencyModel(context,Ioc.getSingleton(Resource.class));",
             "       return dependencyModel;",
             "   }",
             "}")
@@ -1284,7 +1284,7 @@ class FieldInjectionTest {
             "   }",
             "",
             "   public static final AppModel provideAppModel() {",
-            "       AppModel dependencyModel = new AppModel(Ioc.singleton(Resource.class));",
+            "       AppModel dependencyModel = new AppModel(Ioc.getSingleton(Resource.class));",
             "       return dependencyModel;",
             "   }",
             "}")
@@ -1362,7 +1362,7 @@ class FieldInjectionTest {
             "   }",
             "",
             "   public static final BaseModel provideBaseModel() {",
-            "       BaseModel baseModel = new BaseModel(Ioc.singleton(SpeedDialTileClickedEventLogger.class),Ioc.singleton(SpeedDialTileClosedEventLogger.class));",
+            "       BaseModel baseModel = new BaseModel(Ioc.getSingleton(SpeedDialTileClickedEventLogger.class),Ioc.getSingleton(SpeedDialTileClosedEventLogger.class));",
             "       return baseModel;",
             "   }",
             "}")
@@ -1437,8 +1437,8 @@ class FieldInjectionTest {
             "public final class BaseActivityInjector {",
             "   @Keep",
             "   public static final void inject(@NonNull final BaseActivity target) {",
-            "       target.closedEventLogger = Ioc.singleton(ClosedEventLogger.class);",
-            "       target.setEventLogger(Ioc.singleton(ClosedEventLogger.class));",
+            "       target.closedEventLogger = Ioc.getSingleton(ClosedEventLogger.class);",
+            "       target.setEventLogger(Ioc.getSingleton(ClosedEventLogger.class));",
             "   }",
             "}")
 
@@ -1511,7 +1511,7 @@ class FieldInjectionTest {
             "   @Keep",
             "   public static final void inject(@NonNull final Activity target) {",
             "       BaseActivityInjector.inject(target);",
-            "       target.clickedEventLogger = Ioc.singleton(ClickedEventLogger.class);",
+            "       target.clickedEventLogger = Ioc.getSingleton(ClickedEventLogger.class);",
             "   }",
             "}")
 
@@ -1587,7 +1587,7 @@ class FieldInjectionTest {
             "public final class LoggerSingleton implements Provider<Logger> {",
             "",
             "   public final Logger get() {",
-            "       return new Logger(Ioc.singleton(ClosedEventLogger.class),Ioc.singleton(Amplitude.class));",
+            "       return new Logger(Ioc.getSingleton(ClosedEventLogger.class),Ioc.getSingleton(Amplitude.class));",
             "   }",
             "}")
 
@@ -1684,7 +1684,7 @@ class FieldInjectionTest {
             "public final class DownloadsNavigationLoggerSingleton implements Provider<DownloadsNavigationLogger> {",
             "",
             "   public final DownloadsNavigationLogger get() {",
-            "       return new DownloadsNavigationLogger(Ioc.singleton(DownloadsNavigationPathIndicatorClickedEventLogger.class),Ioc.singleton(DownloadsNavigationSystemBackClickedEventLogger.class));",
+            "       return new DownloadsNavigationLogger(Ioc.getSingleton(DownloadsNavigationPathIndicatorClickedEventLogger.class),Ioc.getSingleton(DownloadsNavigationSystemBackClickedEventLogger.class));",
             "   }",
             "}")
 
@@ -1772,7 +1772,7 @@ class FieldInjectionTest {
             "   }",
             "",
             "   public static final BuildCheck provideBuildCheck() {",
-            "       BuildCheck buildCheck = new BuildCheck(Ioc.singleton(Preferences.class));",
+            "       BuildCheck buildCheck = new BuildCheck(Ioc.getSingleton(Preferences.class));",
             "       return buildCheck;",
             "   }",
             "}")
@@ -2014,7 +2014,7 @@ class FieldInjectionTest {
             "",
             "   @Keep",
             "   public static final void inject(@NonNull final Activity target) {",
-            "       target.setLogger(Ioc.singleton(SpeedDialDisplayedEventLogger.class));",
+            "       target.setLogger(Ioc.getSingleton(SpeedDialDisplayedEventLogger.class));",
             "   }",
             "}")
 
@@ -2276,8 +2276,8 @@ class FieldInjectionTest {
             "   }",
             "",
             "   public static final Preferences providePreferences() {",
-            "       Context context = ContextModule.context(Ioc.singleton(SpeedDialDisplayedEventLogger.class));",
-            "       Preferences preferences = new Preferences(context,Ioc.singleton(DefaultLogger.class));",
+            "       Context context = ContextModule.context(Ioc.getSingleton(SpeedDialDisplayedEventLogger.class));",
+            "       Preferences preferences = new Preferences(context,Ioc.getSingleton(DefaultLogger.class));",
             "       return preferences;",
             "   }",
             "}")
@@ -2793,7 +2793,7 @@ class FieldInjectionTest {
             "   }",
             "",
             "   public static final Presenter providePresenter() {",
-            "       Presenter presenter = ContextModule.presenter(Ioc.singleton(Context.class));",
+            "       Presenter presenter = ContextModule.presenter(Ioc.getSingleton(Context.class));",
             "       return presenter;",
             "   }",
             "}")
@@ -2916,8 +2916,8 @@ class FieldInjectionTest {
             "   }",
             "",
             "   public static final Presenter providePresenter() {",
-            "       Resource resource = new Resource(Ioc.singleton(Context.class));",
-            "       Presenter presenter = new Presenter(Ioc.singleton(Context.class),resource);",
+            "       Resource resource = new Resource(Ioc.getSingleton(Context.class));",
+            "       Presenter presenter = new Presenter(Ioc.getSingleton(Context.class),resource);",
             "       return presenter;",
             "   }",
             "}")
@@ -3688,7 +3688,7 @@ class FieldInjectionTest {
             "public final class DownloadsNavigationLoggerSingleton implements Provider<DownloadsNavigationLogger> {",
             "",
             "   public final DownloadsNavigationLogger get() {",
-            "       return new DownloadsNavigationLogger(Ioc.singleton(DownloadsNavigationPathIndicatorClickedEventLogger.class));",
+            "       return new DownloadsNavigationLogger(Ioc.getSingleton(DownloadsNavigationPathIndicatorClickedEventLogger.class));",
             "   }",
             "}")
 

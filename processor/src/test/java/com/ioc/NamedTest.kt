@@ -1336,8 +1336,8 @@ class NamedTest {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public static final void inject(@NonNull final Activity target) {",
-            "       target.setDebugFromMethod(Ioc.singleton(DebugDependency.class));",
-            "       target.setReleaseFromMethod(Ioc.singleton(ReleaseDependency.class));",
+            "       target.setDebugFromMethod(Ioc.getSingleton(DebugDependency.class));",
+            "       target.setReleaseFromMethod(Ioc.getSingleton(ReleaseDependency.class));",
             "   }",
             "}")
 

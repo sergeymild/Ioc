@@ -558,7 +558,7 @@ class ModuleTests {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public static final void inject(@NonNull final Activity target) {",
-            "       target.dependency = Ioc.singleton(ParentDependency.class);",
+            "       target.dependency = Ioc.getSingleton(ParentDependency.class);",
             "   }",
             "}")
 
@@ -615,7 +615,7 @@ class ModuleTests {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public static final void inject(@NonNull final Activity target) {",
-            "       target.setDependency(Ioc.singleton(ParentDependency.class));",
+            "       target.setDependency(Ioc.getSingleton(ParentDependency.class));",
             "   }",
             "}")
 
@@ -739,7 +739,7 @@ class ModuleTests {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public static final void inject(@NonNull final Activity target) {",
-            "       target.dependency = Ioc.singleton(ParentDependency.class);",
+            "       target.dependency = Ioc.getSingleton(ParentDependency.class);",
             "   }",
             "}")
 
@@ -816,7 +816,7 @@ class ModuleTests {
             "",
             "   public static final ParentDependency provideParentDependency() {",
             "       DependencyModel dependencyModel = ModuleClass.getDependency();",
-            "       ParentDependency parentDependency = ModuleClass.getParentDependency(dependencyModel,Ioc.singleton(Dependency2.class));",
+            "       ParentDependency parentDependency = ModuleClass.getParentDependency(dependencyModel,Ioc.getSingleton(Dependency2.class));",
             "       return parentDependency;",
             "   }",
             "}")
@@ -1046,7 +1046,7 @@ class ModuleTests {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public static final void inject(@NonNull final Activity target) {",
-            "       target.dependency = Ioc.singleton(ParentDependency.class);",
+            "       target.dependency = Ioc.getSingleton(ParentDependency.class);",
             "   }",
             "}")
 
@@ -1160,7 +1160,7 @@ class ModuleTests {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public static final void inject(@NonNull final Activity target) {",
-            "       target.setDependency(Ioc.singleton(ParentDependency.class));",
+            "       target.setDependency(Ioc.getSingleton(ParentDependency.class));",
             "   }",
             "}")
 
@@ -1226,7 +1226,7 @@ class ModuleTests {
             "",
             "   public final ParentDependency get() {",
             "       DependencyModel dependencyModel = new DependencyModel();",
-            "       return new ParentDependency(dependencyModel,Ioc.singleton(Singleton2.class));",
+            "       return new ParentDependency(dependencyModel,Ioc.getSingleton(Singleton2.class));",
             "   }",
             "}")
 
@@ -1293,7 +1293,7 @@ class ModuleTests {
             "",
             "   public final ParentDependency get() {",
             "       DependencyModel dependencyModel = new DependencyModel();",
-            "       return new ParentDependency(dependencyModel,Ioc.singleton(Singleton2.class));",
+            "       return new ParentDependency(dependencyModel,Ioc.getSingleton(Singleton2.class));",
             "   }",
             "}")
 
@@ -1361,7 +1361,7 @@ class ModuleTests {
             "",
             "   public static final ParentDependency provideParentDependency() {",
             "       DependencyModel dependencyModel = new DependencyModel();",
-            "       ParentDependency parentDependency = new ParentDependency(dependencyModel,Ioc.singleton(Singleton2.class));",
+            "       ParentDependency parentDependency = new ParentDependency(dependencyModel,Ioc.getSingleton(Singleton2.class));",
             "       return parentDependency;",
             "   }",
             "}")
@@ -1432,7 +1432,7 @@ class ModuleTests {
             "",
             "   public static final ParentDependency provideParentDependency() {",
             "       DependencyModel dependencyModel = new DependencyModel();",
-            "       ParentDependency parentDependency = new ParentDependency(dependencyModel,Ioc.singleton(Singleton2.class));",
+            "       ParentDependency parentDependency = new ParentDependency(dependencyModel,Ioc.getSingleton(Singleton2.class));",
             "       return parentDependency",
             "   }",
             "}")
@@ -1631,7 +1631,7 @@ class ModuleTests {
             "",
             "   @Keep",
             "   public static final void inject(@NonNull final Activity target) {",
-            "       target.service = Ioc.singleton(CountryService.class);",
+            "       target.service = Ioc.getSingleton(CountryService.class);",
             "       target.dependencyService = new DependencyService();",
             "   }",
             "}")
@@ -2535,7 +2535,7 @@ class ModuleTests {
             "   }",
             "",
             "   public static final Factory provideFactory() {",
-            "       CountryProvider countryProvider = Module.INSTANCE.getCountryService(Ioc.singleton(SingletonParameter.class));",
+            "       CountryProvider countryProvider = Module.INSTANCE.getCountryService(Ioc.getSingleton(SingletonParameter.class));",
             "       SearchEngineService searchEngineService = SuggestionModule.INSTANCE.getSearchEngineService(countryProvider);",
             "       Factory factory = new Factory(searchEngineService);",
             "       return factory;",

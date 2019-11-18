@@ -701,9 +701,9 @@ class MethodInjection {
             "   }",
             "",
             "   public static final ParentDependency provideParentDependency() {",
-            "       DependencyModel dependencyModel = new DependencyModel(Ioc.singleton(SingletonDependency.class),Ioc.singleton(NextSingleton.class));",
-            "       Resources resources = new Resources(Ioc.singleton(SingletonDependency.class));",
-            "       ParentDependency parentDependency = new ParentDependency(Ioc.singleton(SingletonDependency.class),Ioc.singleton(NextSingleton.class),dependencyModel,resources);",
+            "       DependencyModel dependencyModel = new DependencyModel(Ioc.getSingleton(SingletonDependency.class),Ioc.getSingleton(NextSingleton.class));",
+            "       Resources resources = new Resources(Ioc.getSingleton(SingletonDependency.class));",
+            "       ParentDependency parentDependency = new ParentDependency(Ioc.getSingleton(SingletonDependency.class),Ioc.getSingleton(NextSingleton.class),dependencyModel,resources);",
             "       return parentDependency;",
             "   }",
             "}")

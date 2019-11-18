@@ -9,11 +9,11 @@ public class Ioc {
         TargetFactory.inject(target);
     }
 
-    public static <T> T singleton(Class<T> clazz) {
+    public static <T> T getSingleton(Class<T> clazz) {
         return SingletonFactory.provide(clazz);
     }
 
-    public static void clear(boolean isDebug) {
+    public static void clearSingletons(boolean isDebug) {
         SingletonFactory.clear(isDebug);
     }
 }
