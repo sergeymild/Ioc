@@ -10,20 +10,31 @@ import com.example.mylibrary.Library
 import com.ios.injector.R
 
 
-object Modu {
 
-    interface Abs {
-        //@Scan
-        @Dependency
-        fun updateManager(): UpdateManager
+@Singleton
+class S: Cleanable {
+    override fun onCleared() {
+
     }
+
+}
+
+@Singleton
+class S2: Cleanable {
+    override fun onCleared() {
+
+    }
+
 }
 
 class MainActivity : AppCompatActivity() {
 
 
     @Inject
-    lateinit var updateManager: UpdateManager
+    lateinit var s: S
+
+    @Inject
+    lateinit var s2: S2
 
 
 

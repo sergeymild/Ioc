@@ -39,6 +39,7 @@ val importIoc = "import ${Ioc::class.java.canonicalName};"
 val importScanAnnotation = "import ${Scan::class.java.canonicalName};"
 
 val importInjectAnnotation = "import ${Inject::class.java.canonicalName};"
+val importCleanable = "import ${Cleanable::class.java.canonicalName};"
 val importSingletonAnnotation = "import ${Singleton::class.java.canonicalName};"
 val importDependencyAnnotation = "import ${Dependency::class.java.canonicalName};"
 val importLocalScopeAnnotation = "import ${LocalScope::class.java.canonicalName};"

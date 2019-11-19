@@ -991,4 +991,72 @@ class SingletonTests {
             .and()
             .generatesSources(injectFile)
     }
+
+    @Test
+    fun skipCleanableInterfaces() {
+        val firstInterface = JavaFileObjects.forSourceLines("test.First", """
+            package test;
+            
+            $importSingletonAnnotation
+            $importCleanable
+            @Singleton
+            public class First implements Cleanable {
+                public void onCleared() {}
+            }
+        """.trimIndent())
+
+        val secondInterface = JavaFileObjects.forSourceLines("test.Second", """
+            package test;
+            
+            $importSingletonAnnotation
+            $importCleanable
+            @Singleton
+            public class Second implements Cleanable {
+                public void onCleared() {}
+            }
+        """.trimIndent())
+
+
+
+        val activity = JavaFileObjects.forSourceLines("test.Activity", """
+            package test;
+            
+            $importInjectAnnotation
+
+            class Activity  {
+                @Inject
+                public First first;
+                @Inject
+                public Second second;
+            }
+        """.trimIndent())
+
+        val injectFile = JavaFileObjects.forSourceLines("com.ioc.SingletonsFactoryImplementation", """
+            package com.ioc;
+            
+            $importKeepAnnotation
+            import java.util.HashMap;
+            import test.First;
+            import test.FirstSingleton;
+            import test.Second;
+            import test.SecondSingleton;
+
+            @Keep
+            final class SingletonsFactoryImplementation extends SingletonFactory {
+              static {
+                map = new HashMap<>(2);
+                cachedSingletons = new HashMap<>(2);
+                map.put(First.class, FirstSingleton.class);
+                map.put(Second.class, SecondSingleton.class);
+              }
+            }
+        """.trimIndent())
+
+        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(JavaSourcesSubjectFactory.javaSources())
+            .that(listOf(firstInterface, secondInterface, activity))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and()
+            .generatesSources(injectFile)
+    }
 }

@@ -27,6 +27,7 @@ object SingletonFactorySpec {
             while (queue.isNotEmpty()) {
                 val type = queue.pop()
                 if (type.isNotValid()) continue
+                if (type.toString() == Cleanable::class.java.canonicalName) continue
 
                 count += 1
                 val typeElement = type.asTypeElement()

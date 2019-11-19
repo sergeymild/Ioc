@@ -79,7 +79,7 @@ fun validateIsAllowCanHaveViewModel(viewModel: Element, targetElement: TypeEleme
 }
 
 @Throws(ProcessorException::class)
-public inline fun validateSingletonClass(element: Element) {
+fun validateSingletonClass(element: Element) {
     if (element.isClass() && !element.isPublic()) {
         throw ProcessorException("${element.asTypeString()} annotated with @Singleton must be public").setElement(element)
     }
