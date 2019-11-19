@@ -1059,4 +1059,53 @@ class SingletonTests {
             .and()
             .generatesSources(injectFile)
     }
+
+    @Test
+    fun skipGenerics() {
+        val firstInterface = JavaFileObjects.forSourceLines("test.First", """
+            package test;
+            public interface First<T> {}
+        """.trimIndent())
+
+        val secondInterface = JavaFileObjects.forSourceLines("test.Second", """
+            package test;
+            $importSingletonAnnotation
+            @Singleton
+            public class Second implements First<String> {}
+        """.trimIndent())
+
+        val activity = JavaFileObjects.forSourceLines("test.Activity", """
+            package test;
+            $importInjectAnnotation
+            class Activity  {
+                @Inject
+                public Second second;
+            }
+        """.trimIndent())
+
+        val injectFile = JavaFileObjects.forSourceLines("com.ioc.SingletonsFactoryImplementation", """
+            package com.ioc;
+            
+            $importKeepAnnotation
+            import java.util.HashMap;
+            import test.Second;
+            import test.SecondSingleton;
+
+            @Keep
+            final class SingletonsFactoryImplementation extends SingletonFactory {
+              static {
+                map = new HashMap<>(1);
+                cachedSingletons = new HashMap<>(1);
+                map.put(Second.class, SecondSingleton.class);
+              }
+            }
+        """.trimIndent())
+
+        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(JavaSourcesSubjectFactory.javaSources())
+            .that(listOf(firstInterface, secondInterface, activity))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and()
+            .generatesSources(injectFile)
+    }
 }

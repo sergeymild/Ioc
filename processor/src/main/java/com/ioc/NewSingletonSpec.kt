@@ -26,15 +26,6 @@ class NewSingletonSpec(private val dependency: DependencyModel) {
             .build()
     }
 
-    private fun getInstanceMethod(singletonName: String): MethodSpec {
-        return MethodSpec.methodBuilder("getInstance")
-            .addModifiers(Modifier.PUBLIC, Modifier.FINAL, Modifier.STATIC)
-            .returns(dependency.originalClassName)
-            .addStatement("if (instance == null) instance = new \$N()", singletonName)
-            .addStatement("return instance.get()")
-            .build()
-    }
-
     private fun initializeMethod(): MethodSpec {
         val builder = MethodSpec.methodBuilder("get")
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)

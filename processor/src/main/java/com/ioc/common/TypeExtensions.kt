@@ -241,6 +241,14 @@ fun TypeMirror.isNotValid(): Boolean {
         || kind == TypeKind.NULL
 }
 
+fun TypeMirror.isValidMapKey(): Boolean {
+    if (isNotValid()) return false
+    if (toString() == Cleanable::class.java.canonicalName) return false
+    // skip all generic types (is First<String>)
+    if (typeArguments().isNotEmpty()) return false
+    return true
+}
+
 fun TypeMirror?.isAllowForScan(): Boolean {
     this ?: return false
     if (isNotValid()) return false

@@ -1,14 +1,12 @@
 package com.ioc
 
-import com.ioc.common.asTypeElement
-import com.ioc.common.isNotValid
-import com.ioc.common.keepAnnotation
-import com.ioc.common.singletonTypeName
+import com.ioc.common.*
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.CodeBlock
 import com.squareup.javapoet.TypeSpec
 import java.util.*
 import javax.lang.model.element.Modifier
+import javax.lang.model.element.TypeElement
 import javax.lang.model.type.TypeMirror
 import kotlin.collections.HashMap
 
@@ -27,12 +25,12 @@ object SingletonFactorySpec {
             while (queue.isNotEmpty()) {
                 val type = queue.pop()
                 if (type.isNotValid()) continue
-                if (type.toString() == Cleanable::class.java.canonicalName) continue
-
-                count += 1
                 val typeElement = type.asTypeElement()
-                staticBlock.addStatement("map.put(\$T.class, \$T.class)",
-                    type, singletonTypeName(singleton))
+                if (type.isValidMapKey()) {
+                    count += 1
+                    staticBlock.addStatement("map.put(\$T.class, \$T.class)",
+                        type, singletonTypeName(singleton))
+                }
 
                 queue.addAll(typeElement.interfaces)
                 queue.add(typeElement.superclass)
