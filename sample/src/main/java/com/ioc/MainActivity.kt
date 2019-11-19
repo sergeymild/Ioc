@@ -14,7 +14,7 @@ import com.ios.injector.R
 @Singleton
 class S: Cleanable {
     override fun onCleared() {
-
+        println("s1---")
     }
 
 }
@@ -22,19 +22,28 @@ class S: Cleanable {
 @Singleton
 class S2: Cleanable {
     override fun onCleared() {
-
+        println("s2---")
     }
 
+    companion object {
+        init {
+            println("s2 -=======")
+        }
+    }
+}
+
+class S22 {
+    @Inject
+    lateinit var s: S2
 }
 
 class MainActivity : AppCompatActivity() {
 
 
-    @Inject
-    lateinit var s: S
+
 
     @Inject
-    lateinit var s2: S2
+    lateinit var s2: TestCl
 
 
 
@@ -42,7 +51,12 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        println(TestCl::class.java)
+        println(S2::class.java)
+        println("after touch .java")
         Ioc.inject(this)
+        println("after inject")
+//        Ioc.clearSingletons(true)
 //        try {
 //            Class.forName("androidx.test.espresso.Espresso")
 //            findViewById<TextView>(R.id.test_text).setText("Test")
