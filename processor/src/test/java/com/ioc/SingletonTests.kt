@@ -700,18 +700,18 @@ class SingletonTests {
             public final class ActivityInjector {
               @Keep
               public static final void inject(@NonNull final Activity target) {
-                target.logger = Ioc.getSingleton(EventLogger.class);
+                target.logger = Ioc.getSingleton(DefaultLogger.class);
                 target.context = provideContext();
                 target.db = provideDb();
               }
             
               public static final Context provideContext() {
-                Context context = new Context(Ioc.getSingleton(EventLogger.class));
+                Context context = new Context(Ioc.getSingleton(DefaultLogger.class));
                 return context;
               }
             
               public static final Db provideDb() {
-                Db db = new Db(Ioc.getSingleton(EventLogger.class));
+                Db db = new Db(Ioc.getSingleton(DefaultLogger.class));
                 return db;
               }
             }
@@ -898,8 +898,8 @@ class SingletonTests {
             public final class ActivityInjector  {
                 @Keep
                 public static final void inject(@NonNull final Activity target) {
-                    target.firstInterface = Ioc.getSingleton(FirstInterface.class);
-                    target.secondInterface = Ioc.getSingleton(SecondInterface.class);
+                    target.firstInterface = Ioc.getSingleton(SingletonClass.class);
+                    target.secondInterface = Ioc.getSingleton(SingletonClass.class);
                 }
             }
         """.trimIndent())

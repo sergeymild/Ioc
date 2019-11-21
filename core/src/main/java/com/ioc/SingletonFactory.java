@@ -29,7 +29,12 @@ abstract class SingletonFactory {
             try {
                 Class<?> singleton = map.get(tClass);
                 if (singleton == null) {
-                    throw new IocException(String.format("Can't find singleton for %s type.", tClass));
+                    try {
+                        singleton = Class.forName(tClass.getCanonicalName() + "Singleton");
+                        map.put(tClass, singleton);
+                    } catch (ClassNotFoundException e) {
+                        throw new IocException(String.format("Can't find singleton for %s type.", tClass));
+                    }
                 }
 
                 Object instance = cachedSingletons.get(singleton);

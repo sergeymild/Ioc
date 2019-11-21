@@ -60,7 +60,7 @@ class SingletonNameTests {
             "public final class ActivityInjector {",
             "   @Keep",
             "   public static final void inject(@NonNull final Activity target) {",
-            "     target.service = Ioc.getSingleton(CrashlitycsService.class);",
+            "     target.service = Ioc.getSingleton(CrashlyticsLogger.class);",
             "   }",
             "}")
 
@@ -130,7 +130,7 @@ class SingletonNameTests {
             "public final class DependencyModelSingleton implements Provider<DependencyModel> {",
             "",
             "   public final DependencyModel get() {",
-            "       return new DependencyModel(Ioc.getSingleton(CrashlitycsService.class));",
+            "       return new DependencyModel(Ioc.getSingleton(CrashlyticsLogger.class));",
             "   }",
             "}")
 

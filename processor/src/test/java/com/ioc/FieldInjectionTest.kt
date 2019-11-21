@@ -1284,7 +1284,7 @@ class FieldInjectionTest {
             "   }",
             "",
             "   public static final AppModel provideAppModel() {",
-            "       AppModel dependencyModel = new AppModel(Ioc.getSingleton(Resource.class));",
+            "       AppModel dependencyModel = new AppModel(Ioc.getSingleton(Context.class));",
             "       return dependencyModel;",
             "   }",
             "}")
@@ -1362,7 +1362,7 @@ class FieldInjectionTest {
             "   }",
             "",
             "   public static final BaseModel provideBaseModel() {",
-            "       BaseModel baseModel = new BaseModel(Ioc.getSingleton(SpeedDialTileClickedEventLogger.class),Ioc.getSingleton(SpeedDialTileClosedEventLogger.class));",
+            "       BaseModel baseModel = new BaseModel(Ioc.getSingleton(Amplitude.class),Ioc.getSingleton(Amplitude.class));",
             "       return baseModel;",
             "   }",
             "}")
@@ -1437,8 +1437,8 @@ class FieldInjectionTest {
             "public final class BaseActivityInjector {",
             "   @Keep",
             "   public static final void inject(@NonNull final BaseActivity target) {",
-            "       target.closedEventLogger = Ioc.getSingleton(ClosedEventLogger.class);",
-            "       target.setEventLogger(Ioc.getSingleton(ClosedEventLogger.class));",
+            "       target.closedEventLogger = Ioc.getSingleton(Amplitude.class);",
+            "       target.setEventLogger(Ioc.getSingleton(Amplitude.class));",
             "   }",
             "}")
 
@@ -1511,7 +1511,7 @@ class FieldInjectionTest {
             "   @Keep",
             "   public static final void inject(@NonNull final Activity target) {",
             "       BaseActivityInjector.inject(target);",
-            "       target.clickedEventLogger = Ioc.getSingleton(ClickedEventLogger.class);",
+            "       target.clickedEventLogger = Ioc.getSingleton(Amplitude.class);",
             "   }",
             "}")
 
@@ -1587,7 +1587,7 @@ class FieldInjectionTest {
             "public final class LoggerSingleton implements Provider<Logger> {",
             "",
             "   public final Logger get() {",
-            "       return new Logger(Ioc.getSingleton(ClosedEventLogger.class),Ioc.getSingleton(Amplitude.class));",
+            "       return new Logger(Ioc.getSingleton(Amplitude.class),Ioc.getSingleton(Amplitude.class));",
             "   }",
             "}")
 
@@ -1684,7 +1684,7 @@ class FieldInjectionTest {
             "public final class DownloadsNavigationLoggerSingleton implements Provider<DownloadsNavigationLogger> {",
             "",
             "   public final DownloadsNavigationLogger get() {",
-            "       return new DownloadsNavigationLogger(Ioc.getSingleton(DownloadsNavigationPathIndicatorClickedEventLogger.class),Ioc.getSingleton(DownloadsNavigationSystemBackClickedEventLogger.class));",
+            "       return new DownloadsNavigationLogger(Ioc.getSingleton(AmplitudeService.class),Ioc.getSingleton(AmplitudeService.class));",
             "   }",
             "}")
 
@@ -2014,7 +2014,7 @@ class FieldInjectionTest {
             "",
             "   @Keep",
             "   public static final void inject(@NonNull final Activity target) {",
-            "       target.setLogger(Ioc.getSingleton(SpeedDialDisplayedEventLogger.class));",
+            "       target.setLogger(Ioc.getSingleton(AmplitudeDefaultLogger.class));",
             "   }",
             "}")
 
@@ -2276,8 +2276,8 @@ class FieldInjectionTest {
             "   }",
             "",
             "   public static final Preferences providePreferences() {",
-            "       Context context = ContextModule.context(Ioc.getSingleton(SpeedDialDisplayedEventLogger.class));",
-            "       Preferences preferences = new Preferences(context,Ioc.getSingleton(DefaultLogger.class));",
+            "       Context context = ContextModule.context(Ioc.getSingleton(AmplitudeDefaultLogger.class));",
+            "       Preferences preferences = new Preferences(context,Ioc.getSingleton(AmplitudeDefaultLogger.class));",
             "       return preferences;",
             "   }",
             "}")
@@ -3688,7 +3688,7 @@ class FieldInjectionTest {
             "public final class DownloadsNavigationLoggerSingleton implements Provider<DownloadsNavigationLogger> {",
             "",
             "   public final DownloadsNavigationLogger get() {",
-            "       return new DownloadsNavigationLogger(Ioc.getSingleton(DownloadsNavigationPathIndicatorClickedEventLogger.class));",
+            "       return new DownloadsNavigationLogger(Ioc.getSingleton(AmplitudeService.class));",
             "   }",
             "}")
 

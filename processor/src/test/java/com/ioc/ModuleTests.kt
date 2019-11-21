@@ -1631,7 +1631,7 @@ class ModuleTests {
             "",
             "   @Keep",
             "   public static final void inject(@NonNull final Activity target) {",
-            "       target.service = Ioc.getSingleton(CountryService.class);",
+            "       target.service = Ioc.getSingleton(CountryServiceImplementation.class);",
             "       target.dependencyService = new DependencyService();",
             "   }",
             "}")
