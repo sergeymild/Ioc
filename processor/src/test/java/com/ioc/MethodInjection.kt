@@ -6,22 +6,19 @@ import com.google.testing.compile.JavaSourcesSubjectFactory
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import java.util.*
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Created by sergeygolishnikov on 03/09/2017.
  */
 @RunWith(JUnit4::class)
-class MethodInjection : BaseTest {
+class MethodInjection {
     @Test
     @Throws(Exception::class)
     fun findSetterMethod() {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class Activity {",
             "",
@@ -42,24 +39,19 @@ class MethodInjection : BaseTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import $keep",
-            "import $nonNull",
+            importKeepAnnotation,
+            importNonNullAnnotation,
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
-            "   public final void inject(@NonNull final Activity target) {",
-            "       injectDependencyModelInDependency(target);",
-            "   }",
-            "",
-            "   private final void injectDependencyModelInDependency(@NonNull final Activity target) {",
-            "       DependencyModel dependencyModel = new DependencyModel();",
-            "       target.setDependency(dependencyModel);",
+            "   public static final void inject(@NonNull final Activity target) {",
+            "       target.setDependency(new DependencyModel());",
             "   }",
             "}")
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(activityFile, dependencyFile))
+            .that(listOf(activityFile, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -71,7 +63,7 @@ class MethodInjection : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class Activity {",
             "",
@@ -85,7 +77,7 @@ class MethodInjection : BaseTest {
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class DependencyModel {",
             "   @Inject",
@@ -95,24 +87,24 @@ class MethodInjection : BaseTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import $keep",
-            "import $nonNull",
+            importKeepAnnotation,
+            importNonNullAnnotation,
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
-            "   public final void inject(@NonNull final Activity target) {",
-            "       injectDependencyModelInDependency(target);",
+            "   public static final void inject(@NonNull final Activity target) {",
+            "       target.setDependency(provideDependencyModel(target));",
             "   }",
             "",
-            "   private final void injectDependencyModelInDependency(@NonNull final Activity target) {",
+            "   private static final DependencyModel provideDependencyModel(@NonNull final Activity target) {",
             "       DependencyModel dependencyModel = new DependencyModel(target);",
-            "       target.setDependency(dependencyModel);",
+            "       return dependencyModel;",
             "   }",
             "}")
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(activityFile, dependencyFile))
+            .that(listOf(activityFile, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -124,7 +116,7 @@ class MethodInjection : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class Activity {",
             "",
@@ -138,7 +130,7 @@ class MethodInjection : BaseTest {
         val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class ParentDependency {",
             "   @Inject",
@@ -148,7 +140,7 @@ class MethodInjection : BaseTest {
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class DependencyModel {",
             "   public DependencyModel() {}",
@@ -157,25 +149,25 @@ class MethodInjection : BaseTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import $keep",
-            "import $nonNull",
+            importKeepAnnotation,
+            importNonNullAnnotation,
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
-            "   public final void inject(@NonNull final Activity target) {",
-            "       injectParentDependencyInDependency(target);",
+            "   public static final void inject(@NonNull final Activity target) {",
+            "       target.setDependency(provideParentDependency(target));",
             "   }",
             "",
-            "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
+            "   private static final ParentDependency provideParentDependency(@NonNull final Activity target) {",
             "       DependencyModel dependencyModel = new DependencyModel();",
             "       ParentDependency parentDependency = new ParentDependency(target, dependencyModel);",
-            "       target.setDependency(parentDependency);",
+            "       return parentDependency;",
             "   }",
             "}")
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(activityFile, dependencyFile, parentDependencyFile))
+            .that(listOf(activityFile, dependencyFile, parentDependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -187,7 +179,7 @@ class MethodInjection : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class Activity {",
             "",
@@ -201,7 +193,7 @@ class MethodInjection : BaseTest {
         val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class ParentDependency {",
             "   @Inject",
@@ -218,25 +210,25 @@ class MethodInjection : BaseTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import $keep",
-            "import $nonNull",
+            importKeepAnnotation,
+            importNonNullAnnotation,
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
-            "   public final void inject(@NonNull final Activity target) {",
-            "       injectParentDependencyInDependency(target);",
+            "   public static final void inject(@NonNull final Activity target) {",
+            "       target.setDependency(provideParentDependency());",
             "   }",
             "",
-            "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
+            "   public static final ParentDependency provideParentDependency() {",
             "       DependencyModel dependencyModel = new DependencyModel();",
             "       ParentDependency parentDependency = new ParentDependency(dependencyModel);",
-            "       target.setDependency(parentDependency);",
+            "       return parentDependency;",
             "   }",
             "}")
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(activityFile, dependencyFile, parentDependencyFile))
+            .that(listOf(activityFile, dependencyFile, parentDependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -255,7 +247,7 @@ class MethodInjection : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class Activity extends ParentActivity {",
             "",
@@ -268,9 +260,9 @@ class MethodInjection : BaseTest {
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
-            "class DependencyModel {",
+            "public class DependencyModel {",
             "",
             "   @Inject",
             "   public DependencyModel() {};",
@@ -279,7 +271,7 @@ class MethodInjection : BaseTest {
         val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class ParentDependency {",
             "   @Inject",
@@ -289,25 +281,25 @@ class MethodInjection : BaseTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import $keep",
-            "import $nonNull",
+            importKeepAnnotation,
+            importNonNullAnnotation,
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
-            "   public final void inject(@NonNull final Activity target) {",
-            "       injectParentDependencyInDependency(target);",
+            "   public static final void inject(@NonNull final Activity target) {",
+            "       target.setDependency(provideParentDependency());",
             "   }",
             "",
-            "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
+            "   public static final ParentDependency provideParentDependency() {",
             "       DependencyModel dependencyModel = new DependencyModel();",
             "       ParentDependency parentDependency = new ParentDependency(dependencyModel);",
-            "       target.setDependency(parentDependency);",
+            "       return parentDependency;",
             "   }",
             "}")
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(activityFile, dependencyFile, parentActivityFile, parentDependencyFile))
+            .that(listOf(activityFile, dependencyFile, parentActivityFile, parentDependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -319,7 +311,7 @@ class MethodInjection : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class Activity {",
             "",
@@ -332,7 +324,7 @@ class MethodInjection : BaseTest {
         val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class ParentDependency {",
             "   @Inject",
@@ -342,7 +334,7 @@ class MethodInjection : BaseTest {
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class DependencyModel {",
             "   @Inject",
@@ -352,25 +344,25 @@ class MethodInjection : BaseTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import $keep",
-            "import $nonNull",
+            importKeepAnnotation,
+            importNonNullAnnotation,
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
-            "   public final void inject(@NonNull final Activity target) {",
-            "       injectParentDependencyInDependency(target);",
+            "   public static final void inject(@NonNull final Activity target) {",
+            "       target.setDependency(provideParentDependency(target));",
             "   }",
             "",
-            "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
+            "   private static final ParentDependency provideParentDependency(@NonNull final Activity target) {",
             "       DependencyModel dependencyModel = new DependencyModel(target);",
             "       ParentDependency parentDependency = new ParentDependency(dependencyModel);",
-            "       target.setDependency(parentDependency);",
+            "       return parentDependency;",
             "   }",
             "}")
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(activityFile, dependencyFile, parentDependencyFile))
+            .that(listOf(activityFile, dependencyFile, parentDependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -389,7 +381,7 @@ class MethodInjection : BaseTest {
         val baseFile = JavaFileObjects.forSourceLines("test.BaseActivity",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class BaseActivity {",
             "",
@@ -401,7 +393,7 @@ class MethodInjection : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class Activity extends ParentActivity {",
             "",
@@ -412,7 +404,7 @@ class MethodInjection : BaseTest {
         val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class ParentDependency {",
             "   @Inject",
@@ -422,8 +414,8 @@ class MethodInjection : BaseTest {
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Dependency::class.java.import(),
+            importInjectAnnotation,
+            importDependencyAnnotation,
             "",
             "@Dependency",
             "public class DependencyModel {",
@@ -434,21 +426,21 @@ class MethodInjection : BaseTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import $keep",
-            "import $nonNull",
+            importKeepAnnotation,
+            importNonNullAnnotation,
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
-            "   public final void inject(@NonNull final Activity target) {",
-            "       new BaseActivityInjector().inject(target);",
-            "       injectParentDependencyInDependency(target);",
+            "   public static final void inject(@NonNull final Activity target) {",
+            "       BaseActivityInjector.inject(target);",
+            "       target.dependency = provideParentDependency(target);",
             "   }",
             "",
-            "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
+            "   private static final ParentDependency provideParentDependency(@NonNull final Activity target) {",
             "       DependencyModel dependencyModel = new DependencyModel(target);",
             "       ParentDependency parentDependency = new ParentDependency(dependencyModel);",
-            "       target.dependency = parentDependency;",
+            "       return parentDependency;",
             "   }",
             "}")
 
@@ -466,7 +458,7 @@ class MethodInjection : BaseTest {
         val parentFile = JavaFileObjects.forSourceLines("test.ParentActivity",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class ParentActivity extends BaseActivity {",
             "",
@@ -477,7 +469,7 @@ class MethodInjection : BaseTest {
         val baseFile = JavaFileObjects.forSourceLines("test.BaseActivity",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class BaseActivity {",
             "",
@@ -489,7 +481,7 @@ class MethodInjection : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class Activity extends ParentActivity {",
             "",
@@ -500,7 +492,7 @@ class MethodInjection : BaseTest {
         val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class ParentDependency {",
             "   @Inject",
@@ -510,7 +502,7 @@ class MethodInjection : BaseTest {
         val resourcesFile = JavaFileObjects.forSourceLines("test.Resources",
             "package test;",
             "",
-            Dependency::class.java.import(),
+            importDependencyAnnotation,
             "",
             "@Dependency",
             "public class Resources {",
@@ -519,8 +511,8 @@ class MethodInjection : BaseTest {
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Dependency::class.java.import(),
+            importInjectAnnotation,
+            importDependencyAnnotation,
             "",
             "@Dependency",
             "public class DependencyModel {",
@@ -531,25 +523,20 @@ class MethodInjection : BaseTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import $keep",
-            "import $nonNull",
+            importKeepAnnotation,
+            importNonNullAnnotation,
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
-            "   public final void inject(@NonNull final Activity target) {",
-            "       new ParentActivityInjector().inject(target);",
-            "       injectParentDependencyInDependency(target);",
-            "   }",
-            "",
-            "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
-            "       ParentDependency parentDependency = new ParentDependency();",
-            "       target.dependency = parentDependency;",
+            "   public static final void inject(@NonNull final Activity target) {",
+            "       ParentActivityInjector.inject(target);",
+            "       target.dependency = new ParentDependency();",
             "   }",
             "}")
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(activityFile, resourcesFile, parentFile, baseFile, dependencyFile, parentDependencyFile))
+            .that(listOf(activityFile, resourcesFile, parentFile, baseFile, dependencyFile, parentDependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -561,7 +548,7 @@ class MethodInjection : BaseTest {
         val parentFile = JavaFileObjects.forSourceLines("test.ParentActivity",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class ParentActivity extends BaseActivity {",
             "",
@@ -572,7 +559,7 @@ class MethodInjection : BaseTest {
         val baseFile = JavaFileObjects.forSourceLines("test.BaseActivity",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class BaseActivity {",
             "",
@@ -584,7 +571,7 @@ class MethodInjection : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class Activity extends ParentActivity {",
             "",
@@ -595,7 +582,7 @@ class MethodInjection : BaseTest {
         val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class ParentDependency {",
             "   @Inject",
@@ -605,7 +592,7 @@ class MethodInjection : BaseTest {
         val resourcesFile = JavaFileObjects.forSourceLines("test.Resources",
             "package test;",
             "",
-            Dependency::class.java.import(),
+            importDependencyAnnotation,
             "",
             "@Dependency",
             "public class Resources {",
@@ -614,8 +601,8 @@ class MethodInjection : BaseTest {
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Dependency::class.java.import(),
+            importInjectAnnotation,
+            importDependencyAnnotation,
             "",
             "@Dependency",
             "public class DependencyModel {",
@@ -626,25 +613,20 @@ class MethodInjection : BaseTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ParentActivityInjector",
             "package test;",
             "",
-            "import $keep",
-            "import $nonNull",
+            importKeepAnnotation,
+            importNonNullAnnotation,
             "",
             "@Keep",
             "public final class ParentActivityInjector {",
             "   @Keep",
-            "   public final void inject(@NonNull final ParentActivity target) {",
-            "       new BaseActivityInjector().inject(target);",
-            "       injectResourcesInResources(target);",
-            "   }",
-            "",
-            "   private final void injectResourcesInResources(@NonNull final ParentActivity target) {",
-            "       Resources resources = new Resources();",
-            "       target.resources = resources;",
+            "   public static final void inject(@NonNull final ParentActivity target) {",
+            "       BaseActivityInjector.inject(target);",
+            "       target.resources = new Resources();",
             "   }",
             "}")
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
-            .that(Arrays.asList(activityFile, resourcesFile, parentFile, baseFile, dependencyFile, parentDependencyFile))
+            .that(listOf(activityFile, resourcesFile, parentFile, baseFile, dependencyFile, parentDependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -657,7 +639,7 @@ class MethodInjection : BaseTest {
         val baseFile = JavaFileObjects.forSourceLines("test.BaseActivity",
             "package test;",
             "",
-            "import $inject;",
+            importInjectAnnotation,
             "",
             "public class BaseActivity {",
             "   @Inject",
@@ -667,7 +649,7 @@ class MethodInjection : BaseTest {
         val singletonDependency = JavaFileObjects.forSourceLines("test.SingletonDependency",
             "package test;",
             "",
-            Singleton::class.java.import(),
+            importSingletonAnnotation,
             "",
             "@Singleton",
             "public class SingletonDependency {",
@@ -676,7 +658,7 @@ class MethodInjection : BaseTest {
         val nextSingleton = JavaFileObjects.forSourceLines("test.NextSingleton",
             "package test;",
             "",
-            Singleton::class.java.import(),
+            importSingletonAnnotation,
             "",
             "@Singleton",
             "public class NextSingleton {",
@@ -707,22 +689,22 @@ class MethodInjection : BaseTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ParentActivityInjector",
             "package test;",
             "",
-            "import $keep;",
-            "import $nonNull;",
-            "import $ioc;",
+            importKeepAnnotation,
+            importNonNullAnnotation,
+            importIoc,
             "",
             "@Keep",
             "public final class BaseActivityInjector {",
             "   @Keep",
-            "   public final void inject(@NonNull final BaseActivity target) {",
-            "       injectParentDependencyInParentDependency(target);",
+            "   public static final void inject(@NonNull final BaseActivity target) {",
+            "       target.parentDependency = provideParentDependency();",
             "   }",
             "",
-            "   private final void injectParentDependencyInParentDependency(@NonNull final BaseActivity target) {",
-            "       DependencyModel dependencyModel = new DependencyModel(Ioc.singleton(SingletonDependency.class), Ioc.singleton(NextSingleton.class));",
-            "       Resources resources = new Resources(Ioc.singleton(SingletonDependency.class));",
-            "       ParentDependency parentDependency = new ParentDependency(Ioc.singleton(SingletonDependency.class), Ioc.singleton(NextSingleton.class), dependencyModel, resources);",
-            "       target.parentDependency = parentDependency;",
+            "   public static final ParentDependency provideParentDependency() {",
+            "       DependencyModel dependencyModel = new DependencyModel(Ioc.getSingleton(SingletonDependency.class),Ioc.getSingleton(NextSingleton.class));",
+            "       Resources resources = new Resources(Ioc.getSingleton(SingletonDependency.class));",
+            "       ParentDependency parentDependency = new ParentDependency(Ioc.getSingleton(SingletonDependency.class),Ioc.getSingleton(NextSingleton.class),dependencyModel,resources);",
+            "       return parentDependency;",
             "   }",
             "}")
 
@@ -732,5 +714,4 @@ class MethodInjection : BaseTest {
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
     }
-
 }

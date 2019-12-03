@@ -9,20 +9,19 @@ archivesBaseName = "ioc-processor"
 
 dependencies {
     implementation project(':core')
-    compileOnly 'javax.inject:javax.inject:1'
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation "com.squareup:javapoet:1.11.1"
     implementation "org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.1.0"
 
-    testImplementation("com.android.support.test.espresso:espresso-core:+")
-    testImplementation 'javax.inject:javax.inject:1'
-    testCompile files('libs/support-annotations-25.3.1.jar')
+    testImplementation("com.android.support.test.espresso:espresso-core:+") {
+        exclude group: 'javax.inject'
+    }
     testImplementation 'junit:junit:4.12'
     testImplementation 'com.google.testing.compile:compile-testing:0.15'
     testImplementation 'com.google.auto:auto-common:0.10'
     testImplementation 'com.google.truth:truth:0.37'
     testImplementation group: 'com.google.android', name: 'android', version: '4.1.1.4'
-    testImplementation "io.reactivex.rxjava2:rxjava:2.2.10"
+    testImplementation "io.reactivex.rxjava2:rxjava:2.2.12"
     testCompile "android.arch.lifecycle:viewmodel:1.1.1"
     implementation "android.arch.lifecycle:viewmodel:1.1.1"
 }
@@ -38,8 +37,8 @@ shadowJar {
 
 jar.finalizedBy shadowJar
 
-sourceCompatibility = JavaVersion.VERSION_1_6
-targetCompatibility = JavaVersion.VERSION_1_6
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
 
 project.buildDir = file("$buildDir/generated/source/kapt/main")
 

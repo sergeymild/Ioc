@@ -17,7 +17,7 @@ android {
         versionCode 1
         versionName "1.0"
 
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
     }
 
@@ -37,7 +37,7 @@ kapt {
 dependencies {
 
     implementation project(':core')
-    implementation 'javax.inject:javax.inject:1'
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation project(':common')
+    api project(':transitionlibrary')
 }

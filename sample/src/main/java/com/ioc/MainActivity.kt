@@ -3,54 +3,66 @@ package com.ioc
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModel
+import com.download.media.views.speeddial.models.SpeedDialModel
+import com.download.transitionlibrary.UpdateManager
+import com.example.mylibrary.BottomAdHolderFactory
+import com.example.mylibrary.Library
 import com.ios.injector.R
-import javax.inject.Inject
-import javax.inject.Singleton
 
-class MyViewModel: ViewModel() {
-    val liveData = MutableLiveData<String>()
+
+
+@Singleton
+class S: Cleanable {
+    override fun onCleared() {
+        println("s1---")
+    }
+
 }
 
+@Singleton
+class S2: Cleanable {
+    override fun onCleared() {
+        println("s2---")
+    }
 
-class Fra: Fragment() {
-    @Inject
-    var myViewModel: MyViewModel? = null
-
-    @DataObserver
-    fun dataObserver(string: String) {
-
+    companion object {
+        init {
+            println("s2 -=======")
+        }
     }
 }
 
+class S22 {
+    @Inject
+    lateinit var s: S2
+}
 
-//@InjectParentDependencies
 class MainActivity : AppCompatActivity() {
 
 
-//    @Inject
-//    lateinit var myViewModel: MyViewModel
+
+
+    @Inject
+    lateinit var s2: TestCl
+
+
+
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+        println(TestCl::class.java)
+        println(S2::class.java)
+        println("after touch .java")
+        Ioc.inject(this)
+        println("after inject")
+//        Ioc.clearSingletons(true)
+//        try {
+//            Class.forName("androidx.test.espresso.Espresso")
+//            findViewById<TextView>(R.id.test_text).setText("Test")
+//        } catch (e: ClassNotFoundException) {
+//        }
 //
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//        setContentView(R.layout.activity_main)
-//
-//
-//
-////        try {
-////            Class.forName("androidx.test.espresso.Espresso")
-////            findViewById<TextView>(R.id.test_text).setText("Test")
-////        } catch (e: ClassNotFoundException) {
-////        }
-////
-//
-//    }
-//
-//    @DataObserver
-//    fun dataObserver(string: String) {
-//
-//    }
+
+    }
 }

@@ -1,6 +1,5 @@
 package com.ioc
 
-import android.content.Context
 import com.google.common.truth.Truth.assertAbout
 import com.google.testing.compile.JavaFileObjects
 import com.google.testing.compile.JavaSourcesSubjectFactory.javaSources
@@ -8,15 +7,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import java.util.*
-import javax.inject.Inject
-import javax.inject.Named
-import javax.inject.Qualifier
 
 /**
  * Created by sergeygolishnikov on 09/08/2017.
  */
 @RunWith(JUnit4::class)
-class NamedTest : BaseTest {
+class NamedTest {
     @Test
     @Throws(Exception::class)
     fun moduleMethodNamedFieldNamed() {
@@ -24,52 +20,47 @@ class NamedTest : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
+            importQualifierAnnotation,
             "",
             "public class Activity {",
             "",
-            "   @Inject @Named(\"debug\")",
+            "   @Inject @Qualifier(\"debug\")",
             "   public DependencyModel dependency;",
             "}")
 
         val moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
             "package test;",
             "",
-            Dependency::class.java.import(),
-            Named::class.java.import(),
+            importDependencyAnnotation,
+            importQualifierAnnotation,
             "",
             "public class ModuleFile {",
             "",
-            "   @Dependency @Named(\"production\")",
+            "   @Dependency @Qualifier(\"production\")",
             "   public static DependencyModel production() { return null; }",
-            "   @Dependency @Named(\"debug\")",
+            "   @Dependency @Qualifier(\"debug\")",
             "   public static DependencyModel debug() { return null; }",
             "}")
 
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "class DependencyModel {",
+            "public class DependencyModel {",
             "   public DependencyModel() {};",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import $keep",
-            "import $nonNull",
+            importKeepAnnotation,
+            importNonNullAnnotation,
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
-            "   public final void inject(@NonNull final Activity target) {",
-            "       injectDependencyModelInDependency(target);",
-            "   }",
-            "",
-            "   private final void injectDependencyModelInDependency(@NonNull final Activity target) {",
-            "       DependencyModel dependencyModel = ModuleFile.debug();",
-            "       target.dependency = dependencyModel;",
+            "   public static final void inject(@NonNull final Activity target) {",
+            "       target.dependency = ModuleFile.debug();",
             "   }",
             "}")
 
@@ -87,60 +78,56 @@ class NamedTest : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
+            importQualifierAnnotation,
             "",
             "public class Activity {",
             "",
-            "   @Inject @Named(\"debug\")",
+            "   @Inject @Qualifier(\"debug\")",
             "   public DependencyModel dependency;",
             "}")
 
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            Named::class.java.import(),
+            importQualifierAnnotation,
             "",
-            "@Named(\"debug\")",
-            "class DependencyModel {",
+            "@Qualifier(\"debug\")",
+            "public class DependencyModel {",
             "   public DependencyModel() {};",
             "}")
 
         val moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
             "package test;",
             "",
-            Dependency::class.java.import(),
-            Named::class.java.import(),
+            importDependencyAnnotation,
+            importQualifierAnnotation,
             "",
             "public class ModuleFile {",
             "",
             "   @Dependency",
             "   public static DependencyModel production() { return null; }",
             "   @Dependency",
+            "   @Qualifier(\"release\")",
             "   public static DependencyModel debug() { return null; }",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import $keep",
-            "import $nonNull",
+            importKeepAnnotation,
+            importNonNullAnnotation,
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
-            "   public final void inject(@NonNull final Activity target) {",
-            "       injectDependencyModelInDependency(target);",
-            "   }",
-            "",
-            "   private final void injectDependencyModelInDependency(@NonNull final Activity target) {",
-            "       DependencyModel dependencyModel = new DependencyModel();",
-            "       target.dependency = dependencyModel;",
+            "   public static final void inject(@NonNull final Activity target) {",
+            "       target.dependency = new DependencyModel();",
             "   }",
             "}")
 
         assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, dependencyFile, moduleFile))
+            .that(listOf(activityFile, dependencyFile, moduleFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -153,7 +140,7 @@ class NamedTest : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class Activity {",
             "",
@@ -164,72 +151,72 @@ class NamedTest : BaseTest {
         val parentDependencyFile = JavaFileObjects.forSourceLines("test.ParentDependency",
             "package test;",
             "",
-            Named::class.java.import(),
-            Inject::class.java.import(),
+            importQualifierAnnotation,
+            importInjectAnnotation,
             "",
-            "class ParentDependency {",
+            "public class ParentDependency {",
             "   @Inject",
-            "   public ParentDependency(@Named(\"release\") DependencyModel dependency) {};",
+            "   public ParentDependency(@Qualifier(\"release\") DependencyModel dependency) {};",
             "}")
 
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "interface DependencyModel {",
+            "public interface DependencyModel {",
             "}")
 
         val debugDependencyFile = JavaFileObjects.forSourceLines("test.DebugDependency",
             "package test;",
             "",
-            "class DebugDependency implements DependencyModel {",
+            "public class DebugDependency implements DependencyModel {",
             "   public DebugDependency() {};",
             "}")
 
         val releaseDependencyFile = JavaFileObjects.forSourceLines("test.ReleaseDependency",
             "package test;",
             "",
-            "class ReleaseDependency implements DependencyModel {",
+            "public class ReleaseDependency implements DependencyModel {",
             "   public ReleaseDependency() {};",
             "}")
 
         val moduleFile = JavaFileObjects.forSourceLines("test.DependencyModuleFile",
             "package test;",
             "",
-            Dependency::class.java.import(),
-            Named::class.java.import(),
+            importDependencyAnnotation,
+            importQualifierAnnotation,
             "",
             "public class DependencyModuleFile {",
             "",
             "   @Dependency",
-            "   @Named(\"release\")",
+            "   @Qualifier(\"release\")",
             "   public static DependencyModel release() { return null; }",
             "   @Dependency",
-            "   @Named(\"debug\")",
+            "   @Qualifier(\"debug\")",
             "   public static DependencyModel debug() { return null; }",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import $keep",
-            "import $nonNull",
+            importKeepAnnotation,
+            importNonNullAnnotation,
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
-            "   public final void inject(@NonNull final Activity target) {",
-            "       injectParentDependencyInParentDependency(target);",
+            "   public static final void inject(@NonNull final Activity target) {",
+            "       target.parentDependency = provideParentDependency();",
             "   }",
             "",
-            "   private final void injectParentDependencyInParentDependency(@NonNull final Activity target) {",
+            "   public static final ParentDependency provideParentDependency() {",
             "       DependencyModel dependencyModel = DependencyModuleFile.release();",
             "       ParentDependency parentDependency = new ParentDependency(dependencyModel);",
-            "       target.parentDependency = parentDependency;",
+            "       return parentDependency;",
             "   }",
             "}")
 
         assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, parentDependencyFile, debugDependencyFile, releaseDependencyFile, dependencyFile, moduleFile))
+            .that(listOf(activityFile, parentDependencyFile, debugDependencyFile, releaseDependencyFile, dependencyFile, moduleFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -243,62 +230,57 @@ class NamedTest : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
+            importQualifierAnnotation,
             "",
             "public class Activity {",
             "",
             "   @Inject",
-            "   @Named(\"release\")",
+            "   @Qualifier(\"release\")",
             "   public DependencyModel dependency;",
             "}")
 
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "interface DependencyModel {",
+            "public interface DependencyModel {",
             "}")
 
         val debugDependencyFile = JavaFileObjects.forSourceLines("test.DebugDependency",
             "package test;",
             "",
-            Named::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importDependencyAnnotation,
             "",
             "@Dependency",
-            "@Named(\"debug\")",
-            "class DebugDependency implements DependencyModel {",
+            "@Qualifier(\"debug\")",
+            "public class DebugDependency implements DependencyModel {",
             "   public DebugDependency() {};",
             "}")
 
         val releaseDependencyFile = JavaFileObjects.forSourceLines("test.ReleaseDependency",
             "package test;",
             "",
-            Named::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importDependencyAnnotation,
             "",
             "@Dependency",
-            "@Named(\"release\")",
-            "class ReleaseDependency implements DependencyModel {",
+            "@Qualifier(\"release\")",
+            "public class ReleaseDependency implements DependencyModel {",
             "   public ReleaseDependency() {};",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import $keep",
-            "import $nonNull",
+            importKeepAnnotation,
+            importNonNullAnnotation,
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
-            "   public final void inject(@NonNull final Activity target) {",
-            "       injectDependencyModelInDependency(target);",
-            "   }",
-            "",
-            "   private final void injectDependencyModelInDependency(@NonNull final Activity target) {",
-            "       DependencyModel dependencyModel = new ReleaseDependency();",
-            "       target.dependency = dependencyModel;",
+            "   public static final void inject(@NonNull final Activity target) {",
+            "       target.dependency = new ReleaseDependency();",
             "   }",
             "}")
 
@@ -316,8 +298,8 @@ class NamedTest : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
+            importQualifierAnnotation,
             "",
             "public class Activity {",
             "",
@@ -328,61 +310,61 @@ class NamedTest : BaseTest {
         val presenter = JavaFileObjects.forSourceLines("test.MainPresenter",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
+            importQualifierAnnotation,
             "",
-            "class MainPresenter {",
+            "public class MainPresenter {",
             "   @Inject",
-            "   MainPresenter(@Named(\"release\") DependencyModel dependency) {}",
+            "   MainPresenter(@Qualifier(\"release\") DependencyModel dependency) {}",
             "}")
 
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "interface DependencyModel {",
+            "public interface DependencyModel {",
             "}")
 
         val debugDependencyFile = JavaFileObjects.forSourceLines("test.DebugDependency",
             "package test;",
             "",
-            Named::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importDependencyAnnotation,
             "",
             "@Dependency",
-            "@Named(\"debug\")",
-            "class DebugDependency implements DependencyModel {",
+            "@Qualifier(\"debug\")",
+            "public class DebugDependency implements DependencyModel {",
             "   public DebugDependency() {};",
             "}")
 
         val releaseDependencyFile = JavaFileObjects.forSourceLines("test.ReleaseDependency",
             "package test;",
             "",
-            Named::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importDependencyAnnotation,
             "",
             "@Dependency",
-            "@Named(\"release\")",
-            "class ReleaseDependency implements DependencyModel {",
+            "@Qualifier(\"release\")",
+            "public class ReleaseDependency implements DependencyModel {",
             "   public ReleaseDependency() {};",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import $keep",
-            "import $nonNull",
+            importKeepAnnotation,
+            importNonNullAnnotation,
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
-            "   public final void inject(@NonNull final Activity target) {",
-            "       injectMainPresenterInPresenter(target);",
+            "   public static final void inject(@NonNull final Activity target) {",
+            "       target.presenter = provideMainPresenter();",
             "   }",
             "",
-            "   private final void injectMainPresenterInPresenter(@NonNull final Activity target) {",
-            "       DependencyModel dependencyModel = new ReleaseDependency();",
+            "   public static final MainPresenter provideMainPresenter() {",
+            "       ReleaseDependency dependencyModel = new ReleaseDependency();",
             "       MainPresenter mainPresenter = new MainPresenter(dependencyModel);",
-            "       target.presenter = mainPresenter;",
+            "       return mainPresenter;",
             "   }",
             "}")
 
@@ -400,8 +382,8 @@ class NamedTest : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
+            importQualifierAnnotation,
             "",
             "public class Activity {",
             "",
@@ -412,10 +394,10 @@ class NamedTest : BaseTest {
         val presenter = JavaFileObjects.forSourceLines("test.MainPresenter",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
+            importQualifierAnnotation,
             "",
-            "class MainPresenter {",
+            "public class MainPresenter {",
             "   @Inject",
             "   MainPresenter(DependencyModel dependency) {}",
             "}")
@@ -423,69 +405,69 @@ class NamedTest : BaseTest {
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
+            importQualifierAnnotation,
             "",
-            "class DependencyModel {",
+            "public class DependencyModel {",
             "   @Inject",
-            "   DependencyModel(@Named(\"cappuccino\") Coffee coffee) {}",
+            "   DependencyModel(@Qualifier(\"cappuccino\") Coffee coffee) {}",
             "}")
 
         val coffee = JavaFileObjects.forSourceLines("test.Coffee",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
-            "interface Coffee {",
+            "public interface Coffee {",
             "}")
 
         val cappuccino = JavaFileObjects.forSourceLines("test.Cappuccino",
             "package test;",
             "",
-            Named::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importDependencyAnnotation,
             "",
             "@Dependency",
-            "@Named(\"cappuccino\")",
-            "class Cappuccino implements Coffee {",
+            "@Qualifier(\"cappuccino\")",
+            "public class Cappuccino implements Coffee {",
             "   public Cappuccino() {};",
             "}")
 
         val nescafe = JavaFileObjects.forSourceLines("test.Nescafe",
             "package test;",
             "",
-            Named::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importDependencyAnnotation,
             "",
             "@Dependency",
-            "@Named(\"nescafe\")",
-            "class Nescafe implements Coffee {",
+            "@Qualifier(\"nescafe\")",
+            "public class Nescafe implements Coffee {",
             "   public Nescafe() {};",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import $keep",
-            "import $nonNull",
+            importKeepAnnotation,
+            importNonNullAnnotation,
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
-            "   public final void inject(@NonNull final Activity target) {",
-            "       injectMainPresenterInPresenter(target);",
+            "   public static final void inject(@NonNull final Activity target) {",
+            "       target.presenter = provideMainPresenter();",
             "   }",
             "",
-            "   private final void injectMainPresenterInPresenter(@NonNull final Activity target) {",
-            "       Coffee coffee = new Cappuccino();",
+            "   public static final MainPresenter provideMainPresenter() {",
+            "       Cappuccino coffee = new Cappuccino();",
             "       DependencyModel dependencyModel = new DependencyModel(coffee);",
             "       MainPresenter mainPresenter = new MainPresenter(dependencyModel);",
-            "       target.presenter = mainPresenter;",
+            "       return mainPresenter;",
             "   }",
             "}")
 
         assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, cappuccino, nescafe, presenter, coffee, dependencyFile))
+            .that(listOf(activityFile, cappuccino, nescafe, presenter, coffee, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -498,8 +480,8 @@ class NamedTest : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
+            importQualifierAnnotation,
             "",
             "public class Activity {",
             "",
@@ -510,98 +492,98 @@ class NamedTest : BaseTest {
         val presenter = JavaFileObjects.forSourceLines("test.MainPresenter",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
+            importQualifierAnnotation,
             "",
-            "class MainPresenter {",
+            "public class MainPresenter {",
             "   @Inject",
-            "   MainPresenter(@Named(\"release\") DependencyModel dependency) {}",
+            "   MainPresenter(@Qualifier(\"release\") DependencyModel dependency) {}",
             "}")
 
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "interface DependencyModel {",
+            "public interface DependencyModel {",
             "}")
 
         val release = JavaFileObjects.forSourceLines("test.ReleaseModel",
             "package test;",
             "",
-            Named::class.java.import(),
-            Inject::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importInjectAnnotation,
+            importDependencyAnnotation,
             "",
             "@Dependency",
-            "@Named(\"release\")",
-            "class ReleaseModel implements DependencyModel {",
+            "@Qualifier(\"release\")",
+            "public class ReleaseModel implements DependencyModel {",
             "   @Inject",
-            "   ReleaseModel(@Named(\"cappuccino\") Coffee coffee) {}",
+            "   ReleaseModel(@Qualifier(\"cappuccino\") Coffee coffee) {}",
             "}")
 
         val debug = JavaFileObjects.forSourceLines("test.DebugModel",
             "package test;",
             "",
-            Named::class.java.import(),
-            Inject::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importInjectAnnotation,
+            importDependencyAnnotation,
             "",
             "@Dependency",
-            "@Named(\"debug\")",
-            "class DebugModel implements DependencyModel {",
+            "@Qualifier(\"debug\")",
+            "public class DebugModel implements DependencyModel {",
             "   @Inject",
-            "   DebugModel(@Named(\"debug\") Coffee coffee) {}",
+            "   DebugModel(@Qualifier(\"debug\") Coffee coffee) {}",
             "}")
 
         val coffee = JavaFileObjects.forSourceLines("test.Coffee",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
-            "interface Coffee {",
+            "public interface Coffee {",
             "}")
 
         val cappuccino = JavaFileObjects.forSourceLines("test.Cappuccino",
             "package test;",
             "",
-            Named::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importDependencyAnnotation,
             "",
             "@Dependency",
-            "@Named(\"cappuccino\")",
-            "class Cappuccino implements Coffee {",
+            "@Qualifier(\"cappuccino\")",
+            "public class Cappuccino implements Coffee {",
             "   public Cappuccino() {};",
             "}")
 
         val nescafe = JavaFileObjects.forSourceLines("test.Nescafe",
             "package test;",
             "",
-            Named::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importDependencyAnnotation,
             "",
             "@Dependency",
-            "@Named(\"nescafe\")",
-            "class Nescafe implements Coffee {",
+            "@Qualifier(\"nescafe\")",
+            "public class Nescafe implements Coffee {",
             "   public Nescafe() {};",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import $keep",
-            "import $nonNull",
+            importKeepAnnotation,
+            importNonNullAnnotation,
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
-            "   public final void inject(@NonNull final Activity target) {",
-            "       injectMainPresenterInPresenter(target);",
+            "   public static final void inject(@NonNull final Activity target) {",
+            "       target.presenter = provideMainPresenter();",
             "   }",
             "",
-            "   private final void injectMainPresenterInPresenter(@NonNull final Activity target) {",
-            "       Coffee coffee = new Cappuccino();",
-            "       DependencyModel dependencyModel = new ReleaseModel(coffee);",
+            "   public static final MainPresenter provideMainPresenter() {",
+            "       Cappuccino coffee = new Cappuccino();",
+            "       ReleaseModel dependencyModel = new ReleaseModel(coffee);",
             "       MainPresenter mainPresenter = new MainPresenter(dependencyModel);",
-            "       target.presenter = mainPresenter;",
+            "       return mainPresenter;",
             "   }",
             "}")
 
@@ -619,8 +601,8 @@ class NamedTest : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
+            importQualifierAnnotation,
             "",
             "public class Activity {",
             "",
@@ -631,103 +613,103 @@ class NamedTest : BaseTest {
         val presenter = JavaFileObjects.forSourceLines("test.MainPresenter",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
+            importQualifierAnnotation,
             "",
-            "class MainPresenter {",
+            "public class MainPresenter {",
             "   @Inject",
-            "   MainPresenter(@Named(\"debug\") DependencyModel dependency) {}",
+            "   MainPresenter(@Qualifier(\"debug\") DependencyModel dependency) {}",
             "}")
 
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "interface DependencyModel {",
+            "public interface DependencyModel {",
             "}")
 
         val release = JavaFileObjects.forSourceLines("test.ReleaseModel",
             "package test;",
             "",
-            Named::class.java.import(),
-            Inject::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importInjectAnnotation,
+            importDependencyAnnotation,
             "",
             "@Dependency",
-            "@Named(\"release\")",
-            "class ReleaseModel implements DependencyModel {",
+            "@Qualifier(\"release\")",
+            "public class ReleaseModel implements DependencyModel {",
             "   @Inject",
-            "   ReleaseModel(@Named(\"cappuccino\") Coffee coffee) {}",
+            "   ReleaseModel(@Qualifier(\"cappuccino\") Coffee coffee) {}",
             "}")
 
         val debug = JavaFileObjects.forSourceLines("test.DebugModel",
             "package test;",
             "",
-            Named::class.java.import(),
-            Inject::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importInjectAnnotation,
+            importDependencyAnnotation,
             "",
             "@Dependency",
-            "@Named(\"debug\")",
-            "class DebugModel implements DependencyModel {",
+            "@Qualifier(\"debug\")",
+            "public class DebugModel implements DependencyModel {",
             "   @Inject",
-            "   DebugModel(@Named(\"cappuccino\") Coffee coffee) {}",
+            "   DebugModel(@Qualifier(\"cappuccino\") Coffee coffee) {}",
             "}")
 
         val coffee = JavaFileObjects.forSourceLines("test.Coffee",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
-            "interface Coffee {",
+            "public interface Coffee {",
             "}")
 
         val cappuccino = JavaFileObjects.forSourceLines("test.Cappuccino",
             "package test;",
             "",
-            Named::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importDependencyAnnotation,
             "",
             "@Dependency",
-            "@Named(\"cappuccino\")",
-            "class Cappuccino implements Coffee {",
+            "@Qualifier(\"cappuccino\")",
+            "public class Cappuccino implements Coffee {",
             "   public Cappuccino() {};",
             "}")
 
         val nescafe = JavaFileObjects.forSourceLines("test.Nescafe",
             "package test;",
             "",
-            Named::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importDependencyAnnotation,
             "",
             "@Dependency",
-            "@Named(\"nescafe\")",
-            "class Nescafe implements Coffee {",
+            "@Qualifier(\"nescafe\")",
+            "public class Nescafe implements Coffee {",
             "   public Nescafe() {};",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import $keep",
-            "import $nonNull",
+            importKeepAnnotation,
+            importNonNullAnnotation,
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
-            "   public final void inject(@NonNull final Activity target) {",
-            "       injectMainPresenterInPresenter(target);",
+            "   public static final void inject(@NonNull final Activity target) {",
+            "       target.presenter = provideMainPresenter();",
             "   }",
             "",
-            "   private final void injectMainPresenterInPresenter(@NonNull final Activity target) {",
-            "       Coffee coffee = new Cappuccino();",
-            "       DependencyModel dependencyModel = new DebugModel(coffee);",
+            "   public static final MainPresenter provideMainPresenter() {",
+            "       Cappuccino coffee = new Cappuccino();",
+            "       DebugModel dependencyModel = new DebugModel(coffee);",
             "       MainPresenter mainPresenter = new MainPresenter(dependencyModel);",
-            "       target.presenter = mainPresenter;",
+            "       return mainPresenter;",
             "   }",
             "}")
 
         assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, cappuccino, nescafe, release, debug, presenter, coffee, dependencyFile))
+            .that(listOf(activityFile, cappuccino, nescafe, release, debug, presenter, coffee, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -740,8 +722,8 @@ class NamedTest : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
+            importQualifierAnnotation,
             "",
             "public class Activity {",
             "",
@@ -752,103 +734,103 @@ class NamedTest : BaseTest {
         val presenter = JavaFileObjects.forSourceLines("test.MainPresenter",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
+            importQualifierAnnotation,
             "",
-            "class MainPresenter {",
+            "public class MainPresenter {",
             "   @Inject",
-            "   MainPresenter(@Named(\"debug\") DependencyModel dependency) {}",
+            "   MainPresenter(@Qualifier(\"debug\") DependencyModel dependency) {}",
             "}")
 
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "interface DependencyModel {",
+            "public interface DependencyModel {",
             "}")
 
         val release = JavaFileObjects.forSourceLines("test.ReleaseModel",
             "package test;",
             "",
-            Named::class.java.import(),
-            Inject::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importInjectAnnotation,
+            importDependencyAnnotation,
             "",
             "@Dependency",
-            "@Named(\"release\")",
-            "class ReleaseModel implements DependencyModel {",
+            "@Qualifier(\"release\")",
+            "public class ReleaseModel implements DependencyModel {",
             "   @Inject",
-            "   ReleaseModel(@Named(\"cappuccino\") Coffee coffee) {}",
+            "   ReleaseModel(@Qualifier(\"cappuccino\") Coffee coffee) {}",
             "}")
 
         val debug = JavaFileObjects.forSourceLines("test.DebugModel",
             "package test;",
             "",
-            Named::class.java.import(),
-            Inject::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importInjectAnnotation,
+            importDependencyAnnotation,
             "",
             "@Dependency",
-            "@Named(\"debug\")",
-            "class DebugModel implements DependencyModel {",
+            "@Qualifier(\"debug\")",
+            "public class DebugModel implements DependencyModel {",
             "   @Inject",
-            "   DebugModel(@Named(\"nescafe\") Coffee coffee) {}",
+            "   DebugModel(@Qualifier(\"nescafe\") Coffee coffee) {}",
             "}")
 
         val coffee = JavaFileObjects.forSourceLines("test.Coffee",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
-            "interface Coffee {",
+            "public interface Coffee {",
             "}")
 
         val cappuccino = JavaFileObjects.forSourceLines("test.Cappuccino",
             "package test;",
             "",
-            Named::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importDependencyAnnotation,
             "",
             "@Dependency",
-            "@Named(\"cappuccino\")",
-            "class Cappuccino implements Coffee {",
+            "@Qualifier(\"cappuccino\")",
+            "public class Cappuccino implements Coffee {",
             "   public Cappuccino() {};",
             "}")
 
         val nescafe = JavaFileObjects.forSourceLines("test.Nescafe",
             "package test;",
             "",
-            Named::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importDependencyAnnotation,
             "",
             "@Dependency",
-            "@Named(\"nescafe\")",
-            "class Nescafe implements Coffee {",
+            "@Qualifier(\"nescafe\")",
+            "public class Nescafe implements Coffee {",
             "   public Nescafe() {};",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import $keep",
-            "import $nonNull",
+            importKeepAnnotation,
+            importNonNullAnnotation,
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
-            "   public final void inject(@NonNull final Activity target) {",
-            "       injectMainPresenterInPresenter(target);",
+            "   public static final void inject(@NonNull final Activity target) {",
+            "       target.presenter = provideMainPresenter();",
             "   }",
             "",
-            "   private final void injectMainPresenterInPresenter(@NonNull final Activity target) {",
-            "       Coffee coffee = new Nescafe();",
-            "       DependencyModel dependencyModel = new DebugModel(coffee);",
+            "   public static final MainPresenter provideMainPresenter() {",
+            "       Nescafe coffee = new Nescafe();",
+            "       DebugModel dependencyModel = new DebugModel(coffee);",
             "       MainPresenter mainPresenter = new MainPresenter(dependencyModel);",
-            "       target.presenter = mainPresenter;",
+            "       return mainPresenter;",
             "   }",
             "}")
 
         assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, cappuccino, nescafe, release, debug, presenter, coffee, dependencyFile))
+            .that(listOf(activityFile, cappuccino, nescafe, release, debug, presenter, coffee, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -861,7 +843,7 @@ class NamedTest : BaseTest {
         val debugQualifierFile = JavaFileObjects.forSourceLines("test.DebugQualifier",
             "package test;",
             "",
-            Qualifier::class.java.import(),
+            importQualifierAnnotation,
             "",
             "@Qualifier",
             "public @interface DebugQualifier {",
@@ -871,7 +853,7 @@ class NamedTest : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class Activity {",
             "",
@@ -882,7 +864,7 @@ class NamedTest : BaseTest {
         val moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
             "package test;",
             "",
-            Dependency::class.java.import(),
+            importDependencyAnnotation,
             "",
             "public class ModuleFile {",
             "",
@@ -895,31 +877,26 @@ class NamedTest : BaseTest {
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "class DependencyModel {",
+            "public class DependencyModel {",
             "   public DependencyModel() {};",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import $keep",
-            "import $nonNull",
+            importKeepAnnotation,
+            importNonNullAnnotation,
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
-            "   public final void inject(@NonNull final Activity target) {",
-            "       injectDependencyModelInDependency(target);",
-            "   }",
-            "",
-            "   private final void injectDependencyModelInDependency(@NonNull final Activity target) {",
-            "       DependencyModel dependencyModel = ModuleFile.debug();",
-            "       target.dependency = dependencyModel;",
+            "   public static final void inject(@NonNull final Activity target) {",
+            "       target.dependency = ModuleFile.debug();",
             "   }",
             "}")
 
         assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, debugQualifierFile, moduleFile, dependencyFile))
+            .that(listOf(activityFile, debugQualifierFile, moduleFile, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -933,7 +910,7 @@ class NamedTest : BaseTest {
         val releaseQualifierFile = JavaFileObjects.forSourceLines("test.ReleaseQualifier",
             "package test;",
             "",
-            Qualifier::class.java.import(),
+            importQualifierAnnotation,
             "",
             "@Qualifier",
             "public @interface ReleaseQualifier {",
@@ -942,7 +919,7 @@ class NamedTest : BaseTest {
         val debugQualifierFile = JavaFileObjects.forSourceLines("test.DebugQualifier",
             "package test;",
             "",
-            Qualifier::class.java.import(),
+            importQualifierAnnotation,
             "",
             "@Qualifier",
             "public @interface DebugQualifier {",
@@ -951,7 +928,7 @@ class NamedTest : BaseTest {
         val cappuccinoQualifierFile = JavaFileObjects.forSourceLines("test.CappuccinoQualifier",
             "package test;",
             "",
-            Qualifier::class.java.import(),
+            importQualifierAnnotation,
             "",
             "@Qualifier",
             "public @interface CappuccinoQualifier {",
@@ -960,7 +937,7 @@ class NamedTest : BaseTest {
         val nescafeQualifierFile = JavaFileObjects.forSourceLines("test.NescafeQualifier",
             "package test;",
             "",
-            Qualifier::class.java.import(),
+            importQualifierAnnotation,
             "",
             "@Qualifier",
             "public @interface NescafeQualifier {",
@@ -974,7 +951,7 @@ class NamedTest : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class Activity {",
             "",
@@ -987,9 +964,9 @@ class NamedTest : BaseTest {
         val presenter = JavaFileObjects.forSourceLines("test.MainPresenter",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
-            "class MainPresenter {",
+            "public class MainPresenter {",
             "   @Inject",
             "   MainPresenter(@DebugQualifier DependencyModel dependency) {}",
             "}")
@@ -997,18 +974,18 @@ class NamedTest : BaseTest {
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "interface DependencyModel {",
+            "public interface DependencyModel {",
             "}")
 
         val release = JavaFileObjects.forSourceLines("test.ReleaseModel",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Dependency::class.java.import(),
+            importInjectAnnotation,
+            importDependencyAnnotation,
             "",
             "@Dependency",
             "@ReleaseQualifier",
-            "class ReleaseModel implements DependencyModel {",
+            "public class ReleaseModel implements DependencyModel {",
             "   @Inject",
             "   ReleaseModel(@CappuccinoQualifier Coffee coffee) {}",
             "}")
@@ -1016,13 +993,13 @@ class NamedTest : BaseTest {
         val debug = JavaFileObjects.forSourceLines("test.DebugModel",
             "package test;",
             "",
-            Named::class.java.import(),
-            Inject::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importInjectAnnotation,
+            importDependencyAnnotation,
             "",
             "@Dependency",
             "@DebugQualifier",
-            "class DebugModel implements DependencyModel {",
+            "public class DebugModel implements DependencyModel {",
             "   @Inject",
             "   DebugModel(@NescafeQualifier Coffee coffee) {}",
             "}")
@@ -1030,64 +1007,59 @@ class NamedTest : BaseTest {
         val coffee = JavaFileObjects.forSourceLines("test.Coffee",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
-            "interface Coffee {",
+            "public interface Coffee {",
             "}")
 
         val cappuccino = JavaFileObjects.forSourceLines("test.Cappuccino",
             "package test;",
             "",
-            Named::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importDependencyAnnotation,
             "",
             "@Dependency",
             "@CappuccinoQualifier",
-            "class Cappuccino implements Coffee {",
+            "public class Cappuccino implements Coffee {",
             "   public Cappuccino() {};",
             "}")
 
         val nescafe = JavaFileObjects.forSourceLines("test.Nescafe",
             "package test;",
             "",
-            Named::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importDependencyAnnotation,
             "",
             "@Dependency",
             "@NescafeQualifier",
-            "class Nescafe implements Coffee {",
+            "public class Nescafe implements Coffee {",
             "   public Nescafe() {};",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import $keep",
-            "import $nonNull",
+            importKeepAnnotation,
+            importNonNullAnnotation,
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
-            "   public final void inject(@NonNull final Activity target) {",
-            "       injectMainPresenterInPresenter(target);",
-            "       injectViewModelInViewModel(target);",
+            "   public static final void inject(@NonNull final Activity target) {",
+            "       target.viewModel = new ViewModel();",
+            "       target.presenter = provideMainPresenter();",
             "   }",
             "",
-            "   private final void injectMainPresenterInPresenter(@NonNull final Activity target) {",
-            "       Coffee coffee = new Nescafe();",
-            "       DependencyModel dependencyModel = new DebugModel(coffee);",
+            "   public static final MainPresenter provideMainPresenter() {",
+            "       Nescafe coffee = new Nescafe();",
+            "       DebugModel dependencyModel = new DebugModel(coffee);",
             "       MainPresenter mainPresenter = new MainPresenter(dependencyModel);",
-            "       target.presenter = mainPresenter;",
-            "   }",
-            "",
-            "   private final void injectViewModelInViewModel(@NonNull final Activity target) {",
-            "       ViewModel viewModel = new ViewModel();",
-            "       target.viewModel = viewModel;",
+            "       return mainPresenter;",
             "   }",
             "}")
 
         assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, debugQualifierFile, viewModelFile, releaseQualifierFile, cappuccinoQualifierFile, nescafeQualifierFile, cappuccino, nescafe, release, debug, presenter, coffee, dependencyFile))
+            .that(listOf(activityFile, debugQualifierFile, viewModelFile, releaseQualifierFile, cappuccinoQualifierFile, nescafeQualifierFile, cappuccino, nescafe, release, debug, presenter, coffee, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -1100,7 +1072,7 @@ class NamedTest : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class Activity {",
             "",
@@ -1111,30 +1083,30 @@ class NamedTest : BaseTest {
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "interface DependencyModel {",
+            "public interface DependencyModel {",
             "}")
 
         val release = JavaFileObjects.forSourceLines("test.ReleaseModel",
             "package test;",
-            Dependency::class.java.import(),
+            importDependencyAnnotation,
             "",
             "@Dependency",
-            "class ReleaseModel implements DependencyModel {",
+            "public class ReleaseModel implements DependencyModel {",
             "}")
 
         val debug = JavaFileObjects.forSourceLines("test.DebugModel",
             "package test;",
-            Dependency::class.java.import(),
+            importDependencyAnnotation,
             "",
             "@Dependency",
-            "class DebugModel implements DependencyModel {",
+            "public class DebugModel implements DependencyModel {",
             "}")
 
         assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, release, debug, dependencyFile))
+            .that(listOf(activityFile, release, debug, dependencyFile))
             .processedWith(IProcessor())
             .failsToCompile()
-            .withErrorContaining("Ambiguous classesWithDependencyAnnotation for type [test.DependencyModel] with qualifiers [@Default]")
+            .withErrorContaining("Found more than one implementation of `test.DependencyModel` with qualifier `@Default` [test.ReleaseModel, test.DebugModel]")
             .`in`(activityFile)
             .onLine(8)
     }
@@ -1146,53 +1118,48 @@ class NamedTest : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
+            importQualifierAnnotation,
             "",
             "public class Activity {",
             "",
             "   @Inject",
-            "   @Named(\"test\")",
+            "   @Qualifier(\"test\")",
             "   public DependencyModel dependency;",
             "}")
 
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
-            Named::class.java.import(),
+            importQualifierAnnotation,
             "",
-            "@Named(\"test\")",
+            "@Qualifier(\"test\")",
             "abstract class DependencyModel {",
             "}")
 
         val implementation = JavaFileObjects.forSourceLines("test.DependencyImpl",
             "package test;",
-            Dependency::class.java.import(),
+            importDependencyAnnotation,
             "",
             "@Dependency",
-            "class DependencyImpl extends DependencyModel {",
+            "public class DependencyImpl extends DependencyModel {",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import $keep",
-            "import $nonNull",
+            importKeepAnnotation,
+            importNonNullAnnotation,
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
-            "   public final void inject(@NonNull final Activity target) {",
-            "       injectDependencyModelInDependency(target);",
-            "   }",
-            "",
-            "   private final void injectDependencyModelInDependency(@NonNull final Activity target) {",
-            "       DependencyModel dependencyModel = new DependencyImpl();",
-            "       target.dependency = dependencyModel;",
+            "   public static final void inject(@NonNull final Activity target) {",
+            "       target.dependency = new DependencyImpl();",
             "   }",
             "}")
 
         assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, implementation, dependencyFile))
+            .that(listOf(activityFile, implementation, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
@@ -1206,7 +1173,7 @@ class NamedTest : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class Activity {",
             "",
@@ -1217,31 +1184,31 @@ class NamedTest : BaseTest {
         val stringProvider = JavaFileObjects.forSourceLines("test.StringProvider",
             "package test;",
             "",
-            "interface StringProvider {",
+            "public interface StringProvider {",
             "}")
 
         val applicationContextProvider = JavaFileObjects.forSourceLines("test.ApplicationContextProvider",
             "package test;",
-            Context::class.java.import(),
-            "interface ApplicationContextProvider {",
+            importAndroidContext,
+            "public interface ApplicationContextProvider {",
             "   public Context context();",
             "}")
 
         val appStringProvider = JavaFileObjects.forSourceLines("test.AppStringProvider",
             "package test;",
-            Context::class.java.import(),
-            Dependency::class.java.import(),
+            importAndroidContext,
+            importDependencyAnnotation,
             "@Dependency",
-            "class AppStringProvider implements StringProvider {",
+            "public class AppStringProvider implements StringProvider {",
             "   AppStringProvider(ApplicationContextProvider context) {}",
             "}")
 
         val contextModule = JavaFileObjects.forSourceLines("test.ContextModule",
             "package test;",
-            Context::class.java.import(),
-            Dependency::class.java.import(),
+            importAndroidContext,
+            importDependencyAnnotation,
 
-            "class ContextModule {",
+            "public class ContextModule {",
             "   @Dependency",
             "   public static ApplicationContextProvider context() { return null; }",
             "}")
@@ -1249,63 +1216,250 @@ class NamedTest : BaseTest {
         val firstDependency = JavaFileObjects.forSourceLines("test.FirstDependency",
             "package test;",
 
-            "class FirstDependency {",
+            "public class FirstDependency {",
             "   FirstDependency(StringProvider stringProvider) {}",
             "}")
 
         val secondDependency = JavaFileObjects.forSourceLines("test.SecondDependency",
             "package test;",
 
-            "class SecondDependency {",
+            "public class SecondDependency {",
             "   SecondDependency(StringProvider stringProvider) {}",
             "}")
 
         val thirdDependency = JavaFileObjects.forSourceLines("test.ThirdDependency",
             "package test;",
 
-            "class ThirdDependency {",
+            "public class ThirdDependency {",
             "   ThirdDependency(StringProvider stringProvider) {}",
             "}")
 
         val presenter = JavaFileObjects.forSourceLines("test.Presenter",
             "package test;",
 
-            "class Presenter {",
+            "public class Presenter {",
             "   Presenter(FirstDependency firstDependency, SecondDependency secondDependency, ThirdDependency thirdDependency) {}",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import $keep",
-            "import $nonNull",
+            importKeepAnnotation,
+            importNonNullAnnotation,
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
-            "   public final void inject(@NonNull final Activity target) {",
-            "       injectPresenterInPresenter(target);",
+            "   public static final void inject(@NonNull final Activity target) {",
+            "       target.presenter = providePresenter();",
             "   }",
             "",
-            "   private final void injectPresenterInPresenter(@NonNull final Activity target) {",
+            "   public static final Presenter providePresenter() {",
             "       ApplicationContextProvider applicationContextProvider = ContextModule.context();",
-            "       StringProvider stringProvider = new AppStringProvider(applicationContextProvider);",
+            "       AppStringProvider stringProvider = new AppStringProvider(applicationContextProvider);",
             "       FirstDependency firstDependency = new FirstDependency(stringProvider);",
             "       ApplicationContextProvider applicationContextProvider2 = ContextModule.context();",
-            "       StringProvider stringProvider2 = new AppStringProvider(applicationContextProvider2);",
+            "       AppStringProvider stringProvider2 = new AppStringProvider(applicationContextProvider2);",
             "       SecondDependency secondDependency = new SecondDependency(stringProvider2);",
             "       ApplicationContextProvider applicationContextProvider3 = ContextModule.context();",
-            "       StringProvider stringProvider3 = new AppStringProvider(applicationContextProvider3);",
+            "       AppStringProvider stringProvider3 = new AppStringProvider(applicationContextProvider3);",
             "       ThirdDependency thirdDependency = new ThirdDependency(stringProvider3);",
             "       Presenter presenter = new Presenter(firstDependency, secondDependency, thirdDependency);",
-            "       target.presenter = presenter;",
+            "       return presenter;",
             "   }",
             "}")
 
         assertAbout(javaSources())
-            .that(Arrays.asList(activityFile, stringProvider, contextModule, applicationContextProvider, appStringProvider, firstDependency, secondDependency, presenter, thirdDependency))
+            .that(listOf(activityFile, stringProvider, contextModule, applicationContextProvider, appStringProvider, firstDependency, secondDependency, presenter, thirdDependency))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun namedOnSetterMethod() {
+
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            "package test;",
+            "",
+            importInjectAnnotation,
+            importQualifierAnnotation,
+            "",
+            "public class Activity {",
+            "   @Inject",
+            "   @Qualifier(\"Debug\")",
+            "   public void setDebugFromMethod(DependencyModel dependency) {};",
+            "   @Inject",
+            "   @Qualifier(\"Release\")",
+            "   public void setReleaseFromMethod(DependencyModel dependency) {};",
+            "}")
+
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+            "package test;",
+            "",
+            "public interface DependencyModel {",
+            "}")
+
+        val debugDependencyFile = JavaFileObjects.forSourceLines("test.DebugDependency",
+            "package test;",
+            importSingletonAnnotation,
+            importQualifierAnnotation,
+            importDependencyAnnotation,
+            "@Singleton",
+            "@Dependency",
+            "@Qualifier(\"Debug\")",
+            "public class DebugDependency implements DependencyModel {",
+            "   public DebugDependency() {};",
+            "}")
+
+        val releaseDependencyFile = JavaFileObjects.forSourceLines("test.ReleaseDependency",
+            "package test;",
+            importSingletonAnnotation,
+            importQualifierAnnotation,
+            importDependencyAnnotation,
+            "@Singleton",
+            "@Dependency",
+            "@Qualifier(\"Release\")",
+            "public class ReleaseDependency implements DependencyModel {",
+            "   public ReleaseDependency() {};",
+            "}")
+
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+            "package test;",
+            "",
+            importKeepAnnotation,
+            importNonNullAnnotation,
+            importIoc,
+            "",
+            "@Keep",
+            "public final class ActivityInjector {",
+            "   @Keep",
+            "   public static final void inject(@NonNull final Activity target) {",
+            "       target.setDebugFromMethod(Ioc.getSingleton(DebugDependency.class));",
+            "       target.setReleaseFromMethod(Ioc.getSingleton(ReleaseDependency.class));",
+            "   }",
+            "}")
+
+        assertAbout(javaSources())
+            .that(listOf(activityFile, debugDependencyFile, releaseDependencyFile, dependencyFile))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile)
+    }
+
+    @Test
+    fun failMethodProviderSingletonReturnsAbstractType() {
+
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            "package test;",
+            "",
+            importInjectAnnotation,
+            importQualifierAnnotation,
+            "",
+            "public class Activity {",
+            "   @Inject",
+            "   @Qualifier(\"Debug\")",
+            "   public void setDebugFromMethod(DependencyModel dependency) {};",
+            "   @Inject",
+            "   @Qualifier(\"Release\")",
+            "   public void setReleaseFromMethod(DependencyModel dependency) {};",
+            "}")
+
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+            "package test;",
+            "",
+            "public interface DependencyModel {",
+            "}")
+
+        val debugDependencyFile = JavaFileObjects.forSourceLines("test.DebugDependency",
+            "package test;",
+            importSingletonAnnotation,
+            "@Singleton",
+            "public class DebugDependency implements DependencyModel {",
+            "   public DebugDependency() {};",
+            "}")
+
+        val releaseDependencyFile = JavaFileObjects.forSourceLines("test.ReleaseDependency",
+            "package test;",
+            importSingletonAnnotation,
+            "@Singleton",
+            "public class ReleaseDependency implements DependencyModel {",
+            "   public ReleaseDependency() {};",
+            "}")
+
+        val module = JavaFileObjects.forSourceLines("test.Module",
+            "package test;",
+            "",
+            importQualifierAnnotation,
+            importDependencyAnnotation,
+            importSingletonAnnotation,
+            "public class Module {",
+            "   @Qualifier(\"Debug\")",
+            "   @Dependency",
+            "   @Singleton",
+            "   public static DependencyModel debug() { return null; }",
+            "",
+            "   @Qualifier(\"Release\")",
+            "   @Dependency",
+            "   public static DependencyModel release() { return null; }",
+            "}")
+
+        assertAbout(javaSources())
+            .that(listOf(activityFile, debugDependencyFile, module, releaseDependencyFile, dependencyFile))
+            .processedWith(IProcessor())
+            .failsToCompile()
+            .withErrorContaining("`test.Module.debug()` annotated with @Singleton must returns implementation not abstract type")
+            .`in`(module)
+            .onLine(10)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun failAddTheSameMethod() {
+
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            "package test;",
+            "",
+            importInjectAnnotation,
+            importQualifierAnnotation,
+            "",
+            "public class Activity {",
+            "",
+            "   @Inject",
+            "   public DependencyModel dependency;",
+            "}")
+
+        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+            "package test;",
+            "",
+            importQualifierAnnotation,
+            "",
+            "public class DependencyModel {",
+            "   public DependencyModel() {};",
+            "}")
+
+        val moduleFile = JavaFileObjects.forSourceLines("test.ModuleFile",
+            "package test;",
+            "",
+            importDependencyAnnotation,
+            importQualifierAnnotation,
+            "",
+            "public class ModuleFile {",
+            "",
+            "   @Dependency",
+            "   public static DependencyModel production() { return null; }",
+            "   @Dependency",
+            "   public static DependencyModel debug() { return null; }",
+            "}")
+
+
+        assertAbout(javaSources())
+            .that(listOf(activityFile, dependencyFile, moduleFile))
+            .processedWith(IProcessor())
+            .failsToCompile()
+            .withErrorContaining("Trying add method `ModuleFile.debug()` witch already added from: `ModuleFile.production()`")
+            .`in`(moduleFile)
+            .onLine(6)
     }
 }

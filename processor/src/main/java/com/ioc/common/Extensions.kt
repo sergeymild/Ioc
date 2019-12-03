@@ -1,58 +1,19 @@
 package com.ioc.common
 
 import com.ioc.IProcessor
-import com.ioc.IocLazy
-import com.ioc.IocProvider
-import com.ioc.ViewModelFactoryAnonymousClass
-import com.squareup.javapoet.ClassName
-import com.squareup.javapoet.CodeBlock
-import com.squareup.javapoet.ParameterizedTypeName
-import com.squareup.javapoet.TypeName
-import java.lang.ref.WeakReference
+import com.squareup.javapoet.*
+import kotlinx.metadata.Flag
 import java.util.concurrent.TimeUnit
 import javax.lang.model.element.Element
+import javax.lang.model.element.Modifier
+import javax.lang.model.element.TypeElement
 import javax.lang.model.type.TypeKind
 import javax.tools.Diagnostic
-import kotlinx.metadata.Flag
-import javax.lang.model.element.TypeElement
 
 
 /**
  * Created by sergeygolishnikov on 20/11/2017.
  */
-
-val emptyCodBlock = CodeBlock.builder().build()
-
-fun Element.asTypeName(): TypeName {
-    return ClassName.get(asType())
-}
-
-fun CodeBlock.add(codeBlock: CodeBlock): CodeBlock {
-    return toBuilder().add(codeBlock).build()
-}
-
-fun CodeBlock.add(block: CodeBlock.Builder): CodeBlock.Builder {
-    return block.add(this)
-}
-
-fun Element.asLazyType(): TypeName {
-    return ParameterizedTypeName.get(iocLazyType, asTypeName())
-}
-
-fun Element.asProviderType(): TypeName {
-    return ParameterizedTypeName.get(iocProviderType, asTypeName())
-}
-
-fun Element.asWeakType(): TypeName {
-    return ParameterizedTypeName.get(weakType, asTypeName())
-}
-
-fun viewModelFactoryCode(name: String, code: CodeBlock.Builder): CodeBlock.Builder {
-    return CodeBlock.builder().add("\$T \$N = \$L;\n",
-        viewModelFactoryType,
-        "factory_$name",
-        ViewModelFactoryAnonymousClass.get(code.build()))
-}
 
 
 fun message(message: Any?) {
@@ -66,15 +27,19 @@ inline fun measure(message: String, block: () -> Unit) {
         block()
     } finally {
         val end = System.currentTimeMillis()
-        com.ioc.common.message("$message: [secs: ${TimeUnit.MILLISECONDS.toSeconds(end - start)} original: ${end - start}]")
-//        println("$message: [secs: ${TimeUnit.MILLISECONDS.toSeconds(end - start)} original: ${end - start}]")
+        message("$message: [mills: ${end - start}]")
     }
 }
 
 
-fun isModuleKotlinObject(typeElement: TypeElement): Boolean {
+fun isKotlinObject(typeElement: TypeElement): Boolean {
     val kmClass = KotlinUtil.kmClassOf(typeElement) ?: return false
     return Flag.Class.IS_OBJECT.invoke(kmClass.flags)
+}
+
+fun isKotlinCompanionObject(typeElement: TypeElement): Boolean {
+    val kmClass = KotlinUtil.kmClassOf(typeElement) ?: return false
+    return Flag.Class.IS_COMPANION_OBJECT.invoke(kmClass.flags)
 }
 
 fun Element?.isSupportedType(): Boolean {

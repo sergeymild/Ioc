@@ -1,7 +1,14 @@
 package com.example.common
 
+import androidx.appcompat.app.AppCompatActivity
 import com.ioc.Dependency
+import com.ioc.Inject
 
+
+open class CommonActivity: AppCompatActivity() {
+    @Inject
+    lateinit var prefs: Preferences
+}
 
 interface Preferences {
 

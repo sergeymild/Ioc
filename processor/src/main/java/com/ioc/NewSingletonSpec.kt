@@ -1,70 +1,54 @@
 package com.ioc
 
-import com.ioc.common.asLazyType
-import com.ioc.common.capitalize
 import com.ioc.common.keepAnnotation
-import com.ioc.common.nonNullAnnotation
-import com.squareup.javapoet.*
+import com.ioc.common.singletonClassName
+import com.squareup.javapoet.ClassName
+import com.squareup.javapoet.FieldSpec
+import com.squareup.javapoet.MethodSpec
+import com.squareup.javapoet.TypeSpec
 import javax.lang.model.element.Modifier
-import javax.lang.model.element.TypeElement
-import javax.lang.model.util.Types
 
 /**
  * Created by sergeygolishnikov on 28/11/2017.
  */
-interface SingletonWrapper {
-    val typeElement: TypeElement
-    val className: ClassName
-    val packageName: String
-    var dependencies: List<DependencyModel>
-    var implementations: List<DependencyProvider>
-    var name: String
-    fun originalClassName(): TypeName
-}
 
-class NewSingletonSpec(
-    private val dependencyModel: SingletonWrapper,
-    private val typeUtils: Types) {
+class NewSingletonSpec(private val dependency: DependencyModel) {
 
     @Throws(Throwable::class)
-    fun inject(): TypeSpec {
+    fun createSpec(): TypeSpec {
 
-        val singletonName = "${dependencyModel.typeElement.simpleName.capitalize()}Singleton"
+        val singletonName = singletonClassName(dependency)
         return TypeSpec.classBuilder(singletonName)
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-            .superclass(dependencyModel.typeElement.asLazyType())
+            .addSuperinterface(dependency.asProviderType())
             .addAnnotation(keepAnnotation)
-            .addMethod(getterMethod(singletonName))
-            .addMethod(generateMethod())
-            .addField(FieldSpec.builder(ClassName.bestGuess(singletonName), "instance", Modifier.PRIVATE, Modifier.STATIC).build())
+            .addMethod(initializeMethod())
             .build()
     }
 
-    private fun getterMethod(singletonName: String): MethodSpec {
-        return MethodSpec.methodBuilder("getInstance")
-            .addModifiers(Modifier.PUBLIC, Modifier.FINAL, Modifier.STATIC)
-            .returns(ClassName.bestGuess(singletonName))
-            .addStatement("if (instance == null) instance = new \$N()", singletonName)
-            .addStatement("return instance")
-            .build()
-    }
+    private fun initializeMethod(): MethodSpec {
+        val builder = MethodSpec.methodBuilder("get")
+            .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+            .returns(dependency.originalClassName)
 
-    private fun generateMethod(): MethodSpec {
-        val builder = MethodSpec.methodBuilder("initialize")
-            .addModifiers(Modifier.PROTECTED, Modifier.FINAL)
-            .returns(dependencyModel.className)
-
-        val code = DependencyTree.get(dependencyModel.dependencies, typeUtils)
+        val code = DependencyTree.get(dependency.dependencies)
         builder.addCode(code)
 
-        applyIsLoadIfNeed(dependencyModel.dependencies, null)
-        val names = dependencyModel.dependencyNames()
+        applyIsLoadIfNeed(dependency.dependencies, null)
+        val names = dependency.dependencyNames()
 
-        dependencyModel.implementations.firstOrNull { it.isMethod }?.let {
-            return builder.addStatement("return \$T.\$N(\$L)", it.module, it.name, names).build()
+        dependency.methodProvider?.let {
+            val instance = if (it.isKotlinModule) "INSTANCE." else ""
+            return builder.addStatement("return \$T.$instance\$N(\$L)", it.module, it.name, names).build()
         }
-        builder.addStatement("return new \$T(\$L)", dependencyModel.typeElement, names)
+        postInitializationMethod(dependency.originalType)?.let {
+            builder.addStatement("\$T instance = new \$T(\$L)", dependency.originalClassName, dependency.originalClassName, names)
+            builder.addStatement("instance.\$N()", it.simpleName)
+            builder.addStatement("return instance")
+            return builder.build()
+        }
+
+        builder.addStatement("return new \$T(\$L)", dependency.originalClassName, names)
         return builder.build()
     }
-
 }

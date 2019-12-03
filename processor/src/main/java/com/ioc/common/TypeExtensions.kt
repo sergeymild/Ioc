@@ -1,18 +1,18 @@
 package com.ioc.common
 
 import com.ioc.*
-import java.lang.ref.WeakReference
+import com.ioc.IProcessor.Companion.elementUtils
+import com.ioc.IProcessor.Companion.processingEnvironment
+import com.ioc.IProcessor.Companion.qualifierFinder
+import com.ioc.scanner.AnnotationSetScanner
+import com.squareup.javapoet.ClassName
+import com.squareup.javapoet.TypeName
 import java.util.*
-import javax.annotation.processing.ProcessingEnvironment
 import javax.annotation.processing.RoundEnvironment
-import javax.inject.Inject
-import javax.inject.Provider
 import javax.lang.model.element.*
 import javax.lang.model.type.DeclaredType
 import javax.lang.model.type.TypeKind
 import javax.lang.model.type.TypeMirror
-import javax.lang.model.util.ElementFilter
-import javax.lang.model.util.ElementScanner8
 
 /**
  * Created by sergeygolishnikov on 31/10/2017.
@@ -29,6 +29,9 @@ fun Element.asTypeElement(): TypeElement {
     }
 }
 
+fun Element.asMethod(): ExecutableElement {
+    return this as ExecutableElement
+}
 
 fun Element.isPrivate(): Boolean {
     return modifiers.contains(Modifier.PRIVATE)
@@ -38,14 +41,23 @@ fun Element.isPublic(): Boolean {
     return modifiers.contains(Modifier.PUBLIC)
 }
 
-fun Element.getGenericFirstType(): Element {
+fun Element.isConstructor(): Boolean {
+    return kind == ElementKind.CONSTRUCTOR
+}
+
+fun Element.isGeneric(): Boolean {
+    if (!isSupportedType()) return false
+    return asType().asDeclared().typeArguments.isNotEmpty()
+}
+
+fun Element.getGenericFirstType(): TypeMirror {
     if (!isSupportedType()) throw ProcessorException("Unsupported type $simpleName").setElement(this)
     return asType().getGenericFirstType()
 }
 
-fun Element.getGenericFirstOrSelfType(): Element {
+fun Element.getGenericFirstOrSelfType(): TypeMirror {
     if (!isSupportedType()) throw ProcessorException("Unsupported type $simpleName").setElement(this)
-    if (asType().typeArguments().isEmpty()) return this
+    if (asType().typeArguments().isEmpty()) return asType()
     return asType().getGenericFirstType()
 }
 
@@ -58,112 +70,146 @@ fun Element.getPackage(): PackageElement {
     return MoreElements.getPackage(this)
 }
 
-val targetDependencies = mutableMapOf<String, MutableSet<Element>>()
-val rootTypeElements = mutableListOf<TypeElement>()
+fun scanForAnnotation(typeElement: TypeElement, annotation: Class<*>): MutableSet<Element> {
+    val annotationType = elementUtils.getTypeElement(annotation.canonicalName)
+    val scanner = AnnotationSetScanner(processingEnvironment, mutableSetOf())
+    return scanner.scan(typeElement, annotationType)
+}
 
-class AnnotationSetScanner(
-    private val processingEnvironment: ProcessingEnvironment,
-    elements: MutableSet<Element>) : ElementScanner8<MutableSet<Element>, TypeElement>(elements) {
-    private var annotatedElements: MutableSet<Element> = LinkedHashSet()
+fun RoundEnvironment.collectModuleMethods(
+    classesWithDependencyAnnotation: MutableList<Element>,
+    methodsWithDependencyAnnotation: MutableList<ExecutableElement>) {
+    val dependencies = getElementsAnnotatedWith(Dependency::class.java).toMutableList()
 
-    override fun visitType(var1: TypeElement, var2: TypeElement): MutableSet<Element> {
-        this.scan(var1.typeParameters, var2)
-        return super.visitType(var1, var2)
-    }
+    val queue = LinkedList<Element>(dependencies)
+    val checked = mutableSetOf<String>()
 
-    override fun visitExecutable(var1: ExecutableElement, var2: TypeElement): MutableSet<Element> {
-        this.scan(var1.typeParameters, var2)
-        return super.visitExecutable(var1, var2)
-    }
+    val moduleMethodsSet = mutableSetOf<String>()
+    val dependencySet = mutableSetOf<String>()
 
-    override fun scan(var1: Element, var2: TypeElement): MutableSet<Element> {
-        val var3 = processingEnvironment.elementUtils.getAllAnnotationMirrors(var1)
-        val var4 = var3.iterator()
+    while (queue.isNotEmpty()) {
+        val dependency = queue.pop()
 
-        while (var4.hasNext()) {
-            val var5 = var4.next() as AnnotationMirror
-            if (var2 == var5.annotationType.asElement()) {
-                this.annotatedElements.add(var1)
+        val name = qualifierFinder.getModuleMethodQualifier(dependency)
+        if (dependency.isNotMethodAndInterface() && dependencySet.add(name)) {
+            classesWithDependencyAnnotation.add(dependency)
+        } else if (dependency.isMethod()) {
+            val method = dependency.asMethod()
+            if (moduleMethodsSet.add(name)) {
+                methodsWithDependencyAnnotation.add(method)
+            } else {
+                val tyString = method.asTypeString()
+                val addedMethod = methodsWithDependencyAnnotation.firstOrNull { it.asTypeString() == tyString }
+                throw ProcessorException("Trying add method `${dependency.enclosingElement.simpleName}.${dependency.simpleName}()` witch already added from: `${addedMethod?.enclosingElement?.simpleName}.${addedMethod?.simpleName}()`").setElement(dependency.enclosingElement)
             }
         }
 
-        var1.accept(this, var2)
-        return this.annotatedElements
+        if (!dependency.isMethod()) continue
+
+        if (!checked.add(dependency.enclosingElement.asTypeString())) continue
+
+        val superTypes = collectSuperTypes(dependency.enclosingElement.asTypeElement(), false)
+        for (superType in superTypes) {
+            if (checked.add(superType.toString()))
+                queue.addAll(superType.asTypeElement().dependencyMethods())
+        }
     }
 }
 
-fun RoundEnvironment.rootElementsWithInjectedDependencies(): List<TypeElement> {
-    targetDependencies.clear()
-    rootTypeElements.clear()
+fun RoundEnvironment.rootElementsWithInjectedDependencies(
+    targetDependencies: MutableMap<String, MutableSet<Element>>,
+    rootTypeElements: MutableList<TypeElement>): List<TypeElement> {
 
-    val injectedElements = getElementsAnnotatedWith(Inject::class.java)
+    val checkedSuperclasses = mutableSetOf<String>()
+
+    val injectedElements = getElementsAnnotatedWith(injectJavaType)
 
     for (dependencyElement in injectedElements) {
+        if (dependencyElement.isConstructor()) continue
         val enclosingElement = dependencyElement.enclosingElement
+        val key = enclosingElement.asMapKey()
 
         // if first time meet class element
-        if (!targetDependencies.containsKey(enclosingElement.asType().toString())) {
+        if (!targetDependencies.containsKey(key)) {
             val typeElement = enclosingElement.asTypeElement()
             rootTypeElements.add(typeElement)
+
+            // first 3 supertypes for @Inject dependencies
+            var superclass = typeElement.superclass
+            while (superclass.isAllowForScan()) {
+                if (!checkedSuperclasses.add(superclass.toString())) break
+                val superclassType = superclass.asTypeElement()
+                if (addRootDependencyIfNeed(superclassType, targetDependencies, rootTypeElements)) {
+                    superclass = superclassType.superclass
+                }
+            }
         }
 
-        val dependencies = targetDependencies.getOrPut(enclosingElement.asType().toString()) { mutableSetOf() }
+        val dependencies = targetDependencies.getOrPut(key) { mutableSetOf() }
         dependencies.add(dependencyElement)
+    }
+
+    // find all module methods with @Scan annotation
+    val scanDependencies = getElementsAnnotatedWith(Scan::class.java)
+    for (element in scanDependencies) {
+        val method = element as ExecutableElement
+        validateMethodAnnotatedWithTarget(method)
+        addRootDependencyIfNeed(method.returnType.asTypeElement(), targetDependencies, rootTypeElements)
     }
 
     return rootTypeElements
 }
 
-fun RoundEnvironment.findDependenciesInParents(processingEnv: ProcessingEnvironment) {
-    val uniqueRootTypeElements = mutableSetOf<String>()
+fun addRootDependencyIfNeed(
+    typeElement: TypeElement,
+    targetDependencies: MutableMap<String, MutableSet<Element>>,
+    rootTypeElements: MutableList<TypeElement>
+): Boolean {
 
-    val injectAnnotationType = processingEnv.elementUtils.getTypeElement(Inject::class.java.canonicalName)
-    for (childElement in getElementsAnnotatedWith(InjectParentDependencies::class.java)) {
-        val typeElement = childElement.asTypeElement()
-        var superclass = typeElement.superclass
-        var isDependenciesFound = false
-        while (!superclass.isNotValid()) {
-            if (uniqueRootTypeElements.contains(superclass.toString())) continue
-            val superclassTypeElement = superclass.asTypeElement()
-
-            val injectElements = mutableSetOf<Element>()
-            val scanner = AnnotationSetScanner(processingEnv, injectElements)
-            val found = scanner.scan(superclassTypeElement, injectAnnotationType)
-
-            val dependencies = targetDependencies.getOrPut(superclass.toString()) { mutableSetOf() }
-            dependencies.addAll(found)
-            if (dependencies.isNotEmpty()) {
-                rootTypeElements.add(superclassTypeElement)
-                isDependenciesFound = true
-            }
-            superclass = superclassTypeElement.superclass
-            if (superclass.isNotValid()) break
-        }
-
-        if (isDependenciesFound && !rootTypeElements.contains(typeElement)) {
-            rootTypeElements.add(typeElement)
-            targetDependencies.getOrPut(typeElement.asType().toString()) { mutableSetOf() }
-        }
-    }
+    val key = typeElement.asMapKey()
+    if (targetDependencies.containsKey(key)) return false
+    val found = scanForAnnotation(typeElement, injectJavaType)
+    if (found.isEmpty()) return false
+    targetDependencies[key] = found
+    rootTypeElements.add(typeElement)
+    return true
 }
 
-fun mapToTargetWithDependencies(dependencyResolver: DependencyResolver): Map<TargetType, MutableList<DependencyModel>> {
-    val targetsWithDependencies = mutableMapOf<TargetType, MutableList<DependencyModel>>()
 
-    for (targetTypeElement in rootTypeElements) {
-        val targetType = IProcessor.createTarget(targetTypeElement, IProcessor.dependencyFinder)
+fun mapToTargetWithDependencies(
+    dependencyResolver: DependencyResolver,
+    targetDependencies: MutableMap<String, MutableSet<Element>>,
+    rootTypeElements: MutableList<TypeElement>
+): Map<TargetType, MutableList<DependencyModel>> {
+    try {
+        val targetsWithDependencies = mutableMapOf<TargetType, MutableList<DependencyModel>>()
 
-        val dependencies = targetsWithDependencies.getOrPut(targetType) { mutableListOf() }
+        for (targetTypeElement in rootTypeElements) {
+            if (isKotlinCompanionObject(targetTypeElement)) {
+                throwCantInjectInCompanionObject(targetTypeElement)
+            }
+            val targetType = createTarget(targetTypeElement, IProcessor.dependencyFinder)
 
-        val injectElements = targetDependencies.getValue(targetTypeElement.asType().toString())
-        for (injectElement in injectElements) {
-            if (injectElement.kind == ElementKind.CONSTRUCTOR) continue
-            val resolved = dependencyResolver.resolveDependency(injectElement, target = targetType)
-            dependencies.add(resolved)
+            val dependencies = targetsWithDependencies.getOrPut(targetType) { mutableListOf() }
+
+            val injectElements = targetDependencies.getValue(targetTypeElement.asMapKey())
+            for (injectElement in injectElements) {
+                if (injectElement.kind == ElementKind.CONSTRUCTOR) continue
+                val resolved = dependencyResolver.resolveDependency(injectElement, target = targetType)
+                if (resolved.isLocal) {
+                    val getterName = findDependencyGetter(injectElement)
+                        .orElse { throwsGetterIsNotFound(injectElement) }
+                        .toGetterName()
+                    targetType.localScopeDependencies[resolved.originalTypeString] = getterName
+                }
+                dependencies.add(resolved)
+            }
         }
-    }
 
-    return targetsWithDependencies
+        return targetsWithDependencies
+    } catch (e: Throwable) {
+        throw e
+    }
 }
 
 fun methodsWithDependencyAnnotation(): List<ExecutableElement> {
@@ -175,22 +221,39 @@ fun classesWithDependencyAnnotation(): List<Element> {
     return IProcessor.classesWithDependencyAnnotation
 }
 
-// Only get all classes with annotation @Dependency
-fun abstractMethodsWithDependencyAnnotations(): List<ExecutableElement> {
-    return IProcessor
-        .methodsWithDependencyAnnotation
-        .filter { it.modifiers.contains(Modifier.ABSTRACT) }
-}
-
 fun Element.isNotMethodAndInterface(): Boolean {
     return kind != ElementKind.METHOD && kind != ElementKind.INTERFACE
 }
 
 fun TypeMirror.isNotValid(): Boolean {
-    return toString() == Object::class.java.canonicalName
+    try {
+        toString()
+    } catch (e: Throwable) {
+        if (e::class.java.canonicalName.contains("com.sun.tools.javac.code.Symbol.CompletionFailure")) {
+            return false
+            //throw ProcessorException("Class ${method.returnType} is not accessible for: ${ele}, maybe you forgot add module witch contains it.")
+        }
+    }
+    return toString() == "none"
+        || toString() == objectJavaType.canonicalName
         || kind == TypeKind.NONE
         || kind == TypeKind.PACKAGE
         || kind == TypeKind.NULL
+}
+
+fun TypeMirror.isValidMapKey(): Boolean {
+    if (isNotValid()) return false
+    if (toString() == Cleanable::class.java.canonicalName) return false
+    // skip all generic types (is First<String>)
+    if (typeArguments().isNotEmpty()) return false
+    return true
+}
+
+fun TypeMirror?.isAllowForScan(): Boolean {
+    this ?: return false
+    if (isNotValid()) return false
+    val typeString = this.toString()
+    return excludedPackages.none { typeString.startsWith(it) }
 }
 
 fun Element.isEqualTo(other: Element): Boolean {
@@ -206,16 +269,24 @@ fun Element?.isEqualTo(other: TypeMirror): Boolean {
     return this.asType().toString() == other.toString()
 }
 
-fun DeclaredType.getGenericFirstType(): Element {
-    return typeArguments[0].asElement()
+fun DeclaredType.getGenericFirstType(): TypeMirror {
+    return typeArguments[0]
 }
 
-fun TypeMirror.getGenericFirstType(): Element {
+fun TypeMirror.getGenericFirstType(): TypeMirror {
     return asDeclared().getGenericFirstType()
 }
 
 fun TypeMirror.asElement(): Element {
     return MoreTypes.asElement(this)
+}
+
+fun Element.asClassName(): TypeName {
+    return asType().asClassName()
+}
+
+fun TypeMirror.asClassName(): TypeName {
+    return ClassName.get(this)
 }
 
 fun TypeMirror.asTypeElement(): TypeElement {
@@ -228,7 +299,8 @@ fun TypeMirror.asDeclared(): DeclaredType {
 
 fun TypeMirror.typeArguments(): List<TypeMirror> {
     if (this !is DeclaredType) return emptyList()
-    return MoreTypes.asDeclared(this).typeArguments
+    val declared = MoreTypes.asDeclared(this)
+    return if (declared.typeArguments.isNotEmpty()) declared.typeArguments else emptyList()
 }
 
 
@@ -245,38 +317,51 @@ fun Name.capitalize(): String {
     return toString().capitalize()
 }
 
-fun Element.isHasArgumentsConstructor(): Boolean =
-    ElementFilter.constructorsIn(asTypeElement().enclosedElements)
-        .any { it.parameters.isNotEmpty() || it.isHasAnnotation(Inject::class.java) }
-
-fun Element.argumentsConstructor(): ExecutableElement? =
-    ElementFilter.constructorsIn(asTypeElement().enclosedElements)
-        .firstOrNull { it.parameters.isNotEmpty() || it.isHasAnnotation(Inject::class.java) }
-
-fun Element.injectionFields(): List<Element> =
-    ElementFilter.fieldsIn(asTypeElement().enclosedElements)
-        .filter { it.isHasAnnotation(Inject::class.java) }
-
-
-fun Element.isWeakDependency(): Boolean {
-    return asType().toString().startsWith(WeakReference::class.java.canonicalName)
+fun Name.decapitalize(): String {
+    return toString().decapitalize()
 }
 
-fun Element.isLazyDependency(): Boolean {
-    return asType().toString().startsWith(Lazy::class.java.canonicalName)
+fun CharSequence.titleize(): String {
+    return toString().capitalize()
 }
 
-fun Element.isProvideDependency(): Boolean {
-    return asType().toString().startsWith(Provider::class.java.canonicalName)
+fun Element.isSingleton(): Boolean {
+    return isHasAnnotation(singletonJavaType)
 }
+
+fun Element.isLocalScoped(): Boolean {
+    return isHasAnnotation(localScopeJavaType)
+}
+
+fun Element.isWeak(): Boolean {
+    return asTypeString().startsWith(weakJavaType.canonicalName)
+}
+
+fun Element.isLazy(): Boolean {
+    return asTypeString().startsWith(lazyJavaType.canonicalName)
+}
+
+fun Element.isProvider(): Boolean {
+    return asTypeString().startsWith(providerJavaType.canonicalName)
+}
+
+fun Element.isPrimitive(): Boolean {
+    return asType().kind.isPrimitive
+}
+
+fun Element.asMapKey(): String = asTypeString()
 
 fun Element.isViewModel(): Boolean {
-    if (asType().kind.isPrimitive) return false
+    if (isPrimitive()) return false
+    return isHasAnnotation(viewModelJavaType)
+}
 
+fun Element.isAndroidViewModel(): Boolean {
+    if (isPrimitive()) return false
     var superType = asTypeElement().superclass
 
     while (superType != null) {
-        if (superType.kind == TypeKind.NONE) break
+        if (superType.isNotValid()) break
         if (viewModelPackages.contains(superType.toString())) return true
         superType = superType.asTypeElement().superclass
     }
@@ -284,12 +369,12 @@ fun Element.isViewModel(): Boolean {
 }
 
 fun Element.isLiveData(): Boolean {
-    if (asType().kind.isPrimitive) return false
+    if (isPrimitive()) return false
 
     var superType = asTypeElement().superclass
 
     while (superType != null) {
-        if (superType.kind == TypeKind.NONE) break
+        if (superType.isNotValid()) break
         if (liveDataPackages.contains(superType.asElement().toString())) return true
         superType = superType.asTypeElement().superclass
     }
@@ -297,15 +382,39 @@ fun Element.isLiveData(): Boolean {
 }
 
 fun Element.isCanHaveViewModel(): Boolean {
-    if (asType().kind.isPrimitive) return false
+    if (isPrimitive()) return false
 
     var superType = asTypeElement().superclass
 
     while (superType != null) {
-        if (superType.kind == TypeKind.NONE) break
+        if (superType.isNotValid()) break
         if (allowedViewModelParents.contains(superType.toString())) return true
         superType = superType.asTypeElement().superclass
     }
+
+    return false
+}
+
+fun Element.isCanHaveLiveDataObserver(): Boolean {
+    if (isPrimitive()) return false
+
+    val typeElement = asTypeElement()
+
+    val supertypes = mutableSetOf<TypeMirror>()
+    val queue = LinkedList<TypeMirror>()
+    queue.addAll(typeElement.interfaces)
+    queue.add(typeElement.superclass)
+
+    while (queue.isNotEmpty()) {
+        val supertype = queue.pop()
+        if (supertype.isNotValid()) continue
+        if (supertype.toString() == lifecycleOwner) return true
+        supertypes.add(supertype)
+        val superclass = supertype.asTypeElement()
+        queue.addAll(superclass.interfaces)
+        queue.add(superclass.superclass)
+    }
+
     return false
 }
 
@@ -313,50 +422,57 @@ fun Element.isMethod(): Boolean {
     return kind == ElementKind.METHOD
 }
 
+fun Element.isClass(): Boolean {
+    return kind == ElementKind.CLASS
+}
+
 fun Element.isInterface(): Boolean {
     return kind == ElementKind.INTERFACE
 }
 
-fun <T> List<T>.addTo(other: MutableList<T>) {
-    other.addAll(this)
+fun Element.isAbstract(): Boolean {
+    return modifiers.contains(Modifier.ABSTRACT)
 }
 
-class SetterAndGetter(val setter: ExecutableElement, val getter: Element)
+fun Element.isStatic(): Boolean {
+    return modifiers.contains(Modifier.STATIC)
+}
+
+fun ExecutableElement.isContainsOneParameterOf(element: Element): Boolean {
+    return parameters.size == 1 && parameters[0].isEqualTo(element)
+}
 
 @Throws(ProcessorException::class)
 fun findDependencySetter(element: Element): ExecutableElement? {
     return element.enclosingElement.methods {
-        it.isPublic() && it.parameters.size == 1 && it.parameters[0].isEqualTo(element)
+        it.isPublic() && it.isContainsOneParameterOf(element)
     }.firstOrNull()
 }
 
 @Throws(ProcessorException::class)
-fun findDependencyGetter(element: Element): Element {
+fun findDependencyGetter(element: Element): Element? {
     if (element.isPublic()) return element
     return element.enclosingElement.methods {
-        it.isPublic() && it.parameters.isEmpty() && it.returnType.toString() == element.asType().toString()
-    }.firstOrNull() ?: throw ProcessorException("@Inject annotation placed on field `${element.simpleName}` in `${element.enclosingElement.simpleName}` with private access and which does't have public getter method.").setElement(element)
+        it.isPublic() && it.parameters.isEmpty() && it.returnType.isEqualTo(element)
+    }.firstOrNull()
 }
 
-fun TypeMirror.isJavaObject(): Boolean {
-    return toString() == "java.lang.Object"
-}
+fun collectSuperTypes(typeElement: TypeElement?, includeSelf: Boolean = false): Set<TypeMirror> {
+    typeElement ?: return emptySet()
 
-fun supertypes(element: Element): Set<String> {
-    val supertypes = mutableSetOf<String>()
-    val type = element.asTypeElement()
+    val supertypes = mutableSetOf<TypeMirror>()
     val queue = LinkedList<TypeMirror>()
-    queue.add(type.asType())
-    queue.add(type.superclass)
-    queue.addAll(type.interfaces)
+    if (includeSelf) queue.add(typeElement.asType())
+    queue.addAll(typeElement.interfaces)
+    queue.add(typeElement.superclass)
 
     while (queue.isNotEmpty()) {
         val supertype = queue.pop()
-        if (supertype.kind == TypeKind.NONE) continue
-        supertypes.add(supertype.asElement().toString())
-        val supertypeElement = supertype.asTypeElement()
-        if (supertypeElement.superclass != null && !supertypeElement.superclass.isJavaObject()) queue.add(supertypeElement.superclass)
-        queue.addAll(supertypeElement.interfaces)
+        if (supertype.isNotValid()) continue
+        supertypes.add(supertype)
+        val superclass = supertype.asTypeElement()
+        queue.addAll(superclass.interfaces)
+        queue.add(superclass.superclass)
     }
 
     return supertypes
@@ -365,26 +481,18 @@ fun supertypes(element: Element): Set<String> {
 @Throws(ProcessorException::class)
 fun findDependencyGetterFromTypeOrSuperType(element: Element): Element {
     if (element.isPublic()) return element
-    val supertypes = supertypes(element)
+    val supertypes = collectSuperTypes(element.asTypeElement(), includeSelf = true)
     val genericType = element.getGenericFirstOrSelfType()
     for (method in element.enclosingElement.methods()) {
         val returnType = method.returnType.asElement().toString()
-        if (supertypes.contains(returnType)) {
+        if (supertypes.any { IProcessor.types.erasure(it).toString() == returnType }) {
             val typeArguments = method.returnType.typeArguments()
-            if (typeArguments.isNotEmpty() && typeArguments.size == 1 && typeArguments[0].toString() == genericType.asType().toString()) {
+            if (typeArguments.isNotEmpty() && typeArguments.size == 1 && typeArguments[0].toString() == genericType.toString()) {
                 return method
             }
         }
     }
-    throw ProcessorException("@Inject annotation placed on field `${element.simpleName}` in `${element.enclosingElement.simpleName}` with private access and which does't have public getter method.").setElement(element)
+    throw exceptionGetterIsNotFound(element)
 }
 
 fun Element.toGetterName(): String = if (this is ExecutableElement) "$simpleName()" else simpleName.toString()
-
-fun findSetterAndGetterMethods(element: Element): SetterAndGetter {
-    val setterMethod = findDependencySetter(element).orElse {
-        throw ProcessorException("@Inject annotation placed on field `${element.simpleName}` in `${element.enclosingElement.simpleName}` with private access and which does't have public setter method.").setElement(element)
-    }
-    val getterMethod = findDependencyGetter(element)
-    return SetterAndGetter(setterMethod, getterMethod)
-}

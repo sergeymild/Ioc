@@ -4,23 +4,17 @@ import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertAbout
 import com.google.testing.compile.JavaFileObjects
 import com.google.testing.compile.JavaSourcesSubject
-import com.google.testing.compile.JavaSourcesSubjectFactory
 import com.google.testing.compile.JavaSourcesSubjectFactory.javaSources
-import com.ioc.Helpers.importType
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import java.util.*
-import javax.inject.Inject
-import javax.inject.Named
-import javax.inject.Singleton
 import javax.tools.JavaFileObject
 
 /**
  * Created by sergeygolishnikov on 14/08/2017.
  */
 @RunWith(JUnit4::class)
-class SingletonNameTests : BaseTest {
+class SingletonNameTests {
 
     @Test
     @Throws(Exception::class)
@@ -29,8 +23,7 @@ class SingletonNameTests : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class Activity {",
             "",
@@ -38,45 +31,40 @@ class SingletonNameTests : BaseTest {
             "   public CrashlitycsService service;",
             "}")
 
-        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val dependencyFile = JavaFileObjects.forSourceLines("test.CrashlitycsService",
             "package test;",
             "",
-            "interface CrashlitycsService {",
+            "public interface CrashlitycsService {",
             "}")
 
-        val release = JavaFileObjects.forSourceLines("test.ReleaseModel",
+        val release = JavaFileObjects.forSourceLines("test.CrashlyticsLogger",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Singleton::class.java.import(),
-            Dependency::class.java.import(),
+            importInjectAnnotation,
+            importSingletonAnnotation,
+            importDependencyAnnotation,
             "",
             "@Dependency",
             "@Singleton",
-            "class CrashlyticsLogger implements CrashlitycsService {",
+            "public class CrashlyticsLogger implements CrashlitycsService {",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import $keep;",
-            "import $nonNull;",
-            "import $ioc;",
+            importKeepAnnotation,
+            importNonNullAnnotation,
+            importIoc,
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
-            "   public final void inject(@NonNull final Activity target) {",
-            "     injectCrashlitycsServiceInService(target);",
-            "   }",
-            "",
-            "   private final void injectCrashlitycsServiceInService(@NonNull final Activity target) {",
-            "        CrashlyticsLogger crashlyticsLogger = Ioc.singleton(CrashlyticsLogger.class);",
-            "        target.service = crashlyticsLogger;",
+            "   public static final void inject(@NonNull final Activity target) {",
+            "     target.service = Ioc.getSingleton(CrashlyticsLogger.class);",
             "   }",
             "}")
 
-        Truth.assertAbout(javaSources())
+        assertAbout(javaSources())
             .that(listOf(activityFile, release, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
@@ -90,7 +78,7 @@ class SingletonNameTests : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            importType(Inject::class.java),
+            importInjectAnnotation,
             "",
             "public class Activity {",
             "",
@@ -101,9 +89,9 @@ class SingletonNameTests : BaseTest {
         val moduleFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            importType(com.ioc.Dependency::class.java),
-            importType(Singleton::class.java),
-            importType(Inject::class.java),
+            importDependencyAnnotation,
+            importSingletonAnnotation,
+            importInjectAnnotation,
             "",
             "@Dependency",
             "@Singleton",
@@ -113,42 +101,36 @@ class SingletonNameTests : BaseTest {
             "   public DependencyModel(CrashlitycsService service) {}",
             "}")
 
-        val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
+        val dependencyFile = JavaFileObjects.forSourceLines("test.CrashlitycsService",
             "package test;",
             "",
-            "interface CrashlitycsService {",
+            "public interface CrashlitycsService {",
             "}")
 
-        val release = JavaFileObjects.forSourceLines("test.ReleaseModel",
+        val release = JavaFileObjects.forSourceLines("test.CrashlyticsLogger",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Singleton::class.java.import(),
-            Dependency::class.java.import(),
+            importInjectAnnotation,
+            importSingletonAnnotation,
+            importDependencyAnnotation,
             "",
             "@Dependency",
             "@Singleton",
-            "class CrashlyticsLogger implements CrashlitycsService {",
+            "public class CrashlyticsLogger implements CrashlitycsService {",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.DependencyModelSingleton",
             "package test;",
             "",
-            "import $keep",
-            "import $ioc",
-            "import $iocLazy",
+            importKeepAnnotation,
+            importIoc,
+            importProvider,
             "",
             "@Keep",
-            "public final class DependencyModelSingleton extends IocLazy<DependencyModel> {",
-            "   private static DependencyModelSingleton instance;",
+            "public final class DependencyModelSingleton implements Provider<DependencyModel> {",
             "",
-            "   public static final DependencyModelSingleton getInstance() {",
-            "       if (instance == null) instance = new DependencyModelSingleton();",
-            "       return instance;",
-            "   }",
-            "",
-            "   protected final DependencyModel initialize() {",
-            "       return new DependencyModel(Ioc.singleton(CrashlyticsLogger.class));",
+            "   public final DependencyModel get() {",
+            "       return new DependencyModel(Ioc.getSingleton(CrashlyticsLogger.class));",
             "   }",
             "}")
 
@@ -165,7 +147,7 @@ class SingletonNameTests : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            "import $inject;",
+            importInjectAnnotation,
             "",
             "public class Activity {",
             "",
@@ -178,8 +160,8 @@ class SingletonNameTests : BaseTest {
         val moduleFile = JavaFileObjects.forSourceLines("test.ModuleClass",
             "package test;",
             "",
-            "import $dependency;",
-            "import $singleton;",
+            importDependencyAnnotation,
+            importSingletonAnnotation,
             "",
             "public class ModuleClass {",
             "",
@@ -214,21 +196,21 @@ class SingletonNameTests : BaseTest {
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import $keep;",
-            "import $nonNull;",
-            "import $ioc;",
+            importKeepAnnotation,
+            importNonNullAnnotation,
+            importIoc,
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
-            "   public final void inject(@NonNull final Activity target) {",
-            "       injectParentDependencyInDependency(target);",
+            "   public static final void inject(@NonNull final Activity target) {",
+            "       target.setDependency(provideParentDependency());",
             "   }",
             "",
-            "   private final void injectParentDependencyInDependency(@NonNull final Activity target) {",
+            "   public static final ParentDependency provideParentDependency() {",
             "       DependencyModel dependencyModel = ModuleClass.getDependency();",
-            "       ParentDependency parentDependency = ModuleClass.getParentDependency(dependencyModel, Ioc.singleton(Dependency2.class));",
-            "       target.setDependency(parentDependency);",
+            "       ParentDependency parentDependency = ModuleClass.getParentDependency(dependencyModel,Ioc.getSingleton(Dependency2.class));",
+            "       return parentDependency;",
             "   }",
             "}")
 
@@ -246,8 +228,7 @@ class SingletonNameTests : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class Activity {",
             "",
@@ -255,39 +236,34 @@ class SingletonNameTests : BaseTest {
             "   public CrashlyticsLogger service;",
             "}")
 
-        val release = JavaFileObjects.forSourceLines("test.ReleaseModel",
+        val release = JavaFileObjects.forSourceLines("test.CrashlyticsLogger",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Singleton::class.java.import(),
-            Dependency::class.java.import(),
+            importInjectAnnotation,
+            importSingletonAnnotation,
+            importDependencyAnnotation,
             "",
             "@Dependency",
             "@Singleton",
-            "class CrashlyticsLogger {",
+            "public class CrashlyticsLogger {",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
             "package test;",
             "",
-            "import $keep",
-            "import $nonNull",
-            "import $ioc",
+            importKeepAnnotation,
+            importNonNullAnnotation,
+            importIoc,
             "",
             "@Keep",
             "public final class ActivityInjector {",
             "   @Keep",
-            "   public final void inject(@NonNull final Activity target) {",
-            "     injectCrashlyticsLoggerInService(target);",
-            "   }",
-            "",
-            "   private final void injectCrashlyticsLoggerInService(@NonNull final Activity target) {",
-            "       CrashlyticsLogger crashlyticsLogger = Ioc.singleton(CrashlyticsLogger.class);",
-            "       target.service = crashlyticsLogger;",
+            "   public static final void inject(@NonNull final Activity target) {",
+            "     target.service = Ioc.getSingleton(CrashlyticsLogger.class);",
             "   }",
             "}")
 
-        Truth.assertAbout(javaSources())
+        assertAbout(javaSources())
             .that(listOf(activityFile, release))
             .processedWith(IProcessor())
             .compilesWithoutError()

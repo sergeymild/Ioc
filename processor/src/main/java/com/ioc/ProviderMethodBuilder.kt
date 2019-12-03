@@ -1,8 +1,8 @@
 package com.ioc
 
-import com.ioc.common.emptyCodBlock
+import com.ioc.common.asClassName
+import com.ioc.common.message
 import com.squareup.javapoet.CodeBlock
-import javax.lang.model.util.Types
 
 /**
  * Created by sergeygolishnikov on 20/11/2017.
@@ -10,65 +10,48 @@ import javax.lang.model.util.Types
 
 object ProviderMethodBuilder {
     fun build(
-        provider: DependencyProvider,
-        dependencyModel: DependencyModel,
-        typeUtils: Types,
+        provider: ModuleMethodProvider,
+        model: DependencyModel,
         target: TargetType?): CodeBlock {
-
-        if (provider.dependencyModels.isEmpty()) {
-            return generateWithoutDependencies(dependencyModel, provider)
-        }
 
         val builder = CodeBlock.builder()
 
-        if (!provider.isSingleton) {
-            DependencyTree.get(provider.dependencyModels, typeUtils, target)
-                .also { builder.add(it) }
-        }
+        DependencyTree.get(model.dependencies, target = target)
+            .also { builder.add(it) }
 
-        builder.add(generateWithDependencies(dependencyModel, provider, target))
+        builder.add(generateWithDependencies(model, provider, target))
 
         return builder.build()
     }
 
     @Throws(Throwable::class)
     private fun generateWithDependencies(
-        dependencyModel: DependencyModel,
-        method: DependencyProvider,
+        model: DependencyModel,
+        method: ModuleMethodProvider,
         target: TargetType?): CodeBlock {
-        if (method.isSingleton) return emptyCodBlock
 
         val builder = CodeBlock.builder()
 
-        applyIsLoadIfNeed(dependencyModel.dependencies, target)
-        val names = method.dependencyNames()
+        applyIsLoadIfNeed(model.dependencies, target)
+        val names = model.dependencyNames()
 
         var statementString = "\$T \$N = \$T.\$N(\$L)"
+        if (method.isKotlinModule && method.name == "INSTANCE") {
+            builder.addStatement("\$T \$N = \$T.INSTANCE",
+                model.originalClassName,
+                model.generatedName,
+                method.module.asClassName())
+            return builder.build()
+        }
         if (method.isKotlinModule) statementString = "\$T \$N = \$T.INSTANCE.\$N(\$L)"
 
         builder.addStatement(statementString,
-            dependencyModel.className,
-            dependencyModel.generatedName,
-            method.module,
-            method.name, names)
+            model.originalClassName,
+            model.generatedName,
+            method.module.asClassName(),
+            method.name,
+            names)
 
         return builder.build()
-    }
-
-    @Throws(Throwable::class)
-    private fun generateWithoutDependencies(dependencyModel: DependencyModel, method: DependencyProvider): CodeBlock {
-        if (method.isSingleton) return emptyCodBlock
-
-        var code = CodeBlock.builder()
-
-        var statementString = "\$T \$N = \$T.\$N()"
-        if (method.isKotlinModule) statementString = "\$T \$N = \$T.INSTANCE.\$N()"
-        code = code.addStatement(statementString,
-            dependencyModel.originalClassName(),
-            dependencyModel.generatedName,
-            method.module,
-            method.name)
-
-        return code.build()
     }
 }

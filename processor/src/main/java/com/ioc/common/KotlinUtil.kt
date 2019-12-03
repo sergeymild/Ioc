@@ -30,3 +30,10 @@ object KotlinUtil {
         }
     }
 }
+
+
+inline fun <T> Collection<T>.toMutableMap(consumer: (T) -> String): MutableMap<String, T> {
+    val resultMap = mutableMapOf<String, T>()
+    for (t in this) resultMap[consumer(t)] = t
+    return resultMap
+}

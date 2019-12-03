@@ -2,21 +2,19 @@ package com.ioc
 
 import com.google.common.truth.Truth
 import com.google.testing.compile.JavaFileObjects
+import com.google.testing.compile.JavaSourcesSubject
 import com.google.testing.compile.JavaSourcesSubjectFactory
+import com.ioc.common.singletonJavaType
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import java.util.*
-import javax.inject.Inject
-import javax.inject.Named
-import javax.inject.Provider
-import javax.inject.Singleton
+import javax.tools.JavaFileObject
 
 /**
  * Created by sergeygolishnikov on 14/08/2017.
  */
 @RunWith(JUnit4::class)
-class SingletonTests : BaseTest {
+class SingletonTests {
     @Test
     @Throws(Exception::class)
     fun classNamedAsArgumentNamedDebugNescafe() {
@@ -24,8 +22,7 @@ class SingletonTests : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
             "",
             "public class Activity {",
             "",
@@ -36,102 +33,97 @@ class SingletonTests : BaseTest {
         val presenter = JavaFileObjects.forSourceLines("test.MainPresenter",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
+            importQualifierAnnotation,
             "",
-            "class MainPresenter {",
+            "public class MainPresenter {",
             "   @Inject",
-            "   MainPresenter(@Named(\"release\") DependencyModel dependency) {}",
+            "   MainPresenter(@Qualifier(\"release\") DependencyModel dependency) {}",
             "}")
 
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "interface DependencyModel {",
+            "public interface DependencyModel {",
             "}")
 
         val release = JavaFileObjects.forSourceLines("test.ReleaseModel",
             "package test;",
             "",
-            Named::class.java.import(),
-            Inject::class.java.import(),
-            Singleton::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importInjectAnnotation,
+            importSingletonAnnotation,
+            importDependencyAnnotation,
             "",
-            "@Named(\"release\")",
+            "@Qualifier(\"release\")",
             "@Singleton",
             "@Dependency",
-            "class ReleaseModel implements DependencyModel {",
+            "public class ReleaseModel implements DependencyModel {",
             "   @Inject",
-            "   ReleaseModel(@Named(\"cappuccino\") Coffee coffee) {}",
+            "   ReleaseModel(@Qualifier(\"cappuccino\") Coffee coffee) {}",
             "}")
 
         val debug = JavaFileObjects.forSourceLines("test.DebugModel",
             "package test;",
             "",
-            Named::class.java.import(),
-            Inject::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importInjectAnnotation,
+            importDependencyAnnotation,
             "",
-            "@Named(\"debug\")",
+            "@Qualifier(\"debug\")",
             "@Dependency",
-            "class DebugModel implements DependencyModel {",
+            "public class DebugModel implements DependencyModel {",
             "   @Inject",
-            "   DebugModel(@Named(\"nescafe\") Coffee coffee) {}",
+            "   DebugModel(@Qualifier(\"nescafe\") Coffee coffee) {}",
             "}")
 
         val coffee = JavaFileObjects.forSourceLines("test.Coffee",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
-            "interface Coffee {",
+            "public interface Coffee {",
             "}")
 
         val cappuccino = JavaFileObjects.forSourceLines("test.Cappuccino",
             "package test;",
             "",
-            Named::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importDependencyAnnotation,
             "",
-            "@Named(\"cappuccino\")",
+            "@Qualifier(\"cappuccino\")",
             "@Dependency",
-            "class Cappuccino implements Coffee {",
+            "public class Cappuccino implements Coffee {",
             "   public Cappuccino() {};",
             "}")
 
         val nescafe = JavaFileObjects.forSourceLines("test.Nescafe",
             "package test;",
             "",
-            Named::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importDependencyAnnotation,
             "",
-            "@Named(\"nescafe\")",
+            "@Qualifier(\"nescafe\")",
             "@Dependency",
-            "class Nescafe implements Coffee {",
+            "public class Nescafe implements Coffee {",
             "   public Nescafe() {};",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ReleaseModelSingleton",
-            "package test;",
-            "",
-            "import $keep",
-            "import $iocLazy",
-            "",
-            "@Keep",
-            "public final class ReleaseModelSingleton extends IocLazy<ReleaseModel>",
-            "   private static ReleaseModelSingleton instance;",
-            "",
-            "   public static final ReleaseModelSingleton getInstance() {",
-            "       if (instance == null) instance = new ReleaseModelSingleton();",
-            "       return instance;",
-            "   }",
-            "",
-            "   protected final ReleaseModel initialize() {",
-            "       Coffee coffee = new Cappuccino();",
-            "       return new ReleaseModel(coffee);",
-            "   }",
-            "}")
+            """
+            package test;
+
+            $importKeepAnnotation
+            $importProvider
+            
+            @Keep
+            public final class ReleaseModelSingleton implements Provider<ReleaseModel> {
+              public final ReleaseModel get() {
+                Cappuccino coffee = new Cappuccino();
+                return new ReleaseModel(coffee);
+              }
+            }
+        """.trimIndent())
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
             .that(listOf(activityFile, cappuccino, nescafe, release, debug, presenter, coffee, dependencyFile))
@@ -147,8 +139,8 @@ class SingletonTests : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
+            importQualifierAnnotation,
             "",
             "public class Activity {",
             "",
@@ -159,80 +151,80 @@ class SingletonTests : BaseTest {
         val presenter = JavaFileObjects.forSourceLines("test.MainPresenter",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
+            importQualifierAnnotation,
             "",
-            "class MainPresenter {",
+            "public class MainPresenter {",
             "   @Inject",
-            "   MainPresenter(@Named(\"release\") DependencyModel dependency) {}",
+            "   MainPresenter(@Qualifier(\"release\") DependencyModel dependency) {}",
             "}")
 
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "interface DependencyModel {",
+            "public interface DependencyModel {",
             "}")
 
         val release = JavaFileObjects.forSourceLines("test.ReleaseModel",
             "package test;",
             "",
-            Named::class.java.import(),
-            Inject::class.java.import(),
-            Singleton::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importInjectAnnotation,
+            importSingletonAnnotation,
+            importDependencyAnnotation,
             "",
-            "@Named(\"release\")",
+            "@Qualifier(\"release\")",
             "@Singleton",
             "@Dependency",
-            "class ReleaseModel implements DependencyModel {",
+            "public class ReleaseModel implements DependencyModel {",
             "   @Inject",
-            "   ReleaseModel(@Named(\"nescafe\") Coffee coffee) {}",
+            "   ReleaseModel(@Qualifier(\"nescafe\") Coffee coffee) {}",
             "}")
 
         val debug = JavaFileObjects.forSourceLines("test.DebugModel",
             "package test;",
             "",
-            Named::class.java.import(),
-            Inject::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importInjectAnnotation,
+            importDependencyAnnotation,
             "",
-            "@Named(\"debug\")",
+            "@Qualifier(\"debug\")",
             "@Dependency",
-            "class DebugModel implements DependencyModel {",
+            "public class DebugModel implements DependencyModel {",
             "   @Inject",
-            "   DebugModel(@Named(\"cappuccino\") Coffee coffee) {}",
+            "   DebugModel(@Qualifier(\"cappuccino\") Coffee coffee) {}",
             "}")
 
         val coffee = JavaFileObjects.forSourceLines("test.Coffee",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
-            "interface Coffee {",
+            "public interface Coffee {",
             "}")
 
         val cappuccino = JavaFileObjects.forSourceLines("test.Cappuccino",
             "package test;",
             "",
-            Named::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importDependencyAnnotation,
             "",
-            "@Named(\"cappuccino\")",
+            "@Qualifier(\"cappuccino\")",
             "@Dependency",
-            "class Cappuccino implements Coffee {",
+            "public class Cappuccino implements Coffee {",
             "   public Cappuccino() {};",
             "}")
 
         val nescafe = JavaFileObjects.forSourceLines("test.Nescafe",
             "package test;",
             "",
-            Named::class.java.import(),
-            Inject::class.java.import(),
-            Dependency::class.java.import(),
+            importQualifierAnnotation,
+            importInjectAnnotation,
+            importDependencyAnnotation,
             "",
-            "@Named(\"nescafe\")",
+            "@Qualifier(\"nescafe\")",
             "@Dependency",
-            "class Nescafe implements Coffee {",
+            "public class Nescafe implements Coffee {",
             "   @Inject",
             "   public Nescafe(Sugar sugar) {};",
             "}")
@@ -240,33 +232,29 @@ class SingletonTests : BaseTest {
         val sugar = JavaFileObjects.forSourceLines("test.Sugar",
             "package test;",
             "",
-            Named::class.java.import(),
+            importQualifierAnnotation,
             "",
-            "class Sugar {",
+            "public class Sugar {",
             "   public Sugar() {};",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ReleaseModelSingleton",
-            "package test;",
-            "",
-            "import $keep",
-            "import $iocLazy",
-            "",
-            "@Keep",
-            "public final class ReleaseModelSingleton extends IocLazy<ReleaseModel> {",
-            "   private static ReleaseModelSingleton instance;",
-            "",
-            "   public static final ReleaseModelSingleton getInstance() {",
-            "       if (instance == null) instance = new ReleaseModelSingleton();",
-            "       return instance;",
-            "   }",
-            "",
-            "   protected final ReleaseModel initialize() {",
-            "       Sugar sugar = new Sugar();",
-            "       Coffee coffee = new Nescafe(sugar);",
-            "       return new ReleaseModel(coffee);",
-            "   }",
-            "}")
+            """
+            package test;
+
+            $importKeepAnnotation
+            $importProvider
+            
+            @Keep
+            public final class ReleaseModelSingleton implements Provider<ReleaseModel> {
+            
+              public final ReleaseModel get() {
+                Sugar sugar = new Sugar();
+                Nescafe coffee = new Nescafe(sugar);
+                return new ReleaseModel(coffee);
+              }
+            }
+        """.trimIndent())
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
             .that(listOf(activityFile, cappuccino, nescafe, sugar, release, debug, presenter, coffee, dependencyFile))
@@ -282,7 +270,7 @@ class SingletonTests : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            "import $inject;",
+            importInjectAnnotation,
             "",
             "public class Activity {",
             "",
@@ -293,42 +281,37 @@ class SingletonTests : BaseTest {
         val presenter = JavaFileObjects.forSourceLines("test.MainPresenter",
             "package test;",
             "",
-            "import $singleton;",
+            importSingletonAnnotation,
             "",
             "@Singleton",
-            "class MainPresenter {",
+            "public class MainPresenter {",
             "   MainPresenter(DependencyModel dependency) {}",
             "}")
 
-        val release = JavaFileObjects.forSourceLines("test.ReleaseModel",
+        val release = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            "import $singleton;",
+            importSingletonAnnotation,
             "",
             "@Singleton",
-            "class DependencyModel {",
+            "public class DependencyModel {",
             "}")
 
+
         val injectedFile = JavaFileObjects.forSourceLines("test.MainPresenterSingleton",
-            "package test;",
-            "",
-            "import $keep",
-            "import $ioc",
-            "import $iocLazy",
-            "",
-            "@Keep",
-            "public final class MainPresenterSingleton extends IocLazy<MainPresenter> {",
-            "   private static MainPresenterSingleton instance;",
-            "",
-            "   public static final MainPresenterSingleton getInstance() {",
-            "       if (instance == null) instance = new MainPresenterSingleton();",
-            "       return instance;",
-            "   }",
-            "",
-            "   protected final MainPresenter initialize() {",
-            "       return new MainPresenter(Ioc.singleton(DependencyModel.class));",
-            "   }",
-            "}")
+            """
+            package test;
+            $importKeepAnnotation
+            $importIoc
+            $importProvider
+            @Keep
+            public final class MainPresenterSingleton implements Provider<MainPresenter> {
+            
+               public final MainPresenter get() {
+                   return new MainPresenter(Ioc.getSingleton(DependencyModel.class));
+               }
+            }
+        """.trimIndent())
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
             .that(listOf(activityFile, release, presenter))
@@ -344,8 +327,8 @@ class SingletonTests : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
+            importQualifierAnnotation,
             "",
             "public class Activity {",
             "",
@@ -364,53 +347,49 @@ class SingletonTests : BaseTest {
         val cookieManager = JavaFileObjects.forSourceLines("test.CookieManagerWorker",
             "package test;",
             "",
-            Singleton::class.java.import(),
+            importSingletonAnnotation,
             "",
             "@Singleton",
-            "class CookieManagerWorker {",
+            "public class CookieManagerWorker {",
             "   CookieManagerWorker(PrivacySettings privacySettings, ThemeSettings themeSettings) {}",
             "}")
 
         val privacySettings = JavaFileObjects.forSourceLines("test.PrivacySettings",
             "package test;",
             "",
-            "interface PrivacySettings {",
+            "public interface PrivacySettings {",
             "}")
 
         val themeSettings = JavaFileObjects.forSourceLines("test.ThemeSettings",
             "package test;",
             "",
-            "interface ThemeSettings {",
+            "public interface ThemeSettings {",
             "}")
 
         val settings = JavaFileObjects.forSourceLines("test.Settings",
             "package test;",
-            Dependency::class.java.import(),
+            importDependencyAnnotation,
             "@Dependency",
-            "class Settings implements PrivacySettings, ThemeSettings {",
+            "public class Settings implements PrivacySettings, ThemeSettings {",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.CookieManagerWorkerSingleton",
-            "package test;",
-            "",
-            "import $keep;",
-            "import $iocLazy;",
-            "",
-            "@Keep",
-            "public final class CookieManagerWorkerSingleton extends IocLazy<CookieManagerWorker> {",
-            "   private static CookieManagerWorkerSingleton instance;",
-            "",
-            "   public static final CookieManagerWorkerSingleton getInstance() {",
-            "       if (instance == null) instance = new CookieManagerWorkerSingleton();",
-            "       return instance;",
-            "   }",
-            "",
-            "   protected final CookieManagerWorker initialize() {",
-            "       PrivacySettings privacySettings = new Settings();",
-            "       ThemeSettings themeSettings = new Settings();",
-            "       return new CookieManagerWorker(privacySettings, themeSettings);",
-            "   }",
-            "}")
+            """
+            package test;
+
+            $importKeepAnnotation
+            $importProvider
+            
+            @Keep
+            public final class CookieManagerWorkerSingleton implements Provider<CookieManagerWorker> {
+            
+              public final CookieManagerWorker get() {
+                Settings privacySettings = new Settings();
+                Settings themeSettings = new Settings();
+                return new CookieManagerWorker(privacySettings,themeSettings);
+              }
+            }
+        """.trimIndent())
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
             .that(listOf(activityFile, cookieManager, privacySettings, themeSettings, settings))
@@ -427,8 +406,8 @@ class SingletonTests : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
+            importQualifierAnnotation,
             "",
             "public class Activity {",
             "",
@@ -439,57 +418,53 @@ class SingletonTests : BaseTest {
             "   public PrivacySettings getPrivacySettings() {return null;}",
             "}")
 
-        val cookieManager = JavaFileObjects.forSourceLines("test.CookieManagerWorker",
+        val cookieManager = JavaFileObjects.forSourceLines("test.WebMusicManager",
             "package test;",
             "",
-            Singleton::class.java.import(),
+            importSingletonAnnotation,
             "",
             "@Singleton",
-            "class WebMusicManager {",
+            "public class WebMusicManager {",
             "   WebMusicManager(Session session) {}",
             "}")
 
-        val privacySettings = JavaFileObjects.forSourceLines("test.PrivacySettings",
+        val privacySettings = JavaFileObjects.forSourceLines("test.Session",
             "package test;",
             "",
-            "class Session {",
+            "public class Session {",
             "   Session(PrivacySettings privacySettings) {}",
             "}")
 
         val themeSettings = JavaFileObjects.forSourceLines("test.PrivacySettings",
             "package test;",
             "",
-            "interface PrivacySettings {",
+            "public interface PrivacySettings {",
             "}")
 
         val settings = JavaFileObjects.forSourceLines("test.Settings",
             "package test;",
-            Dependency::class.java.import(),
+            importDependencyAnnotation,
             "@Dependency",
-            "class Settings implements PrivacySettings {",
+            "public class Settings implements PrivacySettings {",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.WebMusicManagerSingleton",
-            "package test;",
-            "",
-            "import $keep",
-            "import $iocLazy",
-            "",
-            "@Keep",
-            "public final class WebMusicManagerSingleton extends IocLazy<WebMusicManager> {",
-            "   private static WebMusicManagerSingleton instance;",
-            "",
-            "   public static final WebMusicManagerSingleton getInstance() {",
-            "       if (instance == null) instance = new WebMusicManagerSingleton();",
-            "       return instance;",
-            "   }",
-            "",
-            "   protected final WebMusicManager initialize() {",
-            "       PrivacySettings privacySettings = new Settings();",
-            "       Session session = new Session(privacySettings);",
-            "       return new WebMusicManager(session);",
-            "   }",
-            "}")
+            """
+            package test;
+
+            $importKeepAnnotation
+            $importProvider
+            
+            @Keep
+            public final class WebMusicManagerSingleton implements Provider<WebMusicManager> {
+            
+              public final WebMusicManager get() {
+                Settings privacySettings = new Settings();
+                Session session = new Session(privacySettings);
+                return new WebMusicManager(session);
+              }
+            }
+        """.trimIndent())
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
             .that(listOf(activityFile, cookieManager, privacySettings, themeSettings, settings))
@@ -505,8 +480,8 @@ class SingletonTests : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
+            importQualifierAnnotation,
             "",
             "public class Activity {",
             "",
@@ -517,10 +492,10 @@ class SingletonTests : BaseTest {
         val presenter = JavaFileObjects.forSourceLines("test.MainPresenter",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Lazy::class.java.import(),
+            importInjectAnnotation,
+            importLazy,
             "",
-            "class MainPresenter {",
+            "public class MainPresenter {",
             "   @Inject",
             "   MainPresenter(Lazy<DependencyModel> lazyDependency, SingletonDependency singletonDependency) {}",
             "}")
@@ -528,49 +503,50 @@ class SingletonTests : BaseTest {
         val singletonDependency = JavaFileObjects.forSourceLines("test.SingletonDependency",
             "package test;",
             "",
-            Singleton::class.java.import(),
+            importSingletonAnnotation,
             "",
             "@Singleton",
-            "class SingletonDependency {",
+            "public class SingletonDependency {",
             "}")
 
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
-            "class DependencyModel {",
+            "public class DependencyModel {",
             "   @Inject",
             "   DependencyModel(SingletonDependency singletonDependency) {}",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
-            "package test;",
-            "",
-            "import $keep;",
-            "import $nonNull;",
-            "import $ioc;",
-            "import $iocLazy;",
-            "",
-            "@Keep",
-            "public final class ActivityInjector",
-            "",
-            "   @Keep",
-            "   public final void inject(@NonNull final Activity target) {",
-            "       injectMainPresenterInPresenter(target);",
-            "   }",
-            "",
-            "   private final void injectMainPresenterInPresenter(@NonNull final Activity target) {",
-            "       IocLazy<DependencyModel> lazyDependencyModel = new IocLazy<DependencyModel>() {",
-            "           protected DependencyModel initialize() {",
-            "               DependencyModel dependencyModel = new DependencyModel(Ioc.singleton(SingletonDependency.class));",
-            "               return dependencyModel;",
-            "           }",
-            "       };",
-            "       MainPresenter mainPresenter = new MainPresenter(lazyDependencyModel, Ioc.singleton(SingletonDependency.class));",
-            "       target.presenter = mainPresenter;",
-            "   }",
-            "}")
+            """
+            package test;
+
+            $importKeepAnnotation
+            $importNonNullAnnotation
+            $importIoc
+            $importIocLazy
+            
+            @Keep
+            public final class ActivityInjector {
+              @Keep
+              public static final void inject(@NonNull final Activity target) {
+                target.presenter = provideMainPresenter();
+              }
+            
+              public static final MainPresenter provideMainPresenter() {
+                IocLazy<DependencyModel> lazyDependencyModel = new IocLazy<DependencyModel>() {
+                  protected DependencyModel initialize() {
+                    DependencyModel dependencyModel = new DependencyModel(Ioc.getSingleton(SingletonDependency.class));
+                    return dependencyModel;
+                  }
+                };
+                MainPresenter mainPresenter = new MainPresenter(lazyDependencyModel,Ioc.getSingleton(SingletonDependency.class));
+                return mainPresenter;
+              }
+            }
+        """.trimIndent())
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
             .that(listOf(activityFile, singletonDependency, presenter, dependencyFile))
@@ -586,8 +562,8 @@ class SingletonTests : BaseTest {
         val activityFile = JavaFileObjects.forSourceLines("test.Activity",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Named::class.java.import(),
+            importInjectAnnotation,
+            importQualifierAnnotation,
             "",
             "public class Activity {",
             "",
@@ -598,10 +574,10 @@ class SingletonTests : BaseTest {
         val presenter = JavaFileObjects.forSourceLines("test.MainPresenter",
             "package test;",
             "",
-            Inject::class.java.import(),
-            Provider::class.java.import(),
+            importInjectAnnotation,
+            importProvider,
             "",
-            "class MainPresenter {",
+            "public class MainPresenter {",
             "   @Inject",
             "   MainPresenter(Provider<DependencyModel> providerDependency, SingletonDependency singletonDependency) {}",
             "}")
@@ -609,54 +585,574 @@ class SingletonTests : BaseTest {
         val singletonDependency = JavaFileObjects.forSourceLines("test.SingletonDependency",
             "package test;",
             "",
-            Singleton::class.java.import(),
+            importSingletonAnnotation,
             "",
             "@Singleton",
-            "class SingletonDependency {",
+            "public class SingletonDependency {",
             "}")
 
         val dependencyFile = JavaFileObjects.forSourceLines("test.DependencyModel",
             "package test;",
             "",
-            Inject::class.java.import(),
+            importInjectAnnotation,
             "",
-            "class DependencyModel {",
+            "public class DependencyModel {",
             "   @Inject",
             "   DependencyModel(SingletonDependency singletonDependency) {}",
             "}")
 
         val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
-            "package test;",
-            "",
-            "import $keep;",
-            "import $nonNull;",
-            "import $ioc",
-            "import $iosProvider",
-            "",
-            "@Keep",
-            "public final class ActivityInjector",
-            "",
-            "   @Keep",
-            "   public final void inject(@NonNull final Activity target) {",
-            "       injectMainPresenterInPresenter(target);",
-            "   }",
-            "",
-            "   private final void injectMainPresenterInPresenter(@NonNull final Activity target) {",
-            "       IocProvider<DependencyModel> providerDependencyModel = new IocProvider<DependencyModel>() {",
-            "           protected DependencyModel initialize() {",
-            "               DependencyModel dependencyModel = new DependencyModel(Ioc.singleton(SingletonDependency.class));",
-            "               return dependencyModel;",
-            "           }",
-            "       };",
-            "       MainPresenter mainPresenter = new MainPresenter(providerDependencyModel, Ioc.singleton(SingletonDependency.class));",
-            "       target.presenter = mainPresenter;",
-            "   }",
-            "}")
+            """
+            package test;
+
+            $importKeepAnnotation
+            $importNonNullAnnotation
+            $importIoc
+            $importIocProvider
+            
+            @Keep
+            public final class ActivityInjector {
+              @Keep
+              public static final void inject(@NonNull final Activity target) {
+                target.presenter = provideMainPresenter();
+              }
+            
+              public static final MainPresenter provideMainPresenter() {
+                IocProvider<DependencyModel> providerDependencyModel = new IocProvider<DependencyModel>() {
+                  protected DependencyModel initialize() {
+                    DependencyModel dependencyModel = new DependencyModel(Ioc.getSingleton(SingletonDependency.class));
+                    return dependencyModel;
+                  }
+                };
+                MainPresenter mainPresenter = new MainPresenter(providerDependencyModel,Ioc.getSingleton(SingletonDependency.class));
+                return mainPresenter;
+              }
+            }
+        """.trimIndent())
 
         Truth.assertAbout(JavaSourcesSubjectFactory.javaSources())
             .that(listOf(activityFile, singletonDependency, presenter, dependencyFile))
             .processedWith(IProcessor())
             .compilesWithoutError()
             .and().generatesSources(injectedFile)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun injectSameSingletonInDifferentConstructors() {
+
+        val eventLogger = JavaFileObjects.forSourceLines("test.EventLogger",
+            "package test;",
+            "public interface EventLogger {",
+            "}")
+
+        val defaultLogger = JavaFileObjects.forSourceLines("test.DefaultLogger",
+            "package test;",
+            "",
+            importSingletonAnnotation,
+            importDependencyAnnotation,
+            "",
+            "@Singleton",
+            "@Dependency",
+            "public class DefaultLogger implements EventLogger {",
+            "}")
+
+
+        val context = JavaFileObjects.forSourceLines("test.Context",
+            "package test;",
+            "",
+            "public class Context {",
+            "   public Context(EventLogger logger) {}",
+            "}")
+
+        val db = JavaFileObjects.forSourceLines("test.Db",
+            "package test;",
+            "",
+            "public class Db {",
+            "",
+            "   public Db(EventLogger logger) {}",
+            "}")
+
+        val activityFile = JavaFileObjects.forSourceLines("test.Activity",
+            "package test;",
+            "",
+            importInjectAnnotation,
+            "",
+            "public class Activity {",
+            "",
+            "   @Inject",
+            "   public EventLogger logger;",
+            "   @Inject",
+            "   public Context context;",
+            "   @Inject",
+            "   public Db db;",
+            "}")
+
+        val injectedFile = JavaFileObjects.forSourceLines("test.ActivityInjector",
+            """
+            package test;
+
+            $importKeepAnnotation
+            $importNonNullAnnotation
+            $importIoc
+            
+            @Keep
+            public final class ActivityInjector {
+              @Keep
+              public static final void inject(@NonNull final Activity target) {
+                target.logger = Ioc.getSingleton(DefaultLogger.class);
+                target.context = provideContext();
+                target.db = provideDb();
+              }
+            
+              public static final Context provideContext() {
+                Context context = new Context(Ioc.getSingleton(DefaultLogger.class));
+                return context;
+              }
+            
+              public static final Db provideDb() {
+                Db db = new Db(Ioc.getSingleton(DefaultLogger.class));
+                return db;
+              }
+            }
+        """.trimIndent())
+
+        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(JavaSourcesSubjectFactory.javaSources())
+            .that(listOf(activityFile, eventLogger, defaultLogger, context, db))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectedFile)
+    }
+
+    @Test
+    fun failOnSingletonGeneric() {
+        val exampleInterface = JavaFileObjects.forSourceLines("test.ExampleInterface",
+            "package test;",
+            "",
+            "interface ExampleInterface {",
+            "}")
+
+        val parentFile = JavaFileObjects.forSourceLines("test.Parent",
+            "package test;",
+            "",
+            importInjectAnnotation,
+            "",
+            "public abstract class Parent <T extends ExampleInterface> {",
+            "   @Inject",
+            "   public String exampleString;",
+            "}")
+
+        val childFile = JavaFileObjects.forSourceLines("test.Child",
+            "package test;",
+            "",
+            importInjectAnnotation,
+            importList,
+            "",
+            "public abstract class Child <T extends ExampleInterface> extends Parent<T> {",
+            "   @Inject",
+            "   public List<String> exampleList;",
+            "}")
+
+        val moduleFile = JavaFileObjects.forSourceLines("test.Module",
+            "package test;",
+            "",
+            importDependencyAnnotation,
+            importSingletonAnnotation,
+            importKotlinMetadataAnnotation,
+            importList,
+            "",
+            "@Metadata(mv = {1, 1, 15}, bv = {1, 0, 3}, k = 1, d1 = {\"\\u0000\\u0012\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0002\\b\\u0002\\n\\u0002\\u0018\\u0002\\n\\u0000\\bÆ\\u0002\\u0018\\u00002\\u00020\\u0001B\\u0007\\b\\u0002¢\\u0006\\u0002\\u0010\\u0002J\\b\\u0010\\u0003\\u001a\\u00020\\u0004H\\u0007¨\\u0006\\u0005\"}, d2 = {\"Ltest/Module;\", \"\", \"()V\", \"getCountryService\", \"Ltest/CountryService;\", \"sample_debug\"})",
+            "public final class Module {",
+            "   public static final Module INSTANCE;",
+            "   @Dependency",
+            "   @Singleton",
+            "   public final String provideExampleDependencyString() { return null; }",
+            "   @Dependency",
+            "   @Singleton",
+            "   public final List<String> provideExampleDependencyList() { return null; }",
+            "",
+            "   static {",
+            "     Module var0 = new Module();",
+            "     INSTANCE = var0;",
+            "   }",
+            "}")
+
+        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(JavaSourcesSubjectFactory.javaSources())
+            .that(listOf(moduleFile, exampleInterface, parentFile, childFile))
+            .processedWith(IProcessor())
+            .failsToCompile()
+            .withErrorContaining("Singleton with generic types doesn't support")
+            .`in`(childFile)
+            .onLine(8)
+    }
+
+    @Test
+    fun failSingletonMethodMustReturnValidType() {
+
+        val singletonModule = JavaFileObjects.forSourceLines("test.SingletonModule",
+            "package test;",
+            importSingletonAnnotation,
+            "public class SingletonModule {",
+            "   @Singleton",
+            "   public static Object fromModule() { return null; }",
+            "}")
+
+
+        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(JavaSourcesSubjectFactory.javaSources())
+            .that(listOf(singletonModule))
+            .processedWith(IProcessor())
+            .failsToCompile()
+            .withErrorContaining("test.SingletonModule.fromModule() annotated with @Singleton return type is not valid.")
+            .`in`(singletonModule)
+            .onLine(5)
+    }
+
+    @Test
+    fun failSingletonMethodMustReturnType() {
+
+        val singletonModule = JavaFileObjects.forSourceLines("test.SingletonModule",
+            "package test;",
+            importSingletonAnnotation,
+            "public class SingletonModule {",
+            "   @Singleton",
+            "   public static void fromModule() { return null; }",
+            "}")
+
+
+        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(JavaSourcesSubjectFactory.javaSources())
+            .that(listOf(singletonModule))
+            .processedWith(IProcessor())
+            .failsToCompile()
+            .withErrorContaining("test.SingletonModule.fromModule() annotated with @Singleton must return type")
+            .`in`(singletonModule)
+            .onLine(5)
+    }
+
+    @Test
+    fun failSingletonClassMustBePublic() {
+
+        val singletonClass = JavaFileObjects.forSourceLines("test.SingletonClass",
+            "package test;",
+            "",
+            importSingletonAnnotation,
+            "",
+            "@Singleton",
+            "class SingletonClass {}")
+
+
+        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(JavaSourcesSubjectFactory.javaSources())
+            .that(listOf(singletonClass))
+            .processedWith(IProcessor())
+            .failsToCompile()
+            .withErrorContaining("test.SingletonClass annotated with @Singleton must be public")
+            .`in`(singletonClass)
+            .onLine(6)
+    }
+
+    @Test
+    fun singletonWithFewInterfaces() {
+        val firstInterface = JavaFileObjects.forSourceLines("test.FirstInterface", """
+            package test;
+            
+            public interface FirstInterface {}
+        """.trimIndent())
+
+        val secondInterface = JavaFileObjects.forSourceLines("test.SecondInterface", """
+            package test;
+            
+            public interface SecondInterface {}
+        """.trimIndent())
+
+        val singleton = JavaFileObjects.forSourceLines("test.SingletonClass", """
+            package test;
+            
+            $importSingletonAnnotation
+            $importDependencyAnnotation
+            
+            @Singleton
+            @Dependency
+            public class SingletonClass implements FirstInterface, SecondInterface {}
+        """.trimIndent())
+
+        val activity = JavaFileObjects.forSourceLines("test.Activity", """
+            package test;
+            
+            $importInjectAnnotation
+
+            class Activity  {
+                @Inject
+                public FirstInterface firstInterface;
+                @Inject
+                public SecondInterface secondInterface;
+            }
+        """.trimIndent())
+
+        val injectFile = JavaFileObjects.forSourceLines("test.ActivityInjector", """
+            package test;
+            
+            $importKeepAnnotation
+            $importNonNullAnnotation
+            $importIoc
+
+            @Keep
+            public final class ActivityInjector  {
+                @Keep
+                public static final void inject(@NonNull final Activity target) {
+                    target.firstInterface = Ioc.getSingleton(SingletonClass.class);
+                    target.secondInterface = Ioc.getSingleton(SingletonClass.class);
+                }
+            }
+        """.trimIndent())
+
+        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(JavaSourcesSubjectFactory.javaSources())
+            .that(listOf(firstInterface, secondInterface, singleton, activity))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and().generatesSources(injectFile)
+    }
+
+    @Test
+    fun singletonAnnotationOnImplementationInModuleMethod() {
+        val firstInterface = JavaFileObjects.forSourceLines("test.FirstInterface", """
+            package test;
+            public interface FirstInterface {}
+        """.trimIndent())
+
+        val secondInterface = JavaFileObjects.forSourceLines("test.SecondInterface", """
+            package test;
+            
+            public interface SecondInterface {}
+        """.trimIndent())
+
+        val singleton = JavaFileObjects.forSourceLines("test.SingletonClass", """
+            package test;
+            
+            $importSingletonAnnotation
+            $importDependencyAnnotation
+            
+            @Singleton
+            @Dependency
+            public class SingletonClass implements FirstInterface, SecondInterface {}
+        """.trimIndent())
+
+        val module = JavaFileObjects.forSourceLines("test.Module", """
+            package test;
+            
+            $importDependencyAnnotation
+
+            public interface Module {
+                @Dependency
+                FirstInterface firstInterface(SingletonClass singletonClass);
+                
+                @Dependency
+                SecondInterface secondInterface(SingletonClass singletonClass);
+            }
+        """.trimIndent())
+
+        val activity = JavaFileObjects.forSourceLines("test.Activity", """
+            package test;
+            
+            $importInjectAnnotation
+
+            class Activity  {
+                @Inject
+                public FirstInterface firstInterface;
+                @Inject
+                public SecondInterface secondInterface;
+            }
+        """.trimIndent())
+
+        val injectFile = JavaFileObjects.forSourceLines("com.ioc.SingletonsFactoryImplementation", """
+            package com.ioc;
+            
+            $importKeepAnnotation
+            import java.util.HashMap;
+            import test.FirstInterface;
+            import test.SecondInterface;
+            import test.SingletonClass;
+            import test.SingletonClassSingleton;
+
+            @Keep
+            final class SingletonsFactoryImplementation extends SingletonFactory  {
+                static {
+                    map = new HashMap<>(3);
+                    cachedSingletons = new HashMap<>(1);
+                    map.put(SingletonClass.class, SingletonClassSingleton.class);
+                    map.put(FirstInterface.class, SingletonClassSingleton.class);
+                    map.put(SecondInterface.class, SingletonClassSingleton.class);
+                }
+            }
+        """.trimIndent())
+
+        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(JavaSourcesSubjectFactory.javaSources())
+            .that(listOf(firstInterface, secondInterface, singleton, activity, module))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and()
+            .generatesSources(injectFile)
+    }
+
+    @Test
+    fun skipCleanableInterfaces() {
+        val firstInterface = JavaFileObjects.forSourceLines("test.First", """
+            package test;
+            
+            $importSingletonAnnotation
+            $importCleanable
+            @Singleton
+            public class First implements Cleanable {
+                public void onCleared() {}
+            }
+        """.trimIndent())
+
+        val secondInterface = JavaFileObjects.forSourceLines("test.Second", """
+            package test;
+            
+            $importSingletonAnnotation
+            $importCleanable
+            @Singleton
+            public class Second implements Cleanable {
+                public void onCleared() {}
+            }
+        """.trimIndent())
+
+
+
+        val activity = JavaFileObjects.forSourceLines("test.Activity", """
+            package test;
+            
+            $importInjectAnnotation
+
+            class Activity  {
+                @Inject
+                public First first;
+                @Inject
+                public Second second;
+            }
+        """.trimIndent())
+
+        val injectFile = JavaFileObjects.forSourceLines("com.ioc.SingletonsFactoryImplementation", """
+            package com.ioc;
+            
+            $importKeepAnnotation
+            import java.util.HashMap;
+            import test.First;
+            import test.FirstSingleton;
+            import test.Second;
+            import test.SecondSingleton;
+
+            @Keep
+            final class SingletonsFactoryImplementation extends SingletonFactory {
+              static {
+                map = new HashMap<>(2);
+                cachedSingletons = new HashMap<>(2);
+                map.put(First.class, FirstSingleton.class);
+                map.put(Second.class, SecondSingleton.class);
+              }
+            }
+        """.trimIndent())
+
+        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(JavaSourcesSubjectFactory.javaSources())
+            .that(listOf(firstInterface, secondInterface, activity))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and()
+            .generatesSources(injectFile)
+    }
+
+    @Test
+    fun skipGenerics() {
+        val firstInterface = JavaFileObjects.forSourceLines("test.First", """
+            package test;
+            public interface First<T> {}
+        """.trimIndent())
+
+        val secondInterface = JavaFileObjects.forSourceLines("test.Second", """
+            package test;
+            $importSingletonAnnotation
+            @Singleton
+            public class Second implements First<String> {}
+        """.trimIndent())
+
+        val activity = JavaFileObjects.forSourceLines("test.Activity", """
+            package test;
+            $importInjectAnnotation
+            class Activity  {
+                @Inject
+                public Second second;
+            }
+        """.trimIndent())
+
+        val injectFile = JavaFileObjects.forSourceLines("com.ioc.SingletonsFactoryImplementation", """
+            package com.ioc;
+            
+            $importKeepAnnotation
+            import java.util.HashMap;
+            import test.Second;
+            import test.SecondSingleton;
+
+            @Keep
+            final class SingletonsFactoryImplementation extends SingletonFactory {
+              static {
+                map = new HashMap<>(1);
+                cachedSingletons = new HashMap<>(1);
+                map.put(Second.class, SecondSingleton.class);
+              }
+            }
+        """.trimIndent())
+
+        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(JavaSourcesSubjectFactory.javaSources())
+            .that(listOf(firstInterface, secondInterface, activity))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and()
+            .generatesSources(injectFile)
+    }
+
+    @Test
+    fun postInitialization() {
+
+        val secondInterface = JavaFileObjects.forSourceLines("test.Second", """
+            package test;
+            $importSingletonAnnotation
+            $importPostInitializationAnnotation
+            @Singleton
+            public class Second {
+                @PostInitialization
+                public void afterInit() {}
+            }
+        """.trimIndent())
+
+        val activity = JavaFileObjects.forSourceLines("test.Activity", """
+            package test;
+            $importInjectAnnotation
+            class Activity  {
+                @Inject
+                public Second second;
+            }
+        """.trimIndent())
+
+        val injectFile = JavaFileObjects.forSourceLines("test.SecondSingleton", """
+            package test;
+            
+            $importKeepAnnotation
+            $importProvider
+
+            @Keep
+            public final class SecondSingleton implements Provider<Second> {
+              public final Second get() {
+                Second instance = new Second();
+                instance.afterInit();
+                return instance;
+              }
+            }
+        """.trimIndent())
+
+        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(JavaSourcesSubjectFactory.javaSources())
+            .that(listOf(secondInterface, activity))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and()
+            .generatesSources(injectFile)
     }
 }
