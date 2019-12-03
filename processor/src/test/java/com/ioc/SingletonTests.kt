@@ -1108,4 +1108,51 @@ class SingletonTests {
             .and()
             .generatesSources(injectFile)
     }
+
+    @Test
+    fun postInitialization() {
+
+        val secondInterface = JavaFileObjects.forSourceLines("test.Second", """
+            package test;
+            $importSingletonAnnotation
+            $importPostInitializationAnnotation
+            @Singleton
+            public class Second {
+                @PostInitialization
+                public void afterInit() {}
+            }
+        """.trimIndent())
+
+        val activity = JavaFileObjects.forSourceLines("test.Activity", """
+            package test;
+            $importInjectAnnotation
+            class Activity  {
+                @Inject
+                public Second second;
+            }
+        """.trimIndent())
+
+        val injectFile = JavaFileObjects.forSourceLines("test.SecondSingleton", """
+            package test;
+            
+            $importKeepAnnotation
+            $importProvider
+
+            @Keep
+            public final class SecondSingleton implements Provider<Second> {
+              public final Second get() {
+                Second instance = new Second();
+                instance.afterInit();
+                return instance;
+              }
+            }
+        """.trimIndent())
+
+        Truth.assertAbout<JavaSourcesSubject, Iterable<JavaFileObject>>(JavaSourcesSubjectFactory.javaSources())
+            .that(listOf(secondInterface, activity))
+            .processedWith(IProcessor())
+            .compilesWithoutError()
+            .and()
+            .generatesSources(injectFile)
+    }
 }

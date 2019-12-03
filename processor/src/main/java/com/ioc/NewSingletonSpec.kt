@@ -41,6 +41,13 @@ class NewSingletonSpec(private val dependency: DependencyModel) {
             val instance = if (it.isKotlinModule) "INSTANCE." else ""
             return builder.addStatement("return \$T.$instance\$N(\$L)", it.module, it.name, names).build()
         }
+        postInitializationMethod(dependency.originalType)?.let {
+            builder.addStatement("\$T instance = new \$T(\$L)", dependency.originalClassName, dependency.originalClassName, names)
+            builder.addStatement("instance.\$N()", it.simpleName)
+            builder.addStatement("return instance")
+            return builder.build()
+        }
+
         builder.addStatement("return new \$T(\$L)", dependency.originalClassName, names)
         return builder.build()
     }
